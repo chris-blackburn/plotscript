@@ -46,6 +46,10 @@ Vagrant.configure("2") do |config|
 
   # setup the VM
   config.vm.provision "shell", inline: $bootstrap
+
+	# Enable x11 forwarding
+	config.ssh.forward_agent = true
+	config.ssh.forward_x11 = true
   
 end
 
