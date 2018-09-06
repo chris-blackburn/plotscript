@@ -11,6 +11,8 @@ TEST_CASE( "Test default constructor", "[environment]" ) {
 
   REQUIRE(env.is_known(Atom("pi")));
   REQUIRE(env.is_exp(Atom("pi")));
+	REQUIRE(env.is_known(Atom("e")));
+  REQUIRE(env.is_exp(Atom("e")));
 
   REQUIRE(!env.is_known(Atom("hi")));
   REQUIRE(!env.is_exp(Atom("hi")));
@@ -19,6 +21,11 @@ TEST_CASE( "Test default constructor", "[environment]" ) {
   REQUIRE(env.is_proc(Atom("-")));
   REQUIRE(env.is_proc(Atom("*")));
   REQUIRE(env.is_proc(Atom("/")));
+	REQUIRE(env.is_proc(Atom("sqrt")));
+	REQUIRE(env.is_proc(Atom("^")));
+	REQUIRE(env.is_proc(Atom("ln")));
+	REQUIRE(env.is_proc(Atom("sin")));
+	REQUIRE(env.is_proc(Atom("cos")));
   REQUIRE(!env.is_proc(Atom("op")));
 }
 
@@ -88,8 +95,7 @@ TEST_CASE( "Test semeantic errors", "[environment]" ) {
 
   {
     Expression exp(Atom("begin"));
-    
+
     REQUIRE_THROWS_AS(exp.eval(env), SemanticError);
   }
 }
-

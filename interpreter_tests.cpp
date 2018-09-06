@@ -267,14 +267,14 @@ TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 		std::string program = "(sqrt 1)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(1.));
+		REQUIRE(result == Expression(1));
 	}
 
 	{
 		std::string program = "(sqrt 64)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(8.));
+		REQUIRE(result == Expression(8));
 	}
 
 	{
@@ -347,7 +347,7 @@ TEST_CASE( "Test procedures (pow)", "[interpreter]" ) {
 		std::string program = "(^ e 0)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(1.));
+		REQUIRE(result == Expression(1));
 	}
 
 	// Test redefinition, wrong number of arguments
@@ -378,14 +378,14 @@ TEST_CASE( "Test procedures (ln)", "[interpreter]" ) {
 		std::string program = "(ln e)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(1.));
+		REQUIRE(result == Expression(1));
 	}
 
 	{
 		std::string program = "(ln 1)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(0.));
+		REQUIRE(result == Expression(0));
 	}
 
 	{
@@ -399,7 +399,7 @@ TEST_CASE( "Test procedures (ln)", "[interpreter]" ) {
 		std::string program = "(ln (^ e 2))";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(2.));
+		REQUIRE(result == Expression(2));
 	}
 
 	// Test redefinition, wrong number of arguments, negatives, zero
@@ -431,35 +431,35 @@ TEST_CASE( "Test procedures (sin)", "[interpreter]" ) {
 		std::string program = "(sin 0)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(0.));
+		REQUIRE(result == Expression(0));
 	}
 
 	{
 		std::string program = "(sin pi)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(0.));
+		REQUIRE(result == Expression(0));
 	}
 
 	{
 		std::string program = "(sin (/ pi 2))";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(1.));
+		REQUIRE(result == Expression(1));
 	}
 
 	{
 		std::string program = "(sin (- pi))";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(0.));
+		REQUIRE(result == Expression(0));
 	}
 
 	{
 		std::string program = "(sin (/ pi -2))";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(-1.));
+		REQUIRE(result == Expression(-1));
 	}
 
 	// Test redefinition, wrong number of arguments
@@ -468,6 +468,64 @@ TEST_CASE( "Test procedures (sin)", "[interpreter]" ) {
 		std::vector<std::string> programs = {
 			"(define sin 1)",
 			"(sin 1 2)"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			Interpreter interp;
+
+			std::istringstream iss(s);
+
+			bool ok = interp.parseStream(iss);
+			REQUIRE(ok == true);
+
+			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+		}
+	}
+}
+
+TEST_CASE( "Test procedures (cos)", "[interpreter]" ) {
+	{
+		std::string program = "(cos 0)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(1));
+	}
+
+	{
+		std::string program = "(cos pi)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(-1));
+	}
+
+	{
+		std::string program = "(cos (/ pi 2))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0));
+	}
+
+	{
+		std::string program = "(cos (- pi))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(-1));
+	}
+
+	{
+		std::string program = "(cos (/ pi -2))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0));
+	}
+
+	// Test redefinition, wrong number of arguments
+	// Each should throw sematic error
+	{
+		std::vector<std::string> programs = {
+			"(define cos 1)",
+			"(cos 1 2)"
 		};
 
 		for (auto s : programs) {

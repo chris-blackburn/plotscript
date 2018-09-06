@@ -13,7 +13,7 @@ Atom::Atom(double value){
 }
 
 Atom::Atom(const Token & token): Atom(){
-  
+
   // is token a number?
   double temp;
   std::istringstream iss(token.asString());
@@ -32,7 +32,7 @@ Atom::Atom(const Token & token): Atom(){
 }
 
 Atom::Atom(const std::string & value): Atom() {
-  
+
   setSymbol(value);
 }
 
@@ -60,7 +60,7 @@ Atom & Atom::operator=(const Atom & x){
   }
   return *this;
 }
-  
+
 Atom::~Atom(){
 
   // we need to ensure the destructor of the symbol string is called
@@ -79,13 +79,19 @@ bool Atom::isNumber() const noexcept{
 
 bool Atom::isSymbol() const noexcept{
   return m_type == SymbolKind;
-}  
+}
 
 
 void Atom::setNumber(double value){
 
   m_type = NumberKind;
-  numberValue = value;
+
+	// if the value is smaller than or equal to epsilon, just make it zero
+	if (fabs(value) <= std::numeric_limits<double>::epsilon()) {
+		numberValue = 0;
+	} else {
+		numberValue = value;
+	}
 }
 
 void Atom::setSymbol(const std::string & value){
@@ -94,7 +100,7 @@ void Atom::setSymbol(const std::string & value){
   if(m_type == SymbolKind){
     stringValue.~basic_string();
   }
-    
+
   m_type = SymbolKind;
 
   // copy construct in place
@@ -102,10 +108,8 @@ void Atom::setSymbol(const std::string & value){
 }
 
 double Atom::asNumber() const noexcept{
-
-  return (m_type == NumberKind) ? numberValue : 0.0;  
+  return (m_type == NumberKind) ? numberValue : 0.0;
 }
-
 
 std::string Atom::asSymbol() const noexcept{
 
@@ -119,7 +123,7 @@ std::string Atom::asSymbol() const noexcept{
 }
 
 bool Atom::operator==(const Atom & right) const noexcept{
-  
+
   if(m_type != right.m_type) return false;
 
   switch(m_type){
@@ -132,8 +136,8 @@ bool Atom::operator==(const Atom & right) const noexcept{
       double dleft = numberValue;
       double dright = right.numberValue;
       double diff = fabs(dleft - dright);
-      if(std::isnan(diff) ||
-	 (diff > std::numeric_limits<double>::epsilon())) return false;
+      if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon()))
+				return false;
     }
     break;
   case SymbolKind:
@@ -151,7 +155,7 @@ bool Atom::operator==(const Atom & right) const noexcept{
 }
 
 bool operator!=(const Atom & left, const Atom & right) noexcept{
-  
+
   return !(left == right);
 }
 
