@@ -10,14 +10,14 @@
 #include "expression.hpp"
 
 Expression run(const std::string & program){
-  
+
   std::istringstream iss(program);
-    
+
   Interpreter interp;
-    
+
   bool ok = interp.parseStream(iss);
   if(!ok){
-    std::cerr << "Failed to parse: " << program << std::endl; 
+    std::cerr << "Failed to parse: " << program << std::endl;
   }
   REQUIRE(ok == true);
 
@@ -32,7 +32,7 @@ TEST_CASE( "Test Interpreter parser with expected input", "[interpreter]" ) {
   std::string program = "(begin (define r 10) (* pi (* r r)))";
 
   std::istringstream iss(program);
- 
+
   Interpreter interp;
 
   bool ok = interp.parseStream(iss);
@@ -43,10 +43,10 @@ TEST_CASE( "Test Interpreter parser with expected input", "[interpreter]" ) {
 TEST_CASE( "Test Interpreter parser with numerical literals", "[interpreter]" ) {
 
   std::vector<std::string> programs = {"(1)", "(+1)", "(+1e+0)", "(1e-0)"};
-  
+
   for(auto program : programs){
     std::istringstream iss(program);
- 
+
     Interpreter interp;
 
     bool ok = interp.parseStream(iss);
@@ -56,7 +56,7 @@ TEST_CASE( "Test Interpreter parser with numerical literals", "[interpreter]" ) 
 
   {
     std::istringstream iss("(define x 1abc)");
-    
+
     Interpreter interp;
 
     bool ok = interp.parseStream(iss);
@@ -70,12 +70,12 @@ TEST_CASE( "Test Interpreter parser with truncated input", "[interpreter]" ) {
   {
     std::string program = "(f";
     std::istringstream iss(program);
-  
+
     Interpreter interp;
     bool ok = interp.parseStream(iss);
     REQUIRE(ok == false);
   }
-  
+
   {
     std::string program = "(begin (define r 10) (* pi (* r r";
     std::istringstream iss(program);
@@ -102,7 +102,7 @@ TEST_CASE( "Test Interpreter parser with single non-keyword", "[interpreter]" ) 
 
   std::string program = "hello";
   std::istringstream iss(program);
-  
+
   Interpreter interp;
 
   bool ok = interp.parseStream(iss);
@@ -114,7 +114,7 @@ TEST_CASE( "Test Interpreter parser with empty input", "[interpreter]" ) {
 
   std::string program;
   std::istringstream iss(program);
-  
+
   Interpreter interp;
 
   bool ok = interp.parseStream(iss);
@@ -126,7 +126,7 @@ TEST_CASE( "Test Interpreter parser with empty expression", "[interpreter]" ) {
 
   std::string program = "( )";
   std::istringstream iss(program);
-  
+
   Interpreter interp;
 
   bool ok = interp.parseStream(iss);
@@ -138,7 +138,7 @@ TEST_CASE( "Test Interpreter parser with bad number string", "[interpreter]" ) {
 
   std::string program = "(1abc)";
   std::istringstream iss(program);
-  
+
   Interpreter interp;
 
   bool ok = interp.parseStream(iss);
@@ -150,7 +150,7 @@ TEST_CASE( "Test Interpreter parser with incorrect input. Regression Test", "[in
 
   std::string program = "(+ 1 2) (+ 3 4)";
   std::istringstream iss(program);
-  
+
   Interpreter interp;
 
   bool ok = interp.parseStream(iss);
@@ -159,7 +159,7 @@ TEST_CASE( "Test Interpreter parser with incorrect input. Regression Test", "[in
 }
 
 TEST_CASE( "Test Interpreter result with literal expressions", "[interpreter]" ) {
-  
+
   { // Number
     std::string program = "(4)";
     Expression result = run(program);
@@ -172,6 +172,11 @@ TEST_CASE( "Test Interpreter result with literal expressions", "[interpreter]" )
     REQUIRE(result == Expression(atan2(0, -1)));
   }
 
+	{ // Symbol
+		std::string program = "(e)";
+		Expression result = run(program);
+		REQUIRE(result == Expression(exp(1)));
+	}
 }
 
 TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter]" ) {
@@ -182,7 +187,7 @@ TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter
     Expression result = run(program);
     REQUIRE(result == Expression(3.));
   }
-  
+
   { // add, 3-ary case
     std::string program = "(+ 1 2 3)";
     INFO(program);
@@ -197,7 +202,7 @@ TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter
     REQUIRE(result == Expression(21.));
   }
 }
-  
+
 TEST_CASE( "Test Interpreter special forms: begin and define", "[interpreter]" ) {
 
   {
@@ -213,7 +218,7 @@ TEST_CASE( "Test Interpreter special forms: begin and define", "[interpreter]" )
     Expression result = run(program);
     REQUIRE(result == Expression(42.));
   }
-  
+
   {
     std::string program = "(begin (define answer (+ 9 11)) (answer))";
     INFO(program);
@@ -259,7 +264,7 @@ TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
 
 
 TEST_CASE( "Test some semantically invalid expresions", "[interpreter]" ) {
-  
+
   std::vector<std::string> programs = {"(@ none)", // so such procedure
 				       "(- 1 1 2)", // too many arguments
 				       "(define begin 1)", // redefine special form
@@ -268,10 +273,10 @@ TEST_CASE( "Test some semantically invalid expresions", "[interpreter]" ) {
       Interpreter interp;
 
       std::istringstream iss(s);
-      
+
       bool ok = interp.parseStream(iss);
       REQUIRE(ok == true);
-      
+
       REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
     }
 }
@@ -283,12 +288,12 @@ TEST_CASE( "Test for exceptions from semantically incorrect input", "[interprete
 )";
 
   Interpreter interp;
-  
+
   std::istringstream iss(input);
-  
+
   bool ok = interp.parseStream(iss);
   REQUIRE(ok == true);
-  
+
   REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
 }
 
@@ -299,12 +304,12 @@ TEST_CASE( "Test malformed define", "[interpreter]" ) {
 )";
 
   Interpreter interp;
-  
+
   std::istringstream iss(input);
-  
+
   bool ok = interp.parseStream(iss);
   REQUIRE(ok == true);
-  
+
   REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
 }
 
@@ -314,11 +319,11 @@ TEST_CASE( "Test using number as procedure", "[interpreter]" ) {
 )";
 
   Interpreter interp;
-  
+
   std::istringstream iss(input);
-  
+
   bool ok = interp.parseStream(iss);
   REQUIRE(ok == true);
-  
+
   REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
 }
