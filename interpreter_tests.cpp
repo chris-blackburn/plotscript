@@ -265,23 +265,26 @@ TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
 TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 	{
 		std::string program = "(sqrt 1)";
+		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(1.));
 	}
 
 	{
 		std::string program = "(sqrt 64)";
+		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(8.));
 	}
 
 	{
 		std::string program = "(sqrt 2)";
+		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(std::sqrt(2)));
 	}
 
-	// Test redefinition, negative roots, and wrong number of arguments
+	// Test redefinition, negative roots, wrong number of arguments
 	// Each should throw sematic error
 	{
 		std::vector<std::string> programs = {
@@ -291,6 +294,7 @@ TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 		};
 
 		for (auto s : programs) {
+			INFO(s);
 			Interpreter interp;
 
 			std::istringstream iss(s);
@@ -301,8 +305,65 @@ TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
 		}
 	}
+}
 
+TEST_CASE( "Test procedures (pow)", "[interpreter]" ) {
+	{
+		std::string program = "(^ 1 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(1));
+	}
 
+	{
+		std::string program = "(^ 2 1)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(2));
+	}
+
+	{
+		std::string program = "(^ 2 3)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(8));
+	}
+
+	{
+		std::string program = "(^ 2 -1)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == run("(/ 1 2)"));
+	}
+
+	{
+		std::string program = "(^ e 0)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(1));
+	}
+
+	// Test redefinition, wrong number of arguments
+	// Each should throw sematic error
+	{
+		std::vector<std::string> programs = {
+			"(define ^ 1)",
+			"(^ 1)",
+			"(^ 1 2 3)"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			Interpreter interp;
+
+			std::istringstream iss(s);
+
+			bool ok = interp.parseStream(iss);
+			REQUIRE(ok == true);
+
+			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+		}
+	}
 }
 
 TEST_CASE( "Test some semantically invalid expresions", "[interpreter]" ) {
