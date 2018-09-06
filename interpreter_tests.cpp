@@ -366,6 +366,59 @@ TEST_CASE( "Test procedures (pow)", "[interpreter]" ) {
 	}
 }
 
+TEST_CASE( "Test procedures (ln)", "[interpreter]" ) {
+	{
+		std::string program = "(ln e)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(1));
+	}
+
+	{
+		std::string program = "(ln 1)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0));
+	}
+
+	{
+		std::string program = "(ln 10)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(std::log(10)));
+	}
+
+	{
+		std::string program = "(ln (^ e 2))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(2));
+	}
+
+	// Test redefinition, wrong number of arguments, negatives, zero
+	// Each should throw sematic error
+	{
+		std::vector<std::string> programs = {
+			"(define ln 1)",
+			"(ln 1 2)",
+			"(ln -1)",
+			"(ln 0)"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			Interpreter interp;
+
+			std::istringstream iss(s);
+
+			bool ok = interp.parseStream(iss);
+			REQUIRE(ok == true);
+
+			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+		}
+	}
+}
+
 TEST_CASE( "Test some semantically invalid expresions", "[interpreter]" ) {
 
 	std::vector<std::string> programs = {"(@ none)", // so such procedure

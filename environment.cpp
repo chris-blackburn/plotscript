@@ -114,7 +114,7 @@ Expression sqrt(const std::vector<Expression> & args) {
 				result = std::sqrt(args[0].head().asNumber());
 			} else {
 				throw SemanticError("Error in call to square root: cannot take the square"
-					" root of negative.");
+					" root of a negative number.");
 			}
 		} else {
 			throw SemanticError("Error in call to square root: invalid argument.");
@@ -137,6 +137,30 @@ Expression pow(const std::vector<Expression> & args) {
 		}
 	} else {
 		throw SemanticError("Error in call to pow: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
+
+Expression log(const std::vector<Expression> & args) {
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber()) {
+			if (args[0].head().asNumber() > 0) {
+				result = std::log(args[0].head().asNumber());
+			} else if (args[0].head().asNumber() == 0) {
+				throw SemanticError("Error in call to natural log: cannot take the natural log"
+					" of zero (ln(0) == -Inf).");
+			} else{
+				throw SemanticError("Error in call to natural log: cannot take the natural log"
+					" of a negative number.");
+			}
+		} else {
+			throw SemanticError("Error in call to natural log: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to natural log: invalid number of arguments.");
 	}
 
 	return Expression(result);
@@ -243,4 +267,7 @@ void Environment::reset(){
 
 	// Procedure: pow
 	envmap.emplace("^", EnvResult(ProcedureType, pow));
+
+	// Procedure: ln
+	envmap.emplace("ln", EnvResult(ProcedureType, log));
 }
