@@ -12,7 +12,7 @@ Helper Functions
 
 // predicate, the number of args is nargs
 bool nargs_equal(const std::vector<Expression> & args, unsigned nargs){
-  return args.size() == nargs;
+	return args.size() == nargs;
 }
 
 /***********************************************************************
@@ -22,156 +22,178 @@ typedef'd Procedure function pointer.
 
 // the default procedure always returns an expresison of type None
 Expression default_proc(const std::vector<Expression> & args){
-  args.size(); // make compiler happy we used this parameter
-  return Expression();
+	args.size(); // make compiler happy we used this parameter
+	return Expression();
 };
 
 Expression add(const std::vector<Expression> & args){
 
-  // check all aruments are numbers, while adding
-  double result = 0;
-  for( auto & a :args){
-    if(a.isHeadNumber()){
-      result += a.head().asNumber();
-    }
-    else{
-      throw SemanticError("Error in call to add, argument not a number");
-    }
-  }
+	// check all aruments are numbers, while adding
+	double result = 0;
+	for( auto & a :args){
+		if(a.isHeadNumber()){
+			result += a.head().asNumber();
+		}
+		else{
+			throw SemanticError("Error in call to add, argument not a number");
+		}
+	}
 
-  return Expression(result);
+	return Expression(result);
 };
 
 Expression mul(const std::vector<Expression> & args){
 
-  // check all aruments are numbers, while multiplying
-  double result = 1;
-  for( auto & a :args){
-    if(a.isHeadNumber()){
-      result *= a.head().asNumber();
-    }
-    else{
-      throw SemanticError("Error in call to mul, argument not a number");
-    }
-  }
+	// check all aruments are numbers, while multiplying
+	double result = 1;
+	for( auto & a :args){
+		if(a.isHeadNumber()){
+			result *= a.head().asNumber();
+		}
+		else{
+			throw SemanticError("Error in call to mul, argument not a number");
+		}
+	}
 
-  return Expression(result);
+	return Expression(result);
 };
 
 Expression subneg(const std::vector<Expression> & args){
 
-  double result = 0;
+	double result = 0;
 
-  // preconditions
-  if(nargs_equal(args,1)){
-    if(args[0].isHeadNumber()){
-      result = -args[0].head().asNumber();
-    }
-    else{
-      throw SemanticError("Error in call to negate: invalid argument.");
-    }
-  }
-  else if(nargs_equal(args,2)){
-    if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
-      result = args[0].head().asNumber() - args[1].head().asNumber();
-    }
-    else{
-      throw SemanticError("Error in call to subtraction: invalid argument.");
-    }
-  }
-  else{
-    throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
-  }
+	// preconditions
+	if(nargs_equal(args,1)){
+		if(args[0].isHeadNumber()){
+			result = -args[0].head().asNumber();
+		}
+		else{
+			throw SemanticError("Error in call to negate: invalid argument.");
+		}
+	}
+	else if(nargs_equal(args,2)){
+		if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
+			result = args[0].head().asNumber() - args[1].head().asNumber();
+		}
+		else{
+			throw SemanticError("Error in call to subtraction: invalid argument.");
+		}
+	}
+	else{
+		throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
+	}
 
-  return Expression(result);
+	return Expression(result);
 };
 
 Expression div(const std::vector<Expression> & args){
 
-  double result = 0;
+	double result = 0;
 
-  if(nargs_equal(args,2)){
-    if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
-      result = args[0].head().asNumber() / args[1].head().asNumber();
-    }
-    else{
-      throw SemanticError("Error in call to division: invalid argument.");
-    }
-  }
-  else{
-    throw SemanticError("Error in call to division: invalid number of arguments.");
-  }
-  return Expression(result);
+	if(nargs_equal(args,2)){
+		if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
+			result = args[0].head().asNumber() / args[1].head().asNumber();
+		}
+		else{
+			throw SemanticError("Error in call to division: invalid argument.");
+		}
+	}
+	else{
+		throw SemanticError("Error in call to division: invalid number of arguments.");
+	}
+	return Expression(result);
 };
+
+Expression sqrt(const std::vector<Expression> & args) {
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber()) {
+			// TODO: Remove check for negative numbers once complex numbers are implemented
+			if (args[0].head().asNumber() >= 0) {
+				result = std::sqrt(args[0].head().asNumber());
+			} else {
+				throw SemanticError("Error in call to square root: cannot take the square"
+					" root of negative.");
+			}
+		} else {
+			throw SemanticError("Error in call to square root: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to square root: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 
 Environment::Environment(){
 
-  reset();
+	reset();
 }
 
 bool Environment::is_known(const Atom & sym) const{
-  if(!sym.isSymbol()) return false;
+	if(!sym.isSymbol()) return false;
 
-  return envmap.find(sym.asSymbol()) != envmap.end();
+	return envmap.find(sym.asSymbol()) != envmap.end();
 }
 
 bool Environment::is_exp(const Atom & sym) const{
-  if(!sym.isSymbol()) return false;
+	if(!sym.isSymbol()) return false;
 
-  auto result = envmap.find(sym.asSymbol());
-  return (result != envmap.end()) && (result->second.type == ExpressionType);
+	auto result = envmap.find(sym.asSymbol());
+	return (result != envmap.end()) && (result->second.type == ExpressionType);
 }
 
 Expression Environment::get_exp(const Atom & sym) const{
 
-  Expression exp;
+	Expression exp;
 
-  if(sym.isSymbol()){
-    auto result = envmap.find(sym.asSymbol());
-    if((result != envmap.end()) && (result->second.type == ExpressionType)){
-      exp = result->second.exp;
-    }
-  }
+	if(sym.isSymbol()){
+		auto result = envmap.find(sym.asSymbol());
+		if((result != envmap.end()) && (result->second.type == ExpressionType)){
+			exp = result->second.exp;
+		}
+	}
 
-  return exp;
+	return exp;
 }
 
 void Environment::add_exp(const Atom & sym, const Expression & exp){
 
-  if(!sym.isSymbol()){
-    throw SemanticError("Attempt to add non-symbol to environment");
-  }
+	if(!sym.isSymbol()){
+		throw SemanticError("Attempt to add non-symbol to environment");
+	}
 
-  // error if overwriting symbol map
-  if(envmap.find(sym.asSymbol()) != envmap.end()){
-    throw SemanticError("Attempt to overwrite symbol in environemnt");
-  }
+	// error if overwriting symbol map
+	if(envmap.find(sym.asSymbol()) != envmap.end()){
+		throw SemanticError("Attempt to overwrite symbol in environemnt");
+	}
 
-  envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
+	envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
 }
 
 bool Environment::is_proc(const Atom & sym) const{
-  if(!sym.isSymbol()) return false;
+	if(!sym.isSymbol()) return false;
 
-  auto result = envmap.find(sym.asSymbol());
-  return (result != envmap.end()) && (result->second.type == ProcedureType);
+	auto result = envmap.find(sym.asSymbol());
+	return (result != envmap.end()) && (result->second.type == ProcedureType);
 }
 
 Procedure Environment::get_proc(const Atom & sym) const{
 
-  //Procedure proc = default_proc;
+	//Procedure proc = default_proc;
 
-  if(sym.isSymbol()){
-    auto result = envmap.find(sym.asSymbol());
-    if((result != envmap.end()) && (result->second.type == ProcedureType)){
-      return result->second.proc;
-    }
-  }
+	if(sym.isSymbol()){
+		auto result = envmap.find(sym.asSymbol());
+		if((result != envmap.end()) && (result->second.type == ProcedureType)){
+			return result->second.proc;
+		}
+	}
 
-  return default_proc;
+	return default_proc;
 }
 
 /*
@@ -180,23 +202,26 @@ then re-add the default ones.
  */
 void Environment::reset(){
 
-  envmap.clear();
+	envmap.clear();
 
-  // Built-In value of pi
-  envmap.emplace("pi", EnvResult(ExpressionType, Expression(PI)));
+	// Built-In value of pi
+	envmap.emplace("pi", EnvResult(ExpressionType, Expression(PI)));
 
 	// Built_In value of euler's number
 	envmap.emplace("e", EnvResult(ExpressionType, Expression(EXP)));
 
-  // Procedure: add;
-  envmap.emplace("+", EnvResult(ProcedureType, add));
+	// Procedure: add;
+	envmap.emplace("+", EnvResult(ProcedureType, add));
 
-  // Procedure: subneg;
-  envmap.emplace("-", EnvResult(ProcedureType, subneg));
+	// Procedure: subneg;
+	envmap.emplace("-", EnvResult(ProcedureType, subneg));
 
-  // Procedure: mul;
-  envmap.emplace("*", EnvResult(ProcedureType, mul));
+	// Procedure: mul;
+	envmap.emplace("*", EnvResult(ProcedureType, mul));
 
-  // Procedure: div;
-  envmap.emplace("/", EnvResult(ProcedureType, div));
+	// Procedure: div;
+	envmap.emplace("/", EnvResult(ProcedureType, div));
+
+	// Procedure: sqrt
+	envmap.emplace("sqrt", EnvResult(ProcedureType, sqrt));
 }
