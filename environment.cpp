@@ -224,6 +224,7 @@ Expression tan(const std::vector<Expression> & args) {
 
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
+const complex I = complex(0, 1);
 
 Environment::Environment(){
 
@@ -305,6 +306,9 @@ void Environment::reset(){
 
 	// Built_In value of euler's number
 	envmap.emplace("e", EnvResult(ExpressionType, Expression(EXP)));
+
+	// Built_In value of the imaginary number
+	envmap.emplace("I", EnvResult(ExpressionType, Expression(I)));
 
 	// Procedure: add;
 	envmap.emplace("+", EnvResult(ProcedureType, add));

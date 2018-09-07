@@ -13,6 +13,8 @@ TEST_CASE( "Test default constructor", "[environment]" ) {
   REQUIRE(env.is_exp(Atom("pi")));
 	REQUIRE(env.is_known(Atom("e")));
   REQUIRE(env.is_exp(Atom("e")));
+	REQUIRE(env.is_known(Atom("I")));
+	REQUIRE(env.is_exp(Atom("I")));
 
   REQUIRE(!env.is_known(Atom("hi")));
   REQUIRE(!env.is_exp(Atom("hi")));
