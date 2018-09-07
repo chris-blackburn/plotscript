@@ -28,7 +28,9 @@ Expression default_proc(const std::vector<Expression> & args) {
 
 Expression add(const std::vector<Expression> & args) {
 
-	// check all aruments are numbers, while adding
+	// check all aruments are numbers or complex, while adding
+	// I set the result to be complex and return the real value if no complex
+	// numbers were in the expressions
 	complex result = complex(0, 0);
 	bool isComplexProcedure = false;
 
@@ -47,18 +49,21 @@ Expression add(const std::vector<Expression> & args) {
 };
 
 Expression mul(const std::vector<Expression> & args){
+	bool isComplexProcedure = false;
+	complex result = complex(1, 0);
 
-	// check all aruments are numbers, while multiplying
-	double result = 1;
 	for (auto& a : args) {
 		if (a.isHeadNumber()) {
 			result *= a.head().asNumber();
+		} else if (a.isHeadComplex()) {
+			isComplexProcedure = true;
+			result *= a.head().asComplex();
 		} else{
 			throw SemanticError("Error in call to mul, argument not a number");
 		}
 	}
 
-	return Expression(result);
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression subneg(const std::vector<Expression> & args){

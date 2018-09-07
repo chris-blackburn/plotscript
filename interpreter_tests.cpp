@@ -212,10 +212,10 @@ TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter
 
 	// complex numbers, 4-ary, one complex number
 	{
-		std::string program = "(+ I 2 3 4)";
+		std::string program = "(+ I 2 3.2 4)";
 		INFO(program);
 		Expression result = run(program);
-		REQUIRE(result == Expression(complex(9, 1)));
+		REQUIRE(result == Expression(complex(9.2, 1)));
 	}
 
 	// complex numbers, 4-ary, 3 complex number
@@ -224,6 +224,54 @@ TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(3, 3)));
+	}
+}
+
+TEST_CASE( "Test Interpreter result with simple procedures (mul)", "[interpreter]" ) {
+
+	{ // binary case
+		std::string program = "(* 1 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(2));
+	}
+
+	{ // 3-ary case
+		std::string program = "(* 1 2 3)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(6));
+	}
+
+	{ // 6-ary case
+		std::string program = "(* 1 2 3 4 5 6)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(720));
+	}
+
+	// complex numbers, 2-ary, one complex number
+	{
+		std::string program = "(* I 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, 2)));
+	}
+
+	// complex numbers, 4-ary, one complex number
+	{
+		std::string program = "(* I 2 3 4)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, 24)));
+	}
+
+	// complex numbers, 4-ary, 3 complex number
+	{
+		std::string program = "(* I I 3 I)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, -3)));
 	}
 }
 
@@ -268,7 +316,6 @@ TEST_CASE( "Test a medium-sized expression", "[interpreter]" ) {
 }
 
 TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
-
 	{
 		std::vector<std::string> programs = {"(+ 1 -2)",
 					 "(+ -3 1 1)",
@@ -283,6 +330,15 @@ TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
 			Expression result = run(s);
 			REQUIRE(result == Expression(-1.));
 		}
+	}
+}
+
+TEST_CASE( "Test arithmetic procedures with complex numbers", "[interpreter]" ) {
+	{ // Combination of addition and multiplication with complex numbers
+		std::string program = "(+ 3 (* 5 I) 7 I)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(10, 6)));
 	}
 }
 
