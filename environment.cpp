@@ -49,8 +49,11 @@ Expression add(const std::vector<Expression> & args) {
 };
 
 Expression mul(const std::vector<Expression> & args){
-	bool isComplexProcedure = false;
+
+	// The complex result needs to be initialized to (1, 0) for normal multiplication
+	// to occur. The complex number class will handle incorperating complex numbers.
 	complex result = complex(1, 0);
+	bool isComplexProcedure = false;
 
 	for (auto& a : args) {
 		if (a.isHeadNumber()) {
@@ -68,30 +71,37 @@ Expression mul(const std::vector<Expression> & args){
 
 Expression subneg(const std::vector<Expression> & args){
 
-	double result = 0;
+	complex result;
+	bool isComplexProcedure = false;
 
-	// preconditions
+	// If there is just one argument, we want to return the negative of that number
 	if(nargs_equal(args,1)){
-		if(args[0].isHeadNumber()){
+		if (args[0].isHeadNumber()) {
 			result = -args[0].head().asNumber();
-		}
-		else{
+		} else if(args[0].isHeadComplex()) {
+			isComplexProcedure = true;
+			result = -args[0].head().asComplex();
+		} else {
 			throw SemanticError("Error in call to negate: invalid argument.");
 		}
-	}
-	else if(nargs_equal(args,2)){
-		if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
+	} else if (nargs_equal(args,2)) {
+
+		// Either both are numbers, one or both are complex, or niether are numbers or complex
+		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
 			result = args[0].head().asNumber() - args[1].head().asNumber();
-		}
-		else{
+		} else if (args[0].isHeadComplex() || args[1].isHeadComplex()) {
+			isComplexProcedure = true;
+
+			// when either number is complex, we can retrieve the atom as complex
+			result = args[0].head().asComplex() - args[1].head().asComplex();
+		} else {
 			throw SemanticError("Error in call to subtraction: invalid argument.");
 		}
-	}
-	else{
+	} else {
 		throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
 	}
 
-	return Expression(result);
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression div(const std::vector<Expression> & args){

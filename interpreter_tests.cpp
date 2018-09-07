@@ -340,6 +340,41 @@ TEST_CASE( "Test arithmetic procedures with complex numbers", "[interpreter]" ) 
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(10, 6)));
 	}
+
+	{ // Combination of addition and multiplication with complex numbers
+		std::string program = "(+ (* 3 I) (* 7 I) 1)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(1, 10)));
+	}
+
+	{ // negative I
+		std::string program = "(- I)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, -1)));
+	}
+
+	{ // negate addition with I
+		std::string program = "(- (+ 7 I))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(-7, -1)));
+	}
+
+	{ // subtratcion with multiples of I and real numbers
+		std::string program = "(- (- (* 3 I) (* 7 I)) (- 1 (- 17)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(-18, -4)));
+	}
+
+	{ // negation of I * I
+		std::string program = "(- (* I I))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(1, 0)));
+	}
 }
 
 TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {

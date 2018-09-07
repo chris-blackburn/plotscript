@@ -356,3 +356,14 @@ TEST_CASE( "test comparison", "[atom]" ) {
 		REQUIRE(a != c);
 	}
 }
+
+TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
+	// TODO: Write more tests here to cover all cases of retrieval
+
+	{
+		INFO("Retrieve a number as complex")
+		Atom a(1.7);
+		REQUIRE(a.asNumber() == 1.7);
+		REQUIRE(a.asComplex() == complex(1.7, 0));
+	}
+}

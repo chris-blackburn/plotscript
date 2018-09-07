@@ -132,7 +132,14 @@ double Atom::asNumber() const noexcept{
 }
 
 complex Atom::asComplex() const noexcept {
-	return (m_type == ComplexKind) ? complexValue : complex(0, 0);
+	switch(m_type) {
+	case(ComplexKind):
+		return complexValue;
+	case(NumberKind):
+		return complex(numberValue, 0);
+	default:
+		return complex(0, 0);
+	}
 }
 
 std::string Atom::asSymbol() const noexcept{

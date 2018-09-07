@@ -58,6 +58,7 @@ public:
 	double asNumber() const noexcept;
 
 	/// value of Atom as a complex, return (0, 0) if not a Complex Number
+	/// If the Atom is a number, then it returns the complex verson of that number (n, 0)
 	complex asComplex() const noexcept;
 
 	/// value of Atom as a string, returns empty-string if not a Symbol
