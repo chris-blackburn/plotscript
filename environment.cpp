@@ -75,7 +75,7 @@ Expression subneg(const std::vector<Expression> & args){
 	bool isComplexProcedure = false;
 
 	// If there is just one argument, we want to return the negative of that number
-	if(nargs_equal(args,1)){
+	if(nargs_equal(args, 1)){
 		if (args[0].isHeadNumber()) {
 			result = -args[0].head().asNumber();
 		} else if(args[0].isHeadComplex()) {
@@ -84,7 +84,7 @@ Expression subneg(const std::vector<Expression> & args){
 		} else {
 			throw SemanticError("Error in call to negate: invalid argument.");
 		}
-	} else if (nargs_equal(args,2)) {
+	} else if (nargs_equal(args, 2)) {
 
 		// Either both are numbers, one or both are complex, or niether are numbers or complex
 		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
@@ -106,20 +106,25 @@ Expression subneg(const std::vector<Expression> & args){
 
 Expression div(const std::vector<Expression> & args){
 
-	double result = 0;
+	complex result = complex(0, 0);
+	bool isComplexProcedure = false;
 
-	if(nargs_equal(args,2)){
-		if( (args[0].isHeadNumber()) && (args[1].isHeadNumber()) ){
+	if (nargs_equal(args, 2)) {
+		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
 			result = args[0].head().asNumber() / args[1].head().asNumber();
-		}
-		else{
+		} else if (args[0].isHeadComplex() || args[1].isHeadComplex()) {
+			isComplexProcedure = true;
+
+			// When either argument is complex, this becomes a complex operation
+			result = args[0].head().asComplex() / args[1].head().asComplex();
+		} else {
 			throw SemanticError("Error in call to division: invalid argument.");
 		}
-	}
-	else{
+	} else {
 		throw SemanticError("Error in call to division: invalid number of arguments.");
 	}
-	return Expression(result);
+
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression sqrt(const std::vector<Expression> & args) {

@@ -333,7 +333,7 @@ TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test arithmetic procedures with complex numbers", "[interpreter]" ) {
+TEST_CASE( "Test non-trivial arithmetic procedures with complex numbers", "[interpreter]" ) {
 	{ // Combination of addition and multiplication with complex numbers
 		std::string program = "(+ 3 (* 5 I) 7 I)";
 		INFO(program);
@@ -374,6 +374,20 @@ TEST_CASE( "Test arithmetic procedures with complex numbers", "[interpreter]" ) 
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(1, 0)));
+	}
+
+	{ // Divide I by itself
+		std::string program = "(/ I I)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(1, 0)));
+	}
+
+	{ // Combination of addition, negation, division and multiplication
+		std::string program = "(+ (/ I 20) (* I 3) (- 7) (- I))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(-7, 2.05)));
 	}
 }
 
