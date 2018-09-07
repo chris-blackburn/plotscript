@@ -9,16 +9,16 @@
 #include "interpreter.hpp"
 #include "expression.hpp"
 
-Expression run(const std::string & program){
-
+Expression run(const std::string& program) {
 	std::istringstream iss(program);
 
 	Interpreter interp;
 
 	bool ok = interp.parseStream(iss);
-	if(!ok){
+	if (!ok) {
 		std::cerr << "Failed to parse: " << program << std::endl;
 	}
+
 	REQUIRE(ok == true);
 
 	Expression result;
@@ -27,8 +27,7 @@ Expression run(const std::string & program){
 	return result;
 }
 
-TEST_CASE( "Test Interpreter parser with expected input", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with expected input", "[interpreter]") {
 	std::string program = "(begin (define r 10) (* pi (* r r)))";
 
 	std::istringstream iss(program);
@@ -40,11 +39,10 @@ TEST_CASE( "Test Interpreter parser with expected input", "[interpreter]" ) {
 	REQUIRE(ok == true);
 }
 
-TEST_CASE( "Test Interpreter parser with numerical literals", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with numerical literals", "[interpreter]") {
 	std::vector<std::string> programs = {"(1)", "(+1)", "(+1e+0)", "(1e-0)"};
 
-	for(auto program : programs){
+	for (auto program : programs) {
 		std::istringstream iss(program);
 
 		Interpreter interp;
@@ -65,7 +63,7 @@ TEST_CASE( "Test Interpreter parser with numerical literals", "[interpreter]" ) 
 	}
 }
 
-TEST_CASE( "Test Interpreter parser with truncated input", "[interpreter]" ) {
+TEST_CASE("Test Interpreter parser with truncated input", "[interpreter]") {
 
 	{
 		std::string program = "(f";
@@ -86,8 +84,7 @@ TEST_CASE( "Test Interpreter parser with truncated input", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test Interpreter parser with extra input", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with extra input", "[interpreter]") {
 	std::string program = "(begin (define r 10) (* pi (* r r))) )";
 	std::istringstream iss(program);
 
@@ -98,8 +95,7 @@ TEST_CASE( "Test Interpreter parser with extra input", "[interpreter]" ) {
 	REQUIRE(ok == false);
 }
 
-TEST_CASE( "Test Interpreter parser with single non-keyword", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with single non-keyword", "[interpreter]") {
 	std::string program = "hello";
 	std::istringstream iss(program);
 
@@ -110,8 +106,7 @@ TEST_CASE( "Test Interpreter parser with single non-keyword", "[interpreter]" ) 
 	REQUIRE(ok == false);
 }
 
-TEST_CASE( "Test Interpreter parser with empty input", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with empty input", "[interpreter]") {
 	std::string program;
 	std::istringstream iss(program);
 
@@ -122,8 +117,7 @@ TEST_CASE( "Test Interpreter parser with empty input", "[interpreter]" ) {
 	REQUIRE(ok == false);
 }
 
-TEST_CASE( "Test Interpreter parser with empty expression", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with empty expression", "[interpreter]") {
 	std::string program = "( )";
 	std::istringstream iss(program);
 
@@ -134,8 +128,7 @@ TEST_CASE( "Test Interpreter parser with empty expression", "[interpreter]" ) {
 	REQUIRE(ok == false);
 }
 
-TEST_CASE( "Test Interpreter parser with bad number string", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with bad number string", "[interpreter]") {
 	std::string program = "(1abc)";
 	std::istringstream iss(program);
 
@@ -146,8 +139,7 @@ TEST_CASE( "Test Interpreter parser with bad number string", "[interpreter]" ) {
 	REQUIRE(ok == false);
 }
 
-TEST_CASE( "Test Interpreter parser with incorrect input. Regression Test", "[interpreter]" ) {
-
+TEST_CASE("Test Interpreter parser with incorrect input. Regression Test", "[interpreter]") {
 	std::string program = "(+ 1 2) (+ 3 4)";
 	std::istringstream iss(program);
 
@@ -158,7 +150,7 @@ TEST_CASE( "Test Interpreter parser with incorrect input. Regression Test", "[in
 	REQUIRE(ok == false);
 }
 
-TEST_CASE( "Test Interpreter result with literal expressions", "[interpreter]" ) {
+TEST_CASE("Test Interpreter result with literal expressions", "[interpreter]") {
 
 	{ // Number
 		std::string program = "(4)";
@@ -179,7 +171,7 @@ TEST_CASE( "Test Interpreter result with literal expressions", "[interpreter]" )
 	}
 }
 
-TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter]" ) {
+TEST_CASE("Test Interpreter result with simple procedures (add)", "[interpreter]") {
 
 	{ // add, binary case
 		std::string program = "(+ 1 2)";
@@ -202,24 +194,21 @@ TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter
 		REQUIRE(result == Expression(21.));
 	}
 
-	// complex numbers, 2-ary, one complex number
-	{
+	{ // complex numbers, 2-ary, one complex number
 		std::string program = "(+ I 2)";
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(2, 1)));
 	}
 
-	// complex numbers, 4-ary, one complex number
-	{
+	{ // complex numbers, 4-ary, one complex number
 		std::string program = "(+ I 2 3.2 4)";
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(9.2, 1)));
 	}
 
-	// complex numbers, 4-ary, 3 complex number
-	{
+	{ // complex numbers, 4-ary, 3 complex number
 		std::string program = "(+ I I 3 I)";
 		INFO(program);
 		Expression result = run(program);
@@ -227,7 +216,7 @@ TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter
 	}
 }
 
-TEST_CASE( "Test Interpreter result with simple procedures (mul)", "[interpreter]" ) {
+TEST_CASE("Test Interpreter result with simple procedures (mul)", "[interpreter]") {
 
 	{ // binary case
 		std::string program = "(* 1 2)";
@@ -250,24 +239,21 @@ TEST_CASE( "Test Interpreter result with simple procedures (mul)", "[interpreter
 		REQUIRE(result == Expression(720));
 	}
 
-	// complex numbers, 2-ary, one complex number
-	{
+	{ // complex numbers, 2-ary, one complex number
 		std::string program = "(* I 2)";
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(0, 2)));
 	}
 
-	// complex numbers, 4-ary, one complex number
-	{
+	{ // complex numbers, 4-ary, one complex number
 		std::string program = "(* I 2 3 4)";
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(0, 24)));
 	}
 
-	// complex numbers, 4-ary, 3 complex number
-	{
+	{ // complex numbers, 4-ary, 3 complex number
 		std::string program = "(* I I 3 I)";
 		INFO(program);
 		Expression result = run(program);
@@ -275,7 +261,7 @@ TEST_CASE( "Test Interpreter result with simple procedures (mul)", "[interpreter
 	}
 }
 
-TEST_CASE( "Test Interpreter special forms: begin and define", "[interpreter]" ) {
+TEST_CASE("Test Interpreter special forms: begin and define", "[interpreter]") {
 
 	{
 		std::string program = "(define answer 42)";
@@ -306,7 +292,7 @@ TEST_CASE( "Test Interpreter special forms: begin and define", "[interpreter]" )
 	}
 }
 
-TEST_CASE( "Test a medium-sized expression", "[interpreter]" ) {
+TEST_CASE("Test a medium-sized expression", "[interpreter]") {
 
 	{
 		std::string program = "(+ (+ 10 1) (+ 30 (+ 1 1)))";
@@ -315,7 +301,8 @@ TEST_CASE( "Test a medium-sized expression", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
+TEST_CASE("Test arithmetic procedures", "[interpreter]") {
+
 	{
 		std::vector<std::string> programs = {"(+ 1 -2)",
 					 "(+ -3 1 1)",
@@ -326,14 +313,15 @@ TEST_CASE( "Test arithmetic procedures", "[interpreter]" ) {
 					 "(/ -1 1)",
 					 "(/ 1 -1)"};
 
-		for(auto s : programs){
+		for (auto s : programs) {
 			Expression result = run(s);
 			REQUIRE(result == Expression(-1.));
 		}
 	}
 }
 
-TEST_CASE( "Test non-trivial arithmetic procedures with complex numbers", "[interpreter]" ) {
+TEST_CASE("Test non-trivial arithmetic procedures with complex numbers", "[interpreter]") {
+
 	{ // Combination of addition and multiplication with complex numbers
 		std::string program = "(+ 3 (* 5 I) 7 I)";
 		INFO(program);
@@ -391,7 +379,8 @@ TEST_CASE( "Test non-trivial arithmetic procedures with complex numbers", "[inte
 	}
 }
 
-TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
+TEST_CASE("Test procedures (square root)", "[interpreter]") {
+
 	{
 		std::string program = "(sqrt 0)";
 		INFO(program);
@@ -472,7 +461,8 @@ TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test procedures (pow)", "[interpreter]" ) {
+TEST_CASE("Test procedures (pow)", "[interpreter]") {
+
 	{
 		std::string program = "(^ 1 2)";
 		INFO(program);
@@ -560,7 +550,8 @@ TEST_CASE( "Test procedures (pow)", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test procedures (ln)", "[interpreter]" ) {
+TEST_CASE("Test procedures (ln)", "[interpreter]") {
+
 	{
 		std::string program = "(ln e)";
 		INFO(program);
@@ -613,7 +604,8 @@ TEST_CASE( "Test procedures (ln)", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test procedures (sin)", "[interpreter]" ) {
+TEST_CASE("Test procedures (sin)", "[interpreter]") {
+
 	{
 		std::string program = "(sin 0)";
 		INFO(program);
@@ -672,7 +664,8 @@ TEST_CASE( "Test procedures (sin)", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test procedures (cos)", "[interpreter]" ) {
+TEST_CASE("Test procedures (cos)", "[interpreter]") {
+
 	{
 		std::string program = "(cos 0)";
 		INFO(program);
@@ -731,7 +724,8 @@ TEST_CASE( "Test procedures (cos)", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test procedures (tan)", "[interpreter]" ) {
+TEST_CASE("Test procedures (tan)", "[interpreter]") {
+
 	{
 		std::string program = "(tan 0)";
 		INFO(program);
@@ -769,7 +763,8 @@ TEST_CASE( "Test procedures (tan)", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test complex-unique procedures", "[interpreter]" ) {
+TEST_CASE("Test complex-unique procedures", "[interpreter]") {
+
 	{
 		std::string program = "(real (+ 7 (* 3 I)))";
 		INFO(program);
@@ -836,13 +831,15 @@ TEST_CASE( "Test complex-unique procedures", "[interpreter]" ) {
 	}
 }
 
-TEST_CASE( "Test some semantically invalid expresions", "[interpreter]" ) {
+TEST_CASE("Test some semantically invalid expresions", "[interpreter]") {
+	std::vector<std::string> programs = {
+		"(@ none)", // so such procedure
+		"(- 1 1 2)", // too many arguments
+		"(define begin 1)", // redefine special form
+		"(define pi 3.14)" // redefine builtin symbol
+	};
 
-	std::vector<std::string> programs = {"(@ none)", // so such procedure
-							 "(- 1 1 2)", // too many arguments
-							 "(define begin 1)", // redefine special form
-							 "(define pi 3.14)"}; // redefine builtin symbol
-		for(auto s : programs){
+		for (auto s : programs) {
 			Interpreter interp;
 
 			std::istringstream iss(s);
@@ -854,8 +851,7 @@ TEST_CASE( "Test some semantically invalid expresions", "[interpreter]" ) {
 		}
 }
 
-TEST_CASE( "Test for exceptions from semantically incorrect input", "[interpreter]" ) {
-
+TEST_CASE("Test for exceptions from semantically incorrect input", "[interpreter]") {
 	std::string input = R"(
 (+ 1 a)
 )";
@@ -871,8 +867,7 @@ TEST_CASE( "Test for exceptions from semantically incorrect input", "[interprete
 }
 
 TEST_CASE( "Test malformed define", "[interpreter]" ) {
-
-		std::string input = R"(
+	std::string input = R"(
 (define a 1 2)
 )";
 
@@ -886,8 +881,8 @@ TEST_CASE( "Test malformed define", "[interpreter]" ) {
 	REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
 }
 
-TEST_CASE( "Test using number as procedure", "[interpreter]" ) {
-		std::string input = R"(
+TEST_CASE("Test using number as procedure", "[interpreter]") {
+	std::string input = R"(
 (1 2 3)
 )";
 

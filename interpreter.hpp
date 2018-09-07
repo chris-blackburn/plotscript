@@ -25,25 +25,25 @@ The eval method updates Environment and returns last result.
 class Interpreter {
 public:
 
-  /*! Parse into an internal Expression from a stream
-    \param expression the raw text stream repreenting the candidate expression
-    \return true on successful parsing 
-   */
-  bool parseStream(std::istream &expression) noexcept;
+	/*! Parse into an internal Expression from a stream
+		\param expression the raw text stream repreenting the candidate expression
+		\return true on successful parsing
+	 */
+	bool parseStream(std::istream& expression) noexcept;
 
-  /*! Evaluate the Expression by walking the tree, returning the result.
-    \return the Expression resulting from the evaluation in the current environment
-    \throws SemanticError when a semantic error is encountered
-   */
-  Expression evaluate();
+	/*! Evaluate the Expression by walking the tree, returning the result.
+		\return the Expression resulting from the evaluation in the current environment
+		\throws SemanticError when a semantic error is encountered
+	 */
+	Expression evaluate();
 
 private:
 
-  // the environment
-  Environment env;
+	// the environment
+	Environment env;
 
-  // the AST
-  Expression ast;
+	// the AST
+	Expression ast;
 };
 
 #endif

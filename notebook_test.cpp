@@ -1,21 +1,15 @@
 #include <QTest>
 
 class NotebookTest : public QObject {
-  Q_OBJECT
+	Q_OBJECT
 
 private slots:
+	void initTestCase();
 
-  void initTestCase();
-
-  // TODO: implement additional tests here
-  
-
+	// TODO: implement additional tests here
 };
 
-void NotebookTest::initTestCase(){
-
-}
-
+void NotebookTest::initTestCase() {}
 
 QTEST_MAIN(NotebookTest)
 #include "notebook_test.moc"

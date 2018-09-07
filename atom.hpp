@@ -28,16 +28,16 @@ public:
 	Atom(complex value);
 
 	/// Construct an Atom of type Symbol named value
-	Atom(const std::string & value);
+	Atom(const std::string& value);
 
 	/// Construct an Atom directly from a Token
-	Atom(const Token & token);
+	Atom(const Token& token);
 
 	/// Copy-construct an Atom
-	Atom(const Atom & x);
+	Atom(const Atom& x);
 
 	/// Assign an Atom
-	Atom & operator=(const Atom & x);
+	Atom & operator=(const Atom& x);
 
 	/// Atom destructor
 	~Atom();
@@ -65,7 +65,7 @@ public:
 	std::string asSymbol() const noexcept;
 
 	/// equality comparison based on type and value
-	bool operator==(const Atom & right) const noexcept;
+	bool operator==(const Atom& right) const noexcept;
 
 private:
 
@@ -93,13 +93,13 @@ private:
 	void setComplex(complex value);
 
 	// helper to set type and value of Symbol
-	void setSymbol(const std::string & value);
+	void setSymbol(const std::string& value);
 };
 
 /// inequality comparison for Atom
-bool operator!=(const Atom &left, const Atom & right) noexcept;
+bool operator!=(const Atom& left, const Atom& right) noexcept;
 
 /// output stream rendering
-std::ostream & operator<<(std::ostream & out, const Atom & a);
+std::ostream & operator<<(std::ostream& out, const Atom& a);
 
 #endif

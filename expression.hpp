@@ -21,7 +21,6 @@ list of expressions called the tail.
  */
 class Expression {
 public:
-
 	typedef std::vector<Expression>::const_iterator ConstIteratorType;
 
 	/// Default construct and Expression, whose type in NoneType
@@ -30,25 +29,25 @@ public:
 	/*! Construct an Expression with given Atom as head an empty tail
 		\param atom the atom to make the head
 	*/
-	Expression(const Atom & a);
+	Expression(const Atom& a);
 
 	/// deep-copy construct an expression (recursive)
-	Expression(const Expression & a);
+	Expression(const Expression& a);
 
 	/// deep-copy assign an expression	(recursive)
-	Expression & operator=(const Expression & a);
+	Expression& operator=(const Expression& a);
 
 	/// return a reference to the head Atom
-	Atom & head();
+	Atom& head();
 
 	/// return a const-reference to the head Atom
-	const Atom & head() const;
+	const Atom& head() const;
 
 	/// append Atom to tail of the expression
-	void append(const Atom & a);
+	void append(const Atom& a);
 
 	/// return a pointer to the last expression in the tail, or nullptr
-	Expression * tail();
+	Expression* tail();
 
 	/// return a const-iterator to the beginning of tail
 	ConstIteratorType tailConstBegin() const noexcept;
@@ -66,10 +65,10 @@ public:
 	bool isHeadSymbol() const noexcept;
 
 	/// Evaluate expression using a post-order traversal (recursive)
-	Expression eval(Environment & env);
+	Expression eval(Environment& env);
 
 	/// equality comparison for two expressions (recursive)
-	bool operator==(const Expression & exp) const noexcept;
+	bool operator==(const Expression& exp) const noexcept;
 
 private:
 
@@ -84,15 +83,15 @@ private:
 	typedef std::vector<Expression>::iterator IteratorType;
 
 	// internal helper methods
-	Expression handle_lookup(const Atom & head, const Environment & env);
-	Expression handle_define(Environment & env);
-	Expression handle_begin(Environment & env);
+	Expression handle_lookup(const Atom& head, const Environment& env);
+	Expression handle_define(Environment& env);
+	Expression handle_begin(Environment& env);
 };
 
 /// Render expression to output stream
-std::ostream & operator<<(std::ostream & out, const Expression & exp);
+std::ostream & operator<<(std::ostream& out, const Expression& exp);
 
 /// inequality comparison for two expressions (recursive)
-bool operator!=(const Expression & left, const Expression & right) noexcept;
+bool operator!=(const Expression& left, const Expression& right) noexcept;
 
 #endif

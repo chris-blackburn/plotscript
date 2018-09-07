@@ -11,7 +11,7 @@ Helper Functions
 **********************************************************************/
 
 // predicate, the number of args is nargs
-bool nargs_equal(const std::vector<Expression> & args, unsigned nargs) {
+bool nargs_equal(const std::vector<Expression>& args, unsigned nargs) {
 	return args.size() == nargs;
 }
 
@@ -21,12 +21,14 @@ typedef'd Procedure function pointer.
 **********************************************************************/
 
 // the default procedure always returns an expresison of type None
-Expression default_proc(const std::vector<Expression> & args) {
-	args.size(); // make compiler happy we used this parameter
+Expression default_proc(const std::vector<Expression>& args) {
+
+	// make compiler happy we used this parameter
+	args.size();
 	return Expression();
 };
 
-Expression add(const std::vector<Expression> & args) {
+Expression add(const std::vector<Expression>& args) {
 
 	// check all aruments are numbers or complex, while adding
 	// I set the result to be complex and return the real value if no complex
@@ -45,10 +47,10 @@ Expression add(const std::vector<Expression> & args) {
 		}
 	}
 
-	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
+	return (isComplexProcedure) ? Expression(result): Expression(result.real());
 };
 
-Expression mul(const std::vector<Expression> & args){
+Expression mul(const std::vector<Expression>& args) {
 
 	// The complex result needs to be initialized to (1, 0) for normal multiplication
 	// to occur. The complex number class will handle incorperating complex numbers.
@@ -66,16 +68,15 @@ Expression mul(const std::vector<Expression> & args){
 		}
 	}
 
-	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
+	return (isComplexProcedure) ? Expression(result): Expression(result.real());
 };
 
-Expression subneg(const std::vector<Expression> & args){
-
+Expression subneg(const std::vector<Expression>& args) {
 	complex result;
 	bool isComplexProcedure = false;
 
 	// If there is just one argument, we want to return the negative of that number
-	if(nargs_equal(args, 1)){
+	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
 			result = -args[0].head().asNumber();
 		} else if(args[0].isHeadComplex()) {
@@ -101,11 +102,10 @@ Expression subneg(const std::vector<Expression> & args){
 		throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
 	}
 
-	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
+	return (isComplexProcedure) ? Expression(result): Expression(result.real());
 };
 
-Expression div(const std::vector<Expression> & args){
-
+Expression div(const std::vector<Expression>& args) {
 	complex result;
 	bool isComplexProcedure = false;
 
@@ -124,10 +124,10 @@ Expression div(const std::vector<Expression> & args){
 		throw SemanticError("Error in call to division: invalid number of arguments.");
 	}
 
-	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
+	return (isComplexProcedure) ? Expression(result): Expression(result.real());
 };
 
-Expression sqrt(const std::vector<Expression> & args) {
+Expression sqrt(const std::vector<Expression>& args) {
 	complex result;
 	bool isComplexProcedure = false;
 
@@ -152,7 +152,7 @@ Expression sqrt(const std::vector<Expression> & args) {
 	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 }
 
-Expression pow(const std::vector<Expression> & args) {
+Expression pow(const std::vector<Expression>& args) {
 	complex result;
 	bool isComplexProcedure = false;
 
@@ -174,7 +174,7 @@ Expression pow(const std::vector<Expression> & args) {
 	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 }
 
-Expression ln(const std::vector<Expression> & args) {
+Expression ln(const std::vector<Expression>& args) {
 	double result = 0;
 
 	// ln takes one argument
@@ -200,7 +200,7 @@ Expression ln(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression sin(const std::vector<Expression> & args) {
+Expression sin(const std::vector<Expression>& args) {
 	double result = 0;
 
 	// sin takes one argument
@@ -217,7 +217,7 @@ Expression sin(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression cos(const std::vector<Expression> & args) {
+Expression cos(const std::vector<Expression>& args) {
 	double result = 0;
 
 	// cos takes one argument
@@ -234,7 +234,7 @@ Expression cos(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression tan(const std::vector<Expression> & args) {
+Expression tan(const std::vector<Expression>& args) {
 	double result = 0;
 
 	// tan takes one argument
@@ -251,7 +251,7 @@ Expression tan(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression real(const std::vector<Expression> & args) {
+Expression real(const std::vector<Expression>& args) {
 	double result = 0;
 
 	if (nargs_equal(args, 1)) {
@@ -267,7 +267,7 @@ Expression real(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression imag(const std::vector<Expression> & args) {
+Expression imag(const std::vector<Expression>& args) {
 	double result = 0;
 
 	if (nargs_equal(args, 1)) {
@@ -283,7 +283,7 @@ Expression imag(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression mag(const std::vector<Expression> & args) {
+Expression mag(const std::vector<Expression>& args) {
 	double result = 0;
 
 	if (nargs_equal(args, 1)) {
@@ -299,7 +299,7 @@ Expression mag(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression arg(const std::vector<Expression> & args) {
+Expression arg(const std::vector<Expression>& args) {
 	double result = 0;
 
 	if (nargs_equal(args, 1)) {
@@ -315,7 +315,7 @@ Expression arg(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression conj(const std::vector<Expression> & args) {
+Expression conj(const std::vector<Expression>& args) {
 	complex result = 0;
 
 	if (nargs_equal(args, 1)) {
@@ -335,31 +335,33 @@ const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const complex I = complex(0, 1);
 
-Environment::Environment(){
-
+Environment::Environment() {
 	reset();
 }
 
-bool Environment::is_known(const Atom & sym) const{
-	if(!sym.isSymbol()) return false;
+bool Environment::is_known(const Atom& sym) const {
+	if (!sym.isSymbol()) {
+		return false;
+	}
 
 	return envmap.find(sym.asSymbol()) != envmap.end();
 }
 
-bool Environment::is_exp(const Atom & sym) const{
-	if(!sym.isSymbol()) return false;
+bool Environment::is_exp(const Atom& sym) const {
+	if(!sym.isSymbol()) {
+		return false;
+	}
 
 	auto result = envmap.find(sym.asSymbol());
 	return (result != envmap.end()) && (result->second.type == ExpressionType);
 }
 
-Expression Environment::get_exp(const Atom & sym) const{
-
+Expression Environment::get_exp(const Atom& sym) const {
 	Expression exp;
 
-	if(sym.isSymbol()){
+	if (sym.isSymbol()) {
 		auto result = envmap.find(sym.asSymbol());
-		if((result != envmap.end()) && (result->second.type == ExpressionType)){
+		if (result != envmap.end() && result->second.type == ExpressionType) {
 			exp = result->second.exp;
 		}
 	}
@@ -367,34 +369,35 @@ Expression Environment::get_exp(const Atom & sym) const{
 	return exp;
 }
 
-void Environment::add_exp(const Atom & sym, const Expression & exp){
-
-	if(!sym.isSymbol()){
+void Environment::add_exp(const Atom& sym, const Expression& exp) {
+	if (!sym.isSymbol()) {
 		throw SemanticError("Attempt to add non-symbol to environment");
 	}
 
 	// error if overwriting symbol map
-	if(envmap.find(sym.asSymbol()) != envmap.end()){
+	if (envmap.find(sym.asSymbol()) != envmap.end()) {
 		throw SemanticError("Attempt to overwrite symbol in environemnt");
 	}
 
 	envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
 }
 
-bool Environment::is_proc(const Atom & sym) const{
-	if(!sym.isSymbol()) return false;
+bool Environment::is_proc(const Atom& sym) const {
+	if (!sym.isSymbol()) {
+		return false;
+	}
 
 	auto result = envmap.find(sym.asSymbol());
 	return (result != envmap.end()) && (result->second.type == ProcedureType);
 }
 
-Procedure Environment::get_proc(const Atom & sym) const{
+Procedure Environment::get_proc(const Atom& sym) const {
 
 	//Procedure proc = default_proc;
 
-	if(sym.isSymbol()){
+	if (sym.isSymbol()) {
 		auto result = envmap.find(sym.asSymbol());
-		if((result != envmap.end()) && (result->second.type == ProcedureType)){
+		if (result != envmap.end() && result->second.type == ProcedureType) {
 			return result->second.proc;
 		}
 	}
@@ -406,8 +409,7 @@ Procedure Environment::get_proc(const Atom & sym) const{
 Reset the environment to the default state. First remove all entries and
 then re-add the default ones.
  */
-void Environment::reset(){
-
+void Environment::reset() {
 	envmap.clear();
 
 	// Built-In value of pi

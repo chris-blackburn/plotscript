@@ -2,7 +2,7 @@
 
 #include "atom.hpp"
 
-TEST_CASE( "Test constructors", "[atom]" ) {
+TEST_CASE("Test constructors", "[atom]") {
 
 	{
 		INFO("Default Constructor");
@@ -81,7 +81,7 @@ TEST_CASE( "Test constructors", "[atom]" ) {
 	}
 }
 
-TEST_CASE( "Test assignment", "[atom]" ) {
+TEST_CASE("Test assignment", "[atom]") {
 
 	{
 		INFO("default to default");
@@ -236,7 +236,7 @@ TEST_CASE( "Test assignment", "[atom]" ) {
 	}
 }
 
-TEST_CASE( "test comparison", "[atom]" ) {
+TEST_CASE("test comparison", "[atom]") {
 
 	{
 		INFO("compare default to default");
@@ -358,6 +358,7 @@ TEST_CASE( "test comparison", "[atom]" ) {
 }
 
 TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
+
 	// TODO: Write more tests here to cover all cases of retrieval
 
 	{

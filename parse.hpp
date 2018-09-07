@@ -13,6 +13,6 @@ Defines the parse function.
 \param tokens, the input token sequence
 \returns the expression resulting from parsing or the None Expression on failure
  */
-Expression parse(const TokenSequenceType & tokens) noexcept;
+Expression parse(const TokenSequenceType& tokens) noexcept;
 
 #endif
