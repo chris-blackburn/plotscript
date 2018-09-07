@@ -201,6 +201,30 @@ TEST_CASE( "Test Interpreter result with simple procedures (add)", "[interpreter
 		Expression result = run(program);
 		REQUIRE(result == Expression(21.));
 	}
+
+	// complex numbers, 2-ary, one complex number
+	{
+		std::string program = "(+ I 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(2, 1)));
+	}
+
+	// complex numbers, 4-ary, one complex number
+	{
+		std::string program = "(+ I 2 3 4)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(9, 1)));
+	}
+
+	// complex numbers, 4-ary, 3 complex number
+	{
+		std::string program = "(+ I I 3 I)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(3, 3)));
+	}
 }
 
 TEST_CASE( "Test Interpreter special forms: begin and define", "[interpreter]" ) {

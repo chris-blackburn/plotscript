@@ -11,7 +11,7 @@ Helper Functions
 **********************************************************************/
 
 // predicate, the number of args is nargs
-bool nargs_equal(const std::vector<Expression> & args, unsigned nargs){
+bool nargs_equal(const std::vector<Expression> & args, unsigned nargs) {
 	return args.size() == nargs;
 }
 
@@ -21,36 +21,39 @@ typedef'd Procedure function pointer.
 **********************************************************************/
 
 // the default procedure always returns an expresison of type None
-Expression default_proc(const std::vector<Expression> & args){
+Expression default_proc(const std::vector<Expression> & args) {
 	args.size(); // make compiler happy we used this parameter
 	return Expression();
 };
 
-Expression add(const std::vector<Expression> & args){
+Expression add(const std::vector<Expression> & args) {
 
 	// check all aruments are numbers, while adding
-	double result = 0;
-	for( auto & a :args){
-		if(a.isHeadNumber()){
+	complex result = complex(0, 0);
+	bool isComplexProcedure = false;
+
+	for (auto& a : args) {
+		if (a.isHeadNumber()) {
 			result += a.head().asNumber();
-		}
-		else{
-			throw SemanticError("Error in call to add, argument not a number");
+		} else if (a.isHeadComplex()) {
+			isComplexProcedure = true;
+			result += a.head().asComplex();
+		} else {
+			throw SemanticError("Error in call to add, argument not a (complex) number");
 		}
 	}
 
-	return Expression(result);
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression mul(const std::vector<Expression> & args){
 
 	// check all aruments are numbers, while multiplying
 	double result = 1;
-	for( auto & a :args){
-		if(a.isHeadNumber()){
+	for (auto& a : args) {
+		if (a.isHeadNumber()) {
 			result *= a.head().asNumber();
-		}
-		else{
+		} else{
 			throw SemanticError("Error in call to mul, argument not a number");
 		}
 	}
