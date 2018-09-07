@@ -107,8 +107,10 @@ Expression div(const std::vector<Expression> & args){
 Expression sqrt(const std::vector<Expression> & args) {
 	double result = 0;
 
+	// Make sure only one argument is present
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
+
 			// TODO: Remove check for negative numbers once complex numbers are implemented
 			if (args[0].head().asNumber() >= 0) {
 				result = std::sqrt(args[0].head().asNumber());
@@ -129,6 +131,7 @@ Expression sqrt(const std::vector<Expression> & args) {
 Expression pow(const std::vector<Expression> & args) {
 	double result = 0;
 
+	// pow takes two arguments, a ^ b
 	if (nargs_equal(args, 2)) {
 		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
 				result = std::pow(args[0].head().asNumber(), args[1].head().asNumber());
@@ -142,12 +145,17 @@ Expression pow(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
-Expression log(const std::vector<Expression> & args) {
+Expression ln(const std::vector<Expression> & args) {
 	double result = 0;
 
+	// ln takes one argument
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
+
+			// Must be greater than or equal to zero. ln(0) returns -Inf
 			if (args[0].head().asNumber() >= 0) {
+
+				// In the standard lib, log denotes natural logarithm.
 				result = std::log(args[0].head().asNumber());
 			} else {
 				throw SemanticError("Error in call to natural log: cannot take the natural log"
@@ -166,6 +174,7 @@ Expression log(const std::vector<Expression> & args) {
 Expression sin(const std::vector<Expression> & args) {
 	double result = 0;
 
+	// sin takes one argument
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
 			result = std::sin(args[0].head().asNumber());
@@ -182,6 +191,7 @@ Expression sin(const std::vector<Expression> & args) {
 Expression cos(const std::vector<Expression> & args) {
 	double result = 0;
 
+	// cos takes one argument
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
 			result = std::cos(args[0].head().asNumber());
@@ -198,6 +208,7 @@ Expression cos(const std::vector<Expression> & args) {
 Expression tan(const std::vector<Expression> & args) {
 	double result = 0;
 
+	// tan takes one argument
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
 			result = std::tan(args[0].head().asNumber());
@@ -314,7 +325,7 @@ void Environment::reset(){
 	envmap.emplace("^", EnvResult(ProcedureType, pow));
 
 	// Procedure: ln
-	envmap.emplace("ln", EnvResult(ProcedureType, log));
+	envmap.emplace("ln", EnvResult(ProcedureType, ln));
 
 	// Procedure: sin
 	envmap.emplace("sin", EnvResult(ProcedureType, sin));

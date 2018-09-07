@@ -9,164 +9,183 @@ Atom::Atom(): m_type(NoneKind) {}
 
 Atom::Atom(double value){
 
-  setNumber(value);
+	setNumber(value);
+}
+
+Atom::Atom(complex value) {
+	setComplex(value);
 }
 
 Atom::Atom(const Token & token): Atom(){
 
-  // is token a number?
-  double temp;
-  std::istringstream iss(token.asString());
-  if(iss >> temp){
-    // check for trailing characters if >> succeeds
-    if(iss.rdbuf()->in_avail() == 0){
-      setNumber(temp);
-    }
-  }
-  else{ // else assume symbol
-    // make sure does not start with number
-    if(!std::isdigit(token.asString()[0])){
-      setSymbol(token.asString());
-    }
-  }
+	// is token a number?
+	double temp;
+	std::istringstream iss(token.asString());
+	if(iss >> temp){
+		// check for trailing characters if >> succeeds
+		if(iss.rdbuf()->in_avail() == 0){
+			setNumber(temp);
+		}
+	}
+	else{ // else assume symbol
+		// make sure does not start with number
+		if(!std::isdigit(token.asString()[0])){
+			setSymbol(token.asString());
+		}
+	}
 }
 
 Atom::Atom(const std::string & value): Atom() {
 
-  setSymbol(value);
+	setSymbol(value);
 }
 
 Atom::Atom(const Atom & x): Atom(){
-  if(x.isNumber()){
-    setNumber(x.numberValue);
-  }
-  else if(x.isSymbol()){
-    setSymbol(x.stringValue);
-  }
+	if(x.isNumber()){
+		setNumber(x.numberValue);
+	}
+	else if(x.isSymbol()){
+		setSymbol(x.stringValue);
+	}
 }
 
 Atom & Atom::operator=(const Atom & x){
 
-  if(this != &x){
-    if(x.m_type == NoneKind){
-      m_type = NoneKind;
-    }
-    else if(x.m_type == NumberKind){
-      setNumber(x.numberValue);
-    }
-    else if(x.m_type == SymbolKind){
-      setSymbol(x.stringValue);
-    }
-  }
-  return *this;
+	if(this != &x){
+		if(x.m_type == NoneKind){
+			m_type = NoneKind;
+		}
+		else if(x.m_type == NumberKind){
+			setNumber(x.numberValue);
+		}
+		else if(x.m_type == SymbolKind){
+			setSymbol(x.stringValue);
+		}
+	}
+	return *this;
 }
 
 Atom::~Atom(){
 
-  // we need to ensure the destructor of the symbol string is called
-  if(m_type == SymbolKind){
-    stringValue.~basic_string();
-  }
+	// we need to ensure the destructor of the symbol string is called
+	if(m_type == SymbolKind){
+		stringValue.~basic_string();
+	}
 }
 
 bool Atom::isNone() const noexcept{
-  return m_type == NoneKind;
+	return m_type == NoneKind;
 }
 
 bool Atom::isNumber() const noexcept{
-  return m_type == NumberKind;
+	return m_type == NumberKind;
+}
+
+bool Atom::isComplex() const noexcept{
+	return m_type == ComplexKind;
 }
 
 bool Atom::isSymbol() const noexcept{
-  return m_type == SymbolKind;
+	return m_type == SymbolKind;
 }
 
-
-void Atom::setNumber(double value){
-
-  m_type = NumberKind;
+double Atom::truncateToZero(double value) {
 
 	// if the value is smaller than or equal to epsilon, just make it zero
 	if (fabs(value) <= std::numeric_limits<double>::epsilon()) {
-		numberValue = 0;
-	} else {
-		numberValue = value;
+		return 0;
 	}
+
+	return value;
+}
+
+void Atom::setNumber(double value){
+
+	m_type = NumberKind;
+
+	numberValue = truncateToZero(value);
+}
+
+void Atom::setComplex(complex value) {
+
+	m_type = ComplexKind;
+
+	complexValue = complex(truncateToZero(value.real()), truncateToZero(value.imag()));
 }
 
 void Atom::setSymbol(const std::string & value){
 
-  // we need to ensure the destructor of the symbol string is called
-  if(m_type == SymbolKind){
-    stringValue.~basic_string();
-  }
+	// we need to ensure the destructor of the symbol string is called
+	if(m_type == SymbolKind){
+		stringValue.~basic_string();
+	}
 
-  m_type = SymbolKind;
+	m_type = SymbolKind;
 
-  // copy construct in place
-  new (&stringValue) std::string(value);
+	// copy construct in place
+	new (&stringValue) std::string(value);
 }
 
 double Atom::asNumber() const noexcept{
-  return (m_type == NumberKind) ? numberValue : 0.0;
+	return (m_type == NumberKind) ? numberValue : 0.0;
 }
 
 std::string Atom::asSymbol() const noexcept{
 
-  std::string result;
+	std::string result;
 
-  if(m_type == SymbolKind){
-    result = stringValue;
-  }
+	if(m_type == SymbolKind){
+		result = stringValue;
+	}
 
-  return result;
+	return result;
 }
 
 bool Atom::operator==(const Atom & right) const noexcept{
 
-  if(m_type != right.m_type) return false;
+	if(m_type != right.m_type) return false;
 
-  switch(m_type){
-  case NoneKind:
-    if(right.m_type != NoneKind) return false;
-    break;
-  case NumberKind:
-    {
-      if(right.m_type != NumberKind) return false;
-      double dleft = numberValue;
-      double dright = right.numberValue;
-      double diff = fabs(dleft - dright);
-      if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon()))
+	switch(m_type){
+	case NoneKind:
+		if(right.m_type != NoneKind) return false;
+		break;
+	case NumberKind:
+		{
+			if(right.m_type != NumberKind) return false;
+			double dleft = numberValue;
+			double dright = right.numberValue;
+			double diff = fabs(dleft - dright);
+			if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon()))
 				return false;
-    }
-    break;
-  case SymbolKind:
-    {
-      if(right.m_type != SymbolKind) return false;
+		}
+		break;
+	case SymbolKind:
+		{
+			if(right.m_type != SymbolKind) return false;
 
-      return stringValue == right.stringValue;
-    }
-    break;
-  default:
-    return false;
-  }
+			return stringValue == right.stringValue;
+		}
+		break;
+	default:
+		return false;
+	}
 
-  return true;
+	return true;
 }
 
 bool operator!=(const Atom & left, const Atom & right) noexcept{
 
-  return !(left == right);
+	return !(left == right);
 }
 
 
 std::ostream & operator<<(std::ostream & out, const Atom & a){
 
-  if(a.isNumber()){
-    out << a.asNumber();
-  }
-  if(a.isSymbol()){
-    out << a.asSymbol();
-  }
-  return out;
+	if(a.isNumber()){
+		out << a.asNumber();
+	}
+	if(a.isSymbol()){
+		out << a.asSymbol();
+	}
+	return out;
 }
