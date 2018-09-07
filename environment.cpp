@@ -106,7 +106,7 @@ Expression subneg(const std::vector<Expression> & args){
 
 Expression div(const std::vector<Expression> & args){
 
-	complex result = complex(0, 0);
+	complex result;
 	bool isComplexProcedure = false;
 
 	if (nargs_equal(args, 2)) {
@@ -128,19 +128,20 @@ Expression div(const std::vector<Expression> & args){
 };
 
 Expression sqrt(const std::vector<Expression> & args) {
-	double result = 0;
+	complex result;
+	bool isComplexProcedure = false;
 
 	// Make sure only one argument is present
 	if (nargs_equal(args, 1)) {
-		if (args[0].isHeadNumber()) {
 
-			// TODO: Remove check for negative numbers once complex numbers are implemented
-			if (args[0].head().asNumber() >= 0) {
-				result = std::sqrt(args[0].head().asNumber());
-			} else {
-				throw SemanticError("Error in call to square root: cannot take the square"
-					" root of a negative number.");
-			}
+		// If the atom is a number greater than or equal to zero, then proceed as normal.
+		// If not, we need to check if it's complex, or still a number (implicitly negative),
+		// and calculate with complex sqrt.
+		if (args[0].head().isNumber() && args[0].head().asNumber() >= 0) {
+			result = std::sqrt(args[0].head().asNumber());
+		} else if (args[0].isHeadComplex() || args[0].head().isNumber()) {
+			isComplexProcedure = true;
+			result = std::sqrt(args[0].head().asComplex());
 		} else {
 			throw SemanticError("Error in call to square root: invalid argument.");
 		}
@@ -148,7 +149,7 @@ Expression sqrt(const std::vector<Expression> & args) {
 		throw SemanticError("Error in call to square root: invalid number of arguments.");
 	}
 
-	return Expression(result);
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 }
 
 Expression pow(const std::vector<Expression> & args) {

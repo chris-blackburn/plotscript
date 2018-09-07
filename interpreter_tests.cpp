@@ -393,6 +393,13 @@ TEST_CASE( "Test non-trivial arithmetic procedures with complex numbers", "[inte
 
 TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 	{
+		std::string program = "(sqrt 0)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0));
+	}
+
+	{
 		std::string program = "(sqrt 1)";
 		INFO(program);
 		Expression result = run(program);
@@ -413,13 +420,41 @@ TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 		REQUIRE(result == Expression(std::sqrt(2)));
 	}
 
+	{
+		std::string program = "(sqrt -1)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, 1)));
+	}
+
+	{
+		std::string program = "(sqrt -64)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, 8)));
+	}
+
+	{
+		std::string program = "(sqrt -2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(std::sqrt(complex(-2, 0))));
+	}
+
+	{
+		std::string program = "(sqrt (+ 9 (* 144 I)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(std::sqrt(complex(9, 144))));
+	}
+
 	// Test redefinition, negative roots, wrong number of arguments
 	// Each should throw sematic error
 	{
 		std::vector<std::string> programs = {
 			"(define sqrt 1)",
-			"(sqrt -1)",
-			"(sqrt 1 2)"
+			"(sqrt 1 2)",
+			"(sqrt 1 I)",
 		};
 
 		for (auto s : programs) {
