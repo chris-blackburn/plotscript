@@ -40,25 +40,26 @@ Atom::Atom(const std::string & value): Atom() {
 	setSymbol(value);
 }
 
-Atom::Atom(const Atom & x): Atom(){
-	if(x.isNumber()){
+Atom::Atom(const Atom & x): Atom() {
+	if (x.isNumber()) {
 		setNumber(x.numberValue);
-	}
-	else if(x.isSymbol()){
+	} else if (x.isComplex()) {
+		setComplex(x.complexValue);
+	} else if (x.isSymbol()) {
 		setSymbol(x.stringValue);
 	}
 }
 
-Atom & Atom::operator=(const Atom & x){
+Atom & Atom::operator=(const Atom & x) {
 
-	if(this != &x){
-		if(x.m_type == NoneKind){
+	if (this != &x) {
+		if (x.m_type == NoneKind) {
 			m_type = NoneKind;
-		}
-		else if(x.m_type == NumberKind){
+		} else if (x.m_type == NumberKind) {
 			setNumber(x.numberValue);
-		}
-		else if(x.m_type == SymbolKind){
+		} else if (x.m_type == ComplexKind) {
+			setComplex(x.complexValue);
+		} else if (x.m_type == SymbolKind) {
 			setSymbol(x.stringValue);
 		}
 	}
@@ -130,6 +131,10 @@ double Atom::asNumber() const noexcept{
 	return (m_type == NumberKind) ? numberValue : 0.0;
 }
 
+complex Atom::asComplex() const noexcept {
+	return (m_type == ComplexKind) ? complexValue : complex(0, 0);
+}
+
 std::string Atom::asSymbol() const noexcept{
 
 	std::string result;
@@ -159,6 +164,15 @@ bool Atom::operator==(const Atom & right) const noexcept{
 				return false;
 		}
 		break;
+	case ComplexKind:
+		{
+			if (right.m_type != ComplexKind) {
+				return false;
+			}
+
+			return complexValue == right.complexValue;
+		}
+		break;
 	case SymbolKind:
 		{
 			if(right.m_type != SymbolKind) return false;
@@ -173,7 +187,7 @@ bool Atom::operator==(const Atom & right) const noexcept{
 	return true;
 }
 
-bool operator!=(const Atom & left, const Atom & right) noexcept{
+bool operator!=(const Atom & left, const Atom & right) noexcept {
 
 	return !(left == right);
 }
@@ -181,11 +195,13 @@ bool operator!=(const Atom & left, const Atom & right) noexcept{
 
 std::ostream & operator<<(std::ostream & out, const Atom & a){
 
-	if(a.isNumber()){
+	if (a.isNumber()) {
 		out << a.asNumber();
-	}
-	if(a.isSymbol()){
+	} else if (a.isComplex()) {
+		out << a.asComplex();
+	} else if (a.isSymbol()) {
 		out << a.asSymbol();
 	}
+
 	return out;
 }

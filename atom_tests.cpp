@@ -26,7 +26,7 @@ TEST_CASE( "Test constructors", "[atom]" ) {
 
 	{
 		INFO("Complex Constructor");
-		Atom a(std::complex<double>(1, 1));
+		Atom a(complex(1, 1));
 
 		REQUIRE(!a.isNone());
 		REQUIRE(!a.isNumber());
@@ -59,16 +59,25 @@ TEST_CASE( "Test constructors", "[atom]" ) {
 		INFO("Copy Constructor");
 		Atom a("hi");
 		Atom b(1.0);
+		Atom c(complex(1, 1));
 
-		Atom c = a;
-		REQUIRE(!a.isNone());
-		REQUIRE(!c.isNumber());
-		REQUIRE(c.isSymbol());
+		Atom d = a;
+		REQUIRE(!d.isNone());
+		REQUIRE(!d.isNumber());
+		REQUIRE(!d.isComplex());
+		REQUIRE(d.isSymbol());
 
-		Atom d = b;
-		REQUIRE(!a.isNone());
-		REQUIRE(d.isNumber());
-		REQUIRE(!d.isSymbol());
+		Atom e = b;
+		REQUIRE(!e.isNone());
+		REQUIRE(e.isNumber());
+		REQUIRE(!e.isComplex());
+		REQUIRE(!e.isSymbol());
+
+		Atom f = c;
+		REQUIRE(!f.isNone());
+		REQUIRE(!f.isNumber());
+		REQUIRE(f.isComplex());
+		REQUIRE(!f.isSymbol());
 	}
 }
 
@@ -81,6 +90,7 @@ TEST_CASE( "Test assignment", "[atom]" ) {
 		b = a;
 		REQUIRE(b.isNone());
 		REQUIRE(!b.isNumber());
+		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
 	}
 
@@ -91,6 +101,18 @@ TEST_CASE( "Test assignment", "[atom]" ) {
 		b = a;
 		REQUIRE(b.isNone());
 		REQUIRE(!b.isNumber());
+		REQUIRE(!b.isComplex());
+		REQUIRE(!b.isSymbol());
+	}
+
+	{
+		INFO("default to complex");
+		Atom a;
+		Atom b(complex(1, 1));
+		b = a;
+		REQUIRE(b.isNone());
+		REQUIRE(!b.isNumber());
+		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
 	}
 
@@ -101,6 +123,7 @@ TEST_CASE( "Test assignment", "[atom]" ) {
 		b = a;
 		REQUIRE(b.isNone());
 		REQUIRE(!b.isNumber());
+		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
 	}
 
@@ -117,6 +140,15 @@ TEST_CASE( "Test assignment", "[atom]" ) {
 		INFO("number to number");
 		Atom a(1.0);
 		Atom b(2.0);
+		b = a;
+		REQUIRE(b.isNumber());
+		REQUIRE(b.asNumber() == 1.0);
+	}
+
+	{
+		INFO("number to complex");
+		Atom a(1.0);
+		Atom b(complex(1, 1));
 		b = a;
 		REQUIRE(b.isNumber());
 		REQUIRE(b.asNumber() == 1.0);
@@ -150,12 +182,57 @@ TEST_CASE( "Test assignment", "[atom]" ) {
 	}
 
 	{
+		INFO("symbol to complex");
+		Atom a("hi");
+		Atom b(complex(1, 1));
+		b = a;
+		REQUIRE(b.isSymbol());
+		REQUIRE(b.asSymbol() == "hi");
+	}
+
+	{
 		INFO("symbol to symbol");
 		Atom a("hi");
 		Atom b("bye");
 		b = a;
 		REQUIRE(b.isSymbol());
 		REQUIRE(b.asSymbol() == "hi");
+	}
+
+	{
+		INFO("complex to default");
+		Atom a(complex(1, 1));
+		Atom b;
+		b = a;
+		REQUIRE(b.isComplex());
+		REQUIRE(b.asComplex() == complex(1, 1));
+	}
+
+	{
+		INFO("complex to number");
+		Atom a(complex(1, 1));
+		Atom b(1.0);
+		b = a;
+		REQUIRE(b.isComplex());
+		REQUIRE(b.asComplex() == complex(1, 1));
+	}
+
+	{
+		INFO("complex to complex");
+		Atom a(complex(1, 1));
+		Atom b(complex(2, 2));
+		b = a;
+		REQUIRE(b.isComplex());
+		REQUIRE(b.asComplex() == complex(1, 1));
+	}
+
+	{
+		INFO("complex to symbol");
+		Atom a(complex(1, 1));
+		Atom b("hi");
+		b = a;
+		REQUIRE(b.isComplex());
+		REQUIRE(b.asComplex() == complex(1, 1));
 	}
 }
 
@@ -172,6 +249,13 @@ TEST_CASE( "test comparison", "[atom]" ) {
 		INFO("compare default to number");
 		Atom a;
 		Atom b(1.0);
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare default to complex");
+		Atom a;
+		Atom b(complex(1, 1));
 		REQUIRE(a != b);
 	}
 
@@ -199,6 +283,13 @@ TEST_CASE( "test comparison", "[atom]" ) {
 	}
 
 	{
+		INFO("compare number to complex");
+		Atom a(1.0);
+		Atom b(complex(1, 1));
+		REQUIRE(a != b);
+	}
+
+	{
 		INFO("compare number to symbol");
 		Atom a(1.0);
 		Atom b("hi");
@@ -220,6 +311,13 @@ TEST_CASE( "test comparison", "[atom]" ) {
 	}
 
 	{
+		INFO("compare symbol to complex");
+		Atom a("hi");
+		Atom b(complex(1, 1));
+		REQUIRE(a != b);
+	}
+
+	{
 		INFO("compare symbol to symbol");
 		Atom a("hi");
 		Atom b("hi");
@@ -228,4 +326,33 @@ TEST_CASE( "test comparison", "[atom]" ) {
 		REQUIRE(a != c);
 	}
 
+	{
+		INFO("compare complex to default");
+		Atom a(complex(1, 1));
+		Atom b;
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare complex to number");
+		Atom a(complex(1, 1));
+		Atom b(1.0);
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare complex to complex");
+		Atom a(complex(1, 2));
+		Atom b(complex(1, 1));
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare complex to complex");
+		Atom a(complex(1, 1));
+		Atom b(complex(1, 1));
+		Atom c(complex(1, 2));
+		REQUIRE(a == b);
+		REQUIRE(a != c);
+	}
 }
