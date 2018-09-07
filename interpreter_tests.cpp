@@ -514,6 +514,27 @@ TEST_CASE( "Test procedures (pow)", "[interpreter]" ) {
 		REQUIRE(result == Expression(1));
 	}
 
+	{
+		std::string program = "(^ I 0)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(1, 0)));
+	}
+
+	{
+		std::string program = "(^ I 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(-1, 0)));
+	}
+
+	{
+		std::string program = "(^ e (- (* pi I)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(-1, 0)));
+	}
+
 	// Test redefinition, wrong number of arguments
 	// Each should throw sematic error
 	{

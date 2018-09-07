@@ -153,12 +153,17 @@ Expression sqrt(const std::vector<Expression> & args) {
 }
 
 Expression pow(const std::vector<Expression> & args) {
-	double result = 0;
+	complex result;
+	bool isComplexProcedure = false;
 
 	// pow takes two arguments, a ^ b
 	if (nargs_equal(args, 2)) {
+
 		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
-				result = std::pow(args[0].head().asNumber(), args[1].head().asNumber());
+			result = std::pow(args[0].head().asNumber(), args[1].head().asNumber());
+		} else if (args[0].isHeadComplex() || args[0].head().isNumber()) {
+			isComplexProcedure = true;
+			result = std::pow(args[0].head().asComplex(), args[1].head().asComplex());
 		} else {
 			throw SemanticError("Error in call to pow: invalid argument.");
 		}
@@ -166,7 +171,7 @@ Expression pow(const std::vector<Expression> & args) {
 		throw SemanticError("Error in call to pow: invalid number of arguments.");
 	}
 
-	return Expression(result);
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 }
 
 Expression ln(const std::vector<Expression> & args) {
