@@ -147,12 +147,9 @@ Expression log(const std::vector<Expression> & args) {
 
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
-			if (args[0].head().asNumber() > 0) {
+			if (args[0].head().asNumber() >= 0) {
 				result = std::log(args[0].head().asNumber());
-			} else if (args[0].head().asNumber() == 0) {
-				throw SemanticError("Error in call to natural log: cannot take the natural log"
-					" of zero (ln(0) == -Inf).");
-			} else{
+			} else {
 				throw SemanticError("Error in call to natural log: cannot take the natural log"
 					" of a negative number.");
 			}
@@ -193,6 +190,22 @@ Expression cos(const std::vector<Expression> & args) {
 		}
 	} else {
 		throw SemanticError("Error in call to cos: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
+
+Expression tan(const std::vector<Expression> & args) {
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber()) {
+			result = std::tan(args[0].head().asNumber());
+		} else {
+			throw SemanticError("Error in call to tan: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to tan: invalid number of arguments.");
 	}
 
 	return Expression(result);
@@ -308,4 +321,7 @@ void Environment::reset(){
 
 	// Procedure: cos
 	envmap.emplace("cos", EnvResult(ProcedureType, cos));
+
+	// Procedure: tan
+	envmap.emplace("tan", EnvResult(ProcedureType, tan));
 }

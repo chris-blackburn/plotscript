@@ -26,6 +26,7 @@ TEST_CASE( "Test default constructor", "[environment]" ) {
 	REQUIRE(env.is_proc(Atom("ln")));
 	REQUIRE(env.is_proc(Atom("sin")));
 	REQUIRE(env.is_proc(Atom("cos")));
+	REQUIRE(env.is_proc(Atom("tan")));
   REQUIRE(!env.is_proc(Atom("op")));
 }
 

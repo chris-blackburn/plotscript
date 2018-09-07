@@ -402,14 +402,13 @@ TEST_CASE( "Test procedures (ln)", "[interpreter]" ) {
 		REQUIRE(result == Expression(2));
 	}
 
-	// Test redefinition, wrong number of arguments, negatives, zero
+	// Test redefinition, wrong number of arguments, negatives
 	// Each should throw sematic error
 	{
 		std::vector<std::string> programs = {
 			"(define ln 1)",
 			"(ln 1 2)",
-			"(ln -1)",
-			"(ln 0)"
+			"(ln -1)"
 		};
 
 		for (auto s : programs) {
@@ -526,6 +525,43 @@ TEST_CASE( "Test procedures (cos)", "[interpreter]" ) {
 		std::vector<std::string> programs = {
 			"(define cos 1)",
 			"(cos 1 2)"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			Interpreter interp;
+
+			std::istringstream iss(s);
+
+			bool ok = interp.parseStream(iss);
+			REQUIRE(ok == true);
+
+			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+		}
+	}
+}
+
+TEST_CASE( "Test procedures (tan)", "[interpreter]" ) {
+	{
+		std::string program = "(tan 0)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0));
+	}
+
+	{
+		std::string program = "(tan pi)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0));
+	}
+
+	// Test redefinition, wrong number of arguments
+	// Each should throw sematic error
+	{
+		std::vector<std::string> programs = {
+			"(define tan 1)",
+			"(tan 1 2)"
 		};
 
 		for (auto s : programs) {
