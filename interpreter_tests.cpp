@@ -451,6 +451,7 @@ TEST_CASE( "Test procedures (square root)", "[interpreter]" ) {
 	// Test redefinition, negative roots, wrong number of arguments
 	// Each should throw sematic error
 	{
+		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define sqrt 1)",
 			"(sqrt 1 2)",
@@ -538,6 +539,7 @@ TEST_CASE( "Test procedures (pow)", "[interpreter]" ) {
 	// Test redefinition, wrong number of arguments
 	// Each should throw sematic error
 	{
+		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define ^ 1)",
 			"(^ 1)",
@@ -590,6 +592,7 @@ TEST_CASE( "Test procedures (ln)", "[interpreter]" ) {
 	// Test redefinition, wrong number of arguments, negatives
 	// Each should throw sematic error
 	{
+		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define ln 1)",
 			"(ln 1 2)",
@@ -649,6 +652,7 @@ TEST_CASE( "Test procedures (sin)", "[interpreter]" ) {
 	// Test redefinition, wrong number of arguments
 	// Each should throw sematic error
 	{
+		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define sin 1)",
 			"(sin 1 2)"
@@ -707,6 +711,7 @@ TEST_CASE( "Test procedures (cos)", "[interpreter]" ) {
 	// Test redefinition, wrong number of arguments
 	// Each should throw sematic error
 	{
+		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define cos 1)",
 			"(cos 1 2)"
@@ -744,9 +749,77 @@ TEST_CASE( "Test procedures (tan)", "[interpreter]" ) {
 	// Test redefinition, wrong number of arguments
 	// Each should throw sematic error
 	{
+		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define tan 1)",
 			"(tan 1 2)"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			Interpreter interp;
+
+			std::istringstream iss(s);
+
+			bool ok = interp.parseStream(iss);
+			REQUIRE(ok == true);
+
+			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+		}
+	}
+}
+
+TEST_CASE( "Test complex-unique procedures", "[interpreter]" ) {
+	{
+		std::string program = "(real (+ 7 (* 3 I)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(7));
+	}
+
+	{
+		std::string program = "(imag (+ 7 (* 3 I)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(3));
+	}
+
+	{
+		std::string program = "(mag (+ 3 (* 4 I)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(5));
+	}
+
+	{
+		std::string program = "(arg (+ -1 (* 0 I)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == run("(pi)"));
+	}
+
+	{
+		std::string program = "(conj (+ 7 (* 3 I)))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(7, -3)));
+	}
+
+	// Test redefinition, wrong number of arguments
+	// Each should throw sematic error
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(real 1)",
+			"(imag 1)",
+			"(mag 1)",
+			"(arg 1)",
+			"(conj 1)",
+			"(real 1 2)",
+			"(imag 1 2)",
+			"(mag 1 2)",
+			"(arg 1 2)",
+			"(conj 1 2)",
 		};
 
 		for (auto s : programs) {

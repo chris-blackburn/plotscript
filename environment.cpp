@@ -251,6 +251,86 @@ Expression tan(const std::vector<Expression> & args) {
 	return Expression(result);
 }
 
+Expression real(const std::vector<Expression> & args) {
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadComplex()) {
+			result = args[0].head().asComplex().real();
+		} else {
+			throw SemanticError("Error in call to real: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to real: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
+
+Expression imag(const std::vector<Expression> & args) {
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadComplex()) {
+			result = args[0].head().asComplex().imag();
+		} else {
+			throw SemanticError("Error in call to imag: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to imag: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
+
+Expression mag(const std::vector<Expression> & args) {
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadComplex()) {
+			result = std::abs(args[0].head().asComplex());
+		} else {
+			throw SemanticError("Error in call to mag: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to mag: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
+
+Expression arg(const std::vector<Expression> & args) {
+	double result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadComplex()) {
+			result = std::arg(args[0].head().asComplex());
+		} else {
+			throw SemanticError("Error in call to arg: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to arg: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
+
+Expression conj(const std::vector<Expression> & args) {
+	complex result = 0;
+
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadComplex()) {
+			result = std::conj(args[0].head().asComplex());
+		} else {
+			throw SemanticError("Error in call to conj: invalid argument.");
+		}
+	} else {
+		throw SemanticError("Error in call to conj: invalid number of arguments.");
+	}
+
+	return Expression(result);
+}
+
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const complex I = complex(0, 1);
@@ -368,4 +448,19 @@ void Environment::reset(){
 
 	// Procedure: tan
 	envmap.emplace("tan", EnvResult(ProcedureType, tan));
+
+	// Procedure: real
+	envmap.emplace("real", EnvResult(ProcedureType, real));
+
+	// Procedure: imag
+	envmap.emplace("imag", EnvResult(ProcedureType, imag));
+
+	// Procedure: mag
+	envmap.emplace("mag", EnvResult(ProcedureType, mag));
+
+	// Procedure: arg
+	envmap.emplace("arg", EnvResult(ProcedureType, arg));
+
+	// Procedure: conj
+	envmap.emplace("conj", EnvResult(ProcedureType, conj));
 }
