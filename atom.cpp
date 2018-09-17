@@ -5,17 +5,17 @@
 #include <cmath>
 #include <limits>
 
-Atom::Atom(): m_type(NoneKind) {}
+Atom::Atom(): m_type(NoneKind), atomList(nullptr) {}
 
-Atom::Atom(double value) {
+Atom::Atom(double value): Atom() {
 	setNumber(value);
 }
 
-Atom::Atom(complex value) {
+Atom::Atom(complex value): Atom() {
 	setComplex(value);
 }
 
-Atom::Atom(const std::vector<Atom>& value) {
+Atom::Atom(const std::list<Atom>& value): Atom() {
 	setList(value);
 }
 
@@ -75,14 +75,13 @@ Atom& Atom::operator=(const Atom& x) {
 
 Atom::~Atom() {
 
-	// we need to ensure certain destructors are called like string and vector
+	// we need to ensure certain destructors are called like string
 	switch(m_type) {
 	case SymbolKind:
 		stringValue.~basic_string();
 		break;
 	case ListKind:
 		delete atomList;
-		atomList = nullptr;
 		break;
 	default:
 		break;
@@ -134,7 +133,7 @@ void Atom::setComplex(complex value) {
 void Atom::setSymbol(const std::string& value) {
 
 	// we need to ensure the destructor of the symbol string is called
-	if(m_type == SymbolKind){
+	if (m_type == SymbolKind) {
 		stringValue.~basic_string();
 	}
 
@@ -144,10 +143,16 @@ void Atom::setSymbol(const std::string& value) {
 	new (&stringValue) std::string(value);
 }
 
-void Atom::setList(const std::vector<Atom>& value) {
+void Atom::setList(const std::list<Atom>& value) {
+
+	// Delete the old list
+	if (m_type == ListKind) {
+		delete atomList;
+	}
+
 	m_type = ListKind;
 
-	atomList = new std::vector<Atom>(value);
+	atomList = new std::list<Atom>(value);
 }
 
 double Atom::asNumber() const noexcept {
@@ -175,8 +180,8 @@ std::string Atom::asSymbol() const noexcept {
 	return result;
 }
 
-std::vector<Atom> Atom::asList() const noexcept {
-	std::vector<Atom> result;
+std::list<Atom> Atom::asList() const noexcept {
+	std::list<Atom> result;
 
 	if (m_type == ListKind) {
 		result = *atomList;
@@ -233,7 +238,11 @@ std::ostream& operator<<(std::ostream& out, const Atom& a) {
 	} else if (a.isSymbol()) {
 		out << a.asSymbol();
 	} else if (a.isList()) {
-		out << "NOT DONE";
+
+		// Handle printing out list of atoms recursively
+		for (auto& atom : a.asList()) {
+			out << atom;
+		}
 	}
 
 	return out;

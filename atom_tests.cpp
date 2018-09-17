@@ -159,6 +159,18 @@ TEST_CASE("Test assignment", "[atom]") {
 	}
 
 	{
+		INFO("default to list");
+		Atom a;
+		Atom b(std::list<Atom>{a});
+		b = a;
+		REQUIRE(b.isNone());
+		REQUIRE(!b.isNumber());
+		REQUIRE(!b.isComplex());
+		REQUIRE(!b.isSymbol());
+		REQUIRE(!a.isList());
+	}
+
+	{
 		INFO("number to default");
 		Atom a(1.0);
 		Atom b;
@@ -197,7 +209,7 @@ TEST_CASE("Test assignment", "[atom]") {
 	{
 		INFO("number to list");
 		Atom a(1.0);
-		Atom b({a});
+		Atom b(std::list<Atom>{a});
 		b = a;
 		REQUIRE(b.isNumber());
 		REQUIRE(b.asNumber() == 1.0);
@@ -242,7 +254,7 @@ TEST_CASE("Test assignment", "[atom]") {
 	{
 		INFO("symbol to list");
 		Atom a("hi");
-		Atom b({a});
+		Atom b(std::list<Atom>{a});
 		b = a;
 		REQUIRE(b.isSymbol());
 		REQUIRE(b.asSymbol() == "hi");
@@ -287,7 +299,7 @@ TEST_CASE("Test assignment", "[atom]") {
 	{
 		INFO("complex to list");
 		Atom a(complex(1, 1));
-		Atom b({a});
+		Atom b(std::list<Atom>{a});
 		b = a;
 		REQUIRE(b.isComplex());
 		REQUIRE(b.asComplex() == complex(1, 1));
@@ -327,7 +339,7 @@ TEST_CASE("test comparison", "[atom]") {
 	{
 		INFO("compare default to list");
 		Atom a;
-		Atom b(std::vector<Atom>{a});
+		Atom b(std::list<Atom>{});
 		REQUIRE(a != b);
 	}
 
@@ -364,7 +376,7 @@ TEST_CASE("test comparison", "[atom]") {
 	{
 		INFO("compare number to list");
 		Atom a(1.0);
-		Atom b(std::vector<Atom>{a});
+		Atom b(std::list<Atom>{a});
 		REQUIRE(a != b);
 	}
 
@@ -401,7 +413,7 @@ TEST_CASE("test comparison", "[atom]") {
 	{
 		INFO("symbol number to list");
 		Atom a("hi");
-		Atom b(std::vector<Atom>{a});
+		Atom b(std::list<Atom>{a});
 		REQUIRE(a != b);
 	}
 
@@ -420,9 +432,9 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
-		INFO("compare complex to complex");
+		INFO("compare complex to symbol");
 		Atom a(complex(1, 2));
-		Atom b(complex(1, 1));
+		Atom b("hi");
 		REQUIRE(a != b);
 	}
 
@@ -438,8 +450,50 @@ TEST_CASE("test comparison", "[atom]") {
 	{
 		INFO("compare complex to list");
 		Atom a(complex(1, 1));
-		Atom b(std::vector<Atom>{a});
+		Atom b(std::list<Atom>{Atom(1.0)});
 		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare list to default");
+		Atom a(std::list<Atom>{});
+		Atom b;
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare list to number");
+		Atom a(std::list<Atom>{});
+		Atom b(1.0);
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare list to complex");
+		Atom a(std::list<Atom>{});
+		Atom b(complex(1, 1));
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare list to symbol");
+		Atom a(std::list<Atom>{});
+		Atom b("hi");
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare list to list");
+		Atom a(std::list<Atom>{Atom(1.0), Atom("hi"), Atom(complex(1, 1))});
+		Atom b(std::list<Atom>{Atom(1.0), Atom("hi"), Atom(complex(1, 1))});
+		Atom c(std::list<Atom>{Atom(1.0), Atom("bye"), Atom(complex(1, 1))});
+
+		// embedded lists
+		Atom d(std::list<Atom>{Atom(1.0), std::list<Atom>{Atom("bye"), Atom(complex(1, 1))}});
+		Atom e(std::list<Atom>{Atom(1.0), std::list<Atom>{Atom("bye"), Atom(complex(1, 1))}});
+		REQUIRE(a == b);
+		REQUIRE(a != c);
+		REQUIRE(d == e);
 	}
 }
 
@@ -464,6 +518,12 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 	}
 
 	{
+		INFO("complex as list");
+		Atom a(1.7);
+		REQUIRE(a.asList() == std::list<Atom>{});
+	}
+
+	{
 		INFO("complex as number");
 		Atom a(complex(0, 1));
 		REQUIRE(a.asNumber() == 0);
@@ -479,6 +539,12 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 		INFO("complex as symbol");
 		Atom a(complex(0, 1));
 		REQUIRE(a.asSymbol() == "");
+	}
+
+	{
+		INFO("complex as list");
+		Atom a(complex(0, 1));
+		REQUIRE(a.asList() == std::list<Atom>{});
 	}
 
 	{
@@ -500,8 +566,32 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 	}
 
 	{
+		INFO("symbol as list");
+		Atom a("A");
+		REQUIRE(a.asList() == std::list<Atom>{});
+	}
+
+	{
+		INFO("list as number");
+		Atom a(std::list<Atom>{Atom(1)});
+		REQUIRE(a.asNumber() == 0);
+	}
+
+	{
+		INFO("list as complex");
+		Atom a(std::list<Atom>{Atom(1)});
+		REQUIRE(a.asComplex() == complex(0, 0));
+	}
+
+	{
+		INFO("list as symbol");
+		Atom a(std::list<Atom>{Atom(1)});
+		REQUIRE(a.asSymbol() == "");
+	}
+
+	{
 		INFO("list as list");
-		Atom a(std::vector<Atom>{Atom(1)});
-		REQUIRE(a.asList() == std::vector<Atom>{Atom(1)});
+		Atom a(std::list<Atom>{Atom(1)});
+		REQUIRE(a.asList() == std::list<Atom>{Atom(1)});
 	}
 }

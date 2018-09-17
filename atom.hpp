@@ -10,8 +10,9 @@ Defines the Atom type and associated functions.
 #include <complex>
 using complex = std::complex<double>;
 
-// Needed for List type
-#include <vector>
+// Needed for List type.
+#include <list>
+// #define list std::list<Atom>
 
 /*! \class Atom
 \brief A variant type that may be a Number or Symbol or the default type None.
@@ -34,7 +35,7 @@ public:
 	Atom(const std::string& value);
 
 	/// Construct an Atom of type list with the value list
-	Atom(const std::vector<Atom>& value);
+	Atom(const std::list<Atom>& value);
 
 	/// Construct an Atom directly from a Token
 	Atom(const Token& token);
@@ -74,7 +75,7 @@ public:
 	std::string asSymbol() const noexcept;
 
 	/// value of Atom as a list, returns empty-list if not a list
-	std::vector<Atom> asList() const noexcept;
+	std::list<Atom> asList() const noexcept;
 
 	/// equality comparison based on type and value
 	bool operator==(const Atom& right) const noexcept;
@@ -93,9 +94,8 @@ private:
 		double numberValue;
 		std::string stringValue;
 		complex complexValue;
-		std::vector<Atom>* atomList;
+		std::list<Atom>* atomList;
 	};
-
 
 	// Helper function to make numbers smaller than or equal to epsilon equal to zero
 	double truncateToZero(double value);
@@ -110,7 +110,7 @@ private:
 	void setSymbol(const std::string& value);
 
 	// helper to set type and value of List
-	void setList(const std::vector<Atom>& value);
+	void setList(const std::list<Atom>& value);
 };
 
 /// inequality comparison for Atom
