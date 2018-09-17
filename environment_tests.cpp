@@ -16,7 +16,9 @@ TEST_CASE("Test default constructor", "[environment]") {
 	REQUIRE(env.is_exp(Atom("I")));
 
 	REQUIRE(!env.is_known(Atom("hi")));
+	REQUIRE(!env.is_known(Atom(1)));
 	REQUIRE(!env.is_exp(Atom("hi")));
+	REQUIRE(!env.is_exp(Atom(1)));
 
 	REQUIRE(env.is_proc(Atom("+")));
 	REQUIRE(env.is_proc(Atom("-")));
@@ -29,6 +31,7 @@ TEST_CASE("Test default constructor", "[environment]") {
 	REQUIRE(env.is_proc(Atom("cos")));
 	REQUIRE(env.is_proc(Atom("tan")));
 	REQUIRE(!env.is_proc(Atom("op")));
+	REQUIRE(!env.is_proc(Atom(1)));
 }
 
 TEST_CASE("Test get expression", "[environment]") {

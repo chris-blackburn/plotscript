@@ -359,12 +359,57 @@ TEST_CASE("test comparison", "[atom]") {
 
 TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 
-	// TODO: Write more tests here to cover all cases of retrieval
-
 	{
-		INFO("Retrieve a number as complex")
+		INFO("number as number");
 		Atom a(1.7);
 		REQUIRE(a.asNumber() == 1.7);
+	}
+
+	{
+		INFO("number as complex");
+		Atom a(1.7);
 		REQUIRE(a.asComplex() == complex(1.7, 0));
+	}
+
+	{
+		INFO("number as symbol");
+		Atom a(1.7);
+		REQUIRE(a.asSymbol() == "");
+	}
+
+	{
+		INFO("complex as number");
+		Atom a(complex(0, 1));
+		REQUIRE(a.asNumber() == 0);
+	}
+
+	{
+		INFO("complex as complex");
+		Atom a(complex(0, 1));
+		REQUIRE(a.asComplex() == complex(0, 1));
+	}
+
+	{
+		INFO("complex as symbol");
+		Atom a(complex(0, 1));
+		REQUIRE(a.asSymbol() == "");
+	}
+
+	{
+		INFO("symbol as number");
+		Atom a("A");
+		REQUIRE(a.asNumber() == 0);
+	}
+
+	{
+		INFO("symbol as complex");
+		Atom a("A");
+		REQUIRE(a.asComplex() == complex(0, 0));
+	}
+
+	{
+		INFO("symbol as symbol");
+		Atom a("A");
+		REQUIRE(a.asSymbol() == "A");
 	}
 }

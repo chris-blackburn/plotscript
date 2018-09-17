@@ -156,43 +156,26 @@ bool Atom::operator==(const Atom& right) const noexcept {
 
 	switch(m_type) {
 	case NoneKind:
-		if (right.m_type != NoneKind) {
-			return false;
-		}
 
+		// Avoid the default case for NoneKind - if both are NoneKind, then it will return
+		// true once outside this switch statement
 		break;
 	case NumberKind:
 		{
-			if(right.m_type != NumberKind) {
-				return false;
-			}
-
 			double dleft = numberValue;
 			double dright = right.numberValue;
 			double diff = fabs(dleft - dright);
+
 			if(std::isnan(diff) || (diff > std::numeric_limits<double>::epsilon())) {
 				return false;
 			}
 		}
+
 		break;
 	case ComplexKind:
-		{
-			if (right.m_type != ComplexKind) {
-				return false;
-			}
-
-			return complexValue == right.complexValue;
-		}
-		break;
+		return complexValue == right.complexValue;
 	case SymbolKind:
-		{
-			if (right.m_type != SymbolKind) {
-				return false;
-			}
-
-			return stringValue == right.stringValue;
-		}
-		break;
+		return stringValue == right.stringValue;
 	default:
 		return false;
 	}
@@ -203,7 +186,6 @@ bool Atom::operator==(const Atom& right) const noexcept {
 bool operator!=(const Atom& left, const Atom& right) noexcept {
 	return !(left == right);
 }
-
 
 std::ostream& operator<<(std::ostream& out, const Atom& a) {
 	if (a.isNumber()) {

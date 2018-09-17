@@ -9,7 +9,7 @@
 #include "interpreter.hpp"
 #include "expression.hpp"
 
-Expression run(const std::string& program) {
+Expression run(const std::string& program, bool runSemantic = false) {
 	std::istringstream iss(program);
 
 	Interpreter interp;
@@ -22,7 +22,11 @@ Expression run(const std::string& program) {
 	REQUIRE(ok == true);
 
 	Expression result;
-	REQUIRE_NOTHROW(result = interp.evaluate());
+	if (runSemantic) {
+		REQUIRE_THROWS_AS(result = interp.evaluate(), SemanticError);
+	} else {
+		REQUIRE_NOTHROW(result = interp.evaluate());
+	}
 
 	return result;
 }
@@ -261,6 +265,42 @@ TEST_CASE("Test Interpreter result with simple procedures (mul)", "[interpreter]
 	}
 }
 
+TEST_CASE("Test Interpreter result with simple procedures (div)", "[interpreter]") {
+
+	{ // binary case
+		std::string program = "(/ 1 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0.5));
+	}
+
+	{ // complex numbers, 2-ary, one complex number
+		std::string program = "(/ I 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, 0.5)));
+	}
+
+	{ // complex numbers, 4-ary, 3 complex number
+		std::string program = "(/ I I)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(1, 0)));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(/ 1 2 3)"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Test Interpreter special forms: begin and define", "[interpreter]") {
 
 	{
@@ -289,6 +329,19 @@ TEST_CASE("Test Interpreter special forms: begin and define", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(2.));
+	}
+
+	{
+		std::string program = "(begin)";
+		INFO(program);
+		run(program, true);
+	}
+
+	{
+		std::string program = "(define a (* 1 I))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, 1)));
 	}
 }
 
@@ -449,14 +502,7 @@ TEST_CASE("Test procedures (square root)", "[interpreter]") {
 
 		for (auto s : programs) {
 			INFO(s);
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			run(s, true);
 		}
 	}
 }
@@ -538,14 +584,7 @@ TEST_CASE("Test procedures (pow)", "[interpreter]") {
 
 		for (auto s : programs) {
 			INFO(s);
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			run(s, true);
 		}
 	}
 }
@@ -592,14 +631,7 @@ TEST_CASE("Test procedures (ln)", "[interpreter]") {
 
 		for (auto s : programs) {
 			INFO(s);
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			run(s, true);
 		}
 	}
 }
@@ -652,14 +684,7 @@ TEST_CASE("Test procedures (sin)", "[interpreter]") {
 
 		for (auto s : programs) {
 			INFO(s);
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			run(s, true);
 		}
 	}
 }
@@ -712,14 +737,7 @@ TEST_CASE("Test procedures (cos)", "[interpreter]") {
 
 		for (auto s : programs) {
 			INFO(s);
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			run(s, true);
 		}
 	}
 }
@@ -751,14 +769,7 @@ TEST_CASE("Test procedures (tan)", "[interpreter]") {
 
 		for (auto s : programs) {
 			INFO(s);
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			run(s, true);
 		}
 	}
 }
@@ -819,14 +830,7 @@ TEST_CASE("Test complex-unique procedures", "[interpreter]") {
 
 		for (auto s : programs) {
 			INFO(s);
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			run(s, true);
 		}
 	}
 }
@@ -840,14 +844,8 @@ TEST_CASE("Test some semantically invalid expresions", "[interpreter]") {
 	};
 
 		for (auto s : programs) {
-			Interpreter interp;
-
-			std::istringstream iss(s);
-
-			bool ok = interp.parseStream(iss);
-			REQUIRE(ok == true);
-
-			REQUIRE_THROWS_AS(interp.evaluate(), SemanticError);
+			INFO(s);
+			run(s, true);
 		}
 }
 

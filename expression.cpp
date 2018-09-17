@@ -107,7 +107,7 @@ Expression Expression::handle_lookup(const Atom& head, const Environment& env) {
 		} else {
 			throw SemanticError("Error during evaluation: unknown symbol");
 		}
-	} else if (head.isNumber()) {
+	} else if (head.isNumber() || head.isComplex()) {
 			return Expression(head);
 	} else {
 		throw SemanticError("Error during evaluation: Invalid type in terminal expression");
@@ -147,14 +147,14 @@ Expression Expression::handle_define(Environment& env) {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
 
-	if (env.is_proc(m_head)) {
+	if (env.is_proc(m_tail[0].head())) {
 		throw SemanticError("Error during evaluation: attempt to redefine a built-in procedure");
 	}
 
 	// eval tail[1]
 	Expression result = m_tail[1].eval(env);
 
-	if (env.is_exp(m_head)) {
+	if (env.is_exp(m_tail[0].head())) {
 		throw SemanticError("Error during evaluation: attempt to redefine a previously defined symbol");
 	}
 
@@ -210,8 +210,8 @@ bool Expression::operator==(const Expression& exp) const noexcept {
 
 	if (result) {
 		for (auto lefte = m_tail.begin(), righte = exp.m_tail.begin();
-			(lefte != m_tail.end()) && (righte != exp.m_tail.end());
-			++lefte, ++righte){
+			lefte != m_tail.end() && righte != exp.m_tail.end();
+			++lefte, ++righte) {
 
 			result = result && (*lefte == *righte);
 		}
