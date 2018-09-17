@@ -15,6 +15,10 @@ Atom::Atom(complex value) {
 	setComplex(value);
 }
 
+Atom::Atom(const std::vector<Atom>& value) {
+	setList(value);
+}
+
 Atom::Atom(const Token& token): Atom() {
 
 	// is token a number?
@@ -46,6 +50,8 @@ Atom::Atom(const Atom& x): Atom() {
 		setComplex(x.complexValue);
 	} else if (x.isSymbol()) {
 		setSymbol(x.stringValue);
+	} else if (x.isList()) {
+		setList(*x.atomList);
 	}
 }
 
@@ -59,6 +65,8 @@ Atom& Atom::operator=(const Atom& x) {
 			setComplex(x.complexValue);
 		} else if (x.m_type == SymbolKind) {
 			setSymbol(x.stringValue);
+		} else if (x.m_type == ListKind) {
+			setList(*x.atomList);
 		}
 	}
 
@@ -67,9 +75,17 @@ Atom& Atom::operator=(const Atom& x) {
 
 Atom::~Atom() {
 
-	// we need to ensure the destructor of the symbol string is called
-	if (m_type == SymbolKind) {
+	// we need to ensure certain destructors are called like string and vector
+	switch(m_type) {
+	case SymbolKind:
 		stringValue.~basic_string();
+		break;
+	case ListKind:
+		delete atomList;
+		atomList = nullptr;
+		break;
+	default:
+		break;
 	}
 }
 
@@ -87,6 +103,10 @@ bool Atom::isComplex() const noexcept {
 
 bool Atom::isSymbol() const noexcept {
 	return m_type == SymbolKind;
+}
+
+bool Atom::isList() const noexcept {
+	return m_type == ListKind;
 }
 
 double Atom::truncateToZero(double value) {
@@ -124,15 +144,21 @@ void Atom::setSymbol(const std::string& value) {
 	new (&stringValue) std::string(value);
 }
 
+void Atom::setList(const std::vector<Atom>& value) {
+	m_type = ListKind;
+
+	atomList = new std::vector<Atom>(value);
+}
+
 double Atom::asNumber() const noexcept {
 	return (m_type == NumberKind) ? numberValue : 0.0;
 }
 
 complex Atom::asComplex() const noexcept {
 	switch(m_type) {
-	case(ComplexKind):
+	case ComplexKind:
 		return complexValue;
-	case(NumberKind):
+	case NumberKind:
 		return complex(numberValue, 0);
 	default:
 		return complex(0, 0);
@@ -142,8 +168,18 @@ complex Atom::asComplex() const noexcept {
 std::string Atom::asSymbol() const noexcept {
 	std::string result;
 
-	if(m_type == SymbolKind){
+	if (m_type == SymbolKind) {
 		result = stringValue;
+	}
+
+	return result;
+}
+
+std::vector<Atom> Atom::asList() const noexcept {
+	std::vector<Atom> result;
+
+	if (m_type == ListKind) {
+		result = *atomList;
 	}
 
 	return result;
@@ -176,6 +212,8 @@ bool Atom::operator==(const Atom& right) const noexcept {
 		return complexValue == right.complexValue;
 	case SymbolKind:
 		return stringValue == right.stringValue;
+	case ListKind:
+		return *atomList == *right.atomList;
 	default:
 		return false;
 	}
@@ -194,6 +232,8 @@ std::ostream& operator<<(std::ostream& out, const Atom& a) {
 		out << a.asComplex().real() << "," << a.asComplex().imag();
 	} else if (a.isSymbol()) {
 		out << a.asSymbol();
+	} else if (a.isList()) {
+		out << "NOT DONE";
 	}
 
 	return out;
