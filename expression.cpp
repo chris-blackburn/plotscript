@@ -56,10 +56,6 @@ bool Expression::isHeadSymbol() const noexcept {
 	return m_head.isSymbol();
 }
 
-bool Expression::isHeadRoot() const noexcept {
-	return m_head.isRoot();
-}
-
 void Expression::append(const Atom& a) {
 	m_tail.emplace_back(a);
 }
@@ -211,13 +207,11 @@ std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 	out << exp.head();
 
 	for (auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e) {
-		out << *e;
-
-		// if this is a list and we are not at the last element in the tail, print space
-		// TODO: if not at last elemtn, print spaces
-		if (true) {
+		if (e != exp.tailConstBegin()) {
 			out << " ";
 		}
+
+		out << *e;
 	}
 
 	out << ")";

@@ -348,14 +348,61 @@ TEST_CASE("Test Interpreter special forms: begin and define", "[interpreter]") {
 TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
 
 	{
+		std::string program = "(list)";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(begin (define mylist (list 1)) (list mylist))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(std::vector<Expression>{Expression(1)})};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
 		std::string program = "(list (* I 1) (sqrt 4) 42 (list) (list 10 (/ 1 2)))";
 		INFO(program);
 		Expression result = run(program);
 
-		using E = Expression;
-		using Elist = std::vector<Expression>;
-		Elist expected = {E(complex(0, 1)), E(2), E(42), Elist({}), E(Elist{E(10), E(0.5)})};
+		std::vector<Expression> expected = {Expression(complex(0, 1)), Expression(2), Expression(42),
+			std::vector<Expression>({}), Expression(std::vector<Expression>{Expression(10),
+				Expression(0.5)})};
 		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(+ (list 1) 1)",
+			"(- (list 1) 1)",
+			"(- (list 1))",
+			"(* (list 1) 1)",
+			"(/ (list 1) 1)",
+			"(sqrt (list 1))",
+			"(sqrt (list (* 1 I)))",
+			"(^ (list 1) 2)",
+			"(^ (list (* 1 I)))",
+			"(ln (list 1))",
+			"(cos (list 1))",
+			"(sin (list 1))",
+			"(tan (list 1))",
+			"(real (list (* 1 I)))",
+			"(imag (list (* 1 I)))",
+			"(mag (list (* 1 I)))",
+			"(arg (list (* 1 I)))",
+			"(conj (list (* 1 I)))",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
 	}
 }
 

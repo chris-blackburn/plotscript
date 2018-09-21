@@ -15,6 +15,7 @@ TEST_CASE("Test expression list constructor", "[expression]") {
 		Expression(Atom("hi"))};
 	Expression exp(list);
 
+	// The head atom is of type NoneKind - it acts like a place holder
 	REQUIRE(!exp.isHeadNumber());
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
