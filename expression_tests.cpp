@@ -18,7 +18,6 @@ TEST_CASE("Test expression list constructor", "[expression]") {
 	REQUIRE(!exp.isHeadNumber());
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
-	REQUIRE(exp.isHeadRoot());
 }
 
 TEST_CASE("Test double expression", "[expression]") {

@@ -345,6 +345,20 @@ TEST_CASE("Test Interpreter special forms: begin and define", "[interpreter]") {
 	}
 }
 
+TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
+
+	{
+		std::string program = "(list (* I 1) (sqrt 4) 42 (list) (list 10 (/ 1 2)))";
+		INFO(program);
+		Expression result = run(program);
+
+		using E = Expression;
+		using Elist = std::vector<Expression>;
+		Elist expected = {E(complex(0, 1)), E(2), E(42), Elist({}), E(Elist{E(10), E(0.5)})};
+		REQUIRE(result == Expression(expected));
+	}
+}
+
 TEST_CASE("Test a medium-sized expression", "[interpreter]") {
 
 	{

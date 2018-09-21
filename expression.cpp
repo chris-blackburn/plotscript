@@ -8,16 +8,9 @@
 
 Expression::Expression() {}
 
-Expression::Expression(const std::vector<Expression>& a) {
-	m_head = Atom();
-	m_head.setRoot();
+Expression::Expression(const std::vector<Expression>& a): m_head(Atom()), m_tail(a) {}
 
-	m_tail = a;
-}
-
-Expression::Expression(const Atom& a) {
-	m_head = a;
-}
+Expression::Expression(const Atom& a): m_head(a) {}
 
 // recursive copy
 Expression::Expression(const Expression& a) {
@@ -71,8 +64,8 @@ void Expression::append(const Atom& a) {
 	m_tail.emplace_back(a);
 }
 
-Expression * Expression::tail() {
-	Expression * ptr = nullptr;
+Expression* Expression::tail() {
+	Expression* ptr = nullptr;
 
 	if (m_tail.size() > 0) {
 		ptr = &m_tail.back();
@@ -174,13 +167,20 @@ Expression Expression::handle_define(Environment& env) {
 	return result;
 }
 
+Expression Expression::handle_list(Environment& env) {
+	std::vector<Expression> result;
+	for (auto& a : m_tail) {
+		result.push_back(a.eval(env));
+	}
+
+	return Expression(result);
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment& env) {
-	if (m_tail.empty()) {
-		return handle_lookup(m_head, env);
-	} else if(m_head.isSymbol() && m_head.asSymbol() == "begin") {
+	if(m_head.isSymbol() && m_head.asSymbol() == "begin") {
 
 		// handle begin special-form
 		return handle_begin(env);
@@ -188,6 +188,12 @@ Expression Expression::eval(Environment& env) {
 
 		// handle define special-form
 		return handle_define(env);
+	} else if (m_head.isSymbol() && m_head.asSymbol() == "list") {
+
+		// handle list special-form
+		return handle_list(env);
+	} else if (m_tail.empty()) {
+		return handle_lookup(m_head, env);
 	} else {
 
 		// else attempt to treat as procedure
@@ -200,13 +206,18 @@ Expression Expression::eval(Environment& env) {
 	}
 }
 
-
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 	out << "(";
 	out << exp.head();
 
 	for (auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e) {
 		out << *e;
+
+		// if this is a list and we are not at the last element in the tail, print space
+		// TODO: if not at last elemtn, print spaces
+		if (true) {
+			out << " ";
+		}
 	}
 
 	out << ")";
