@@ -10,6 +10,17 @@ TEST_CASE("Test default expression", "[expression]") {
 	REQUIRE(!exp.isHeadSymbol());
 }
 
+TEST_CASE("Test expression list constructor", "[expression]") {
+	std::vector<Expression> list = {Expression(1), Expression(complex(0, 1)),
+		Expression(Atom("hi"))};
+	Expression exp(list);
+
+	REQUIRE(!exp.isHeadNumber());
+	REQUIRE(!exp.isHeadComplex());
+	REQUIRE(!exp.isHeadSymbol());
+	REQUIRE(exp.isHeadRoot());
+}
+
 TEST_CASE("Test double expression", "[expression]") {
 	Expression exp(6.023);
 

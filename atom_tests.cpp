@@ -12,6 +12,22 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isRoot());
+	}
+
+	{
+		INFO("Default Constructor (set as root)");
+		Atom a;
+		REQUIRE(a.setRoot());
+
+		REQUIRE(!a.isNone());
+		REQUIRE(!a.isNumber());
+		REQUIRE(!a.isComplex());
+		REQUIRE(!a.isSymbol());
+		REQUIRE(a.isRoot());
+
+		// setRoot on RootKind still returns true
+		REQUIRE(a.setRoot());
 	}
 
 	{
@@ -22,6 +38,9 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isRoot());
+
+		REQUIRE(!a.setRoot());
 	}
 
 	{
@@ -32,6 +51,9 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isRoot());
+
+		REQUIRE(!a.setRoot());
 	}
 
 	{
@@ -42,6 +64,9 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(a.isSymbol());
+		REQUIRE(!a.isRoot());
+
+		REQUIRE(!a.setRoot());
 	}
 
 	{
@@ -53,6 +78,9 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(a.isSymbol());
+		REQUIRE(!a.isRoot());
+
+		REQUIRE(!a.setRoot());
 	}
 
 	{

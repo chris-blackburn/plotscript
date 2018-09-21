@@ -89,6 +89,19 @@ bool Atom::isSymbol() const noexcept {
 	return m_type == SymbolKind;
 }
 
+bool Atom::setRoot() noexcept {
+	if (m_type == NoneKind) {
+		m_type = RootKind;
+	}
+
+	// If NoneKind, or RootKind, isRoot will be true
+	return isRoot();
+}
+
+bool Atom::isRoot() const noexcept {
+	return m_type == RootKind;
+}
+
 double Atom::truncateToZero(double value) {
 
 	// if the value is smaller than or equal to epsilon, just make it zero

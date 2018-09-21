@@ -37,7 +37,7 @@ public:
 	Atom(const Atom& x);
 
 	/// Assign an Atom
-	Atom & operator=(const Atom& x);
+	Atom& operator=(const Atom& x);
 
 	/// Atom destructor
 	~Atom();
@@ -53,6 +53,13 @@ public:
 
 	/// predicate to determine if an Atom is of type Symbol
 	bool isSymbol() const noexcept;
+
+	/// Set the type of the atom to RootKind (to root an AST). Returns true if setting it was
+	/// successful or if it's already a RootKind. It will only set NoneKind type Atoms to roots.
+	bool setRoot() noexcept;
+
+	/// predicate to determine if an Atom is of type RootKind
+	bool isRoot() const noexcept;
 
 	/// value of Atom as a number, return 0 if not a Number
 	double asNumber() const noexcept;
@@ -70,7 +77,8 @@ public:
 private:
 
 	// internal enum of known types
-	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind};
+	// RootKind atoms have no value - they are used to mark the head of an expression AST
+	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind, RootKind};
 
 	// track the type
 	Type m_type;

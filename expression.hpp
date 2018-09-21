@@ -26,6 +26,9 @@ public:
 	/// Default construct and Expression, whose type in NoneType
 	Expression();
 
+	/// Constructor for an list of expressions. The head atom will be ListRoot type
+	Expression(const std::vector<Expression>& a);
+
 	/*! Construct an Expression with given Atom as head an empty tail
 		\param atom the atom to make the head
 	*/
@@ -63,6 +66,9 @@ public:
 
 	/// convienience member to determine if head atom is a symbol
 	bool isHeadSymbol() const noexcept;
+
+	/// convienience member to determine if head atom is acting as a root for an AST
+	bool isHeadRoot() const noexcept;
 
 	/// Evaluate expression using a post-order traversal (recursive)
 	Expression eval(Environment& env);

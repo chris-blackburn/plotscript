@@ -8,6 +8,13 @@
 
 Expression::Expression() {}
 
+Expression::Expression(const std::vector<Expression>& a) {
+	m_head = Atom();
+	m_head.setRoot();
+
+	m_tail = a;
+}
+
 Expression::Expression(const Atom& a) {
 	m_head = a;
 }
@@ -56,6 +63,9 @@ bool Expression::isHeadSymbol() const noexcept {
 	return m_head.isSymbol();
 }
 
+bool Expression::isHeadRoot() const noexcept {
+	return m_head.isRoot();
+}
 
 void Expression::append(const Atom& a) {
 	m_tail.emplace_back(a);
