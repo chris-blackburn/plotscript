@@ -10,10 +10,6 @@ Defines the Atom type and associated functions.
 #include <complex>
 using complex = std::complex<double>;
 
-// Needed for List type.
-#include <list>
-// #define list std::list<Atom>
-
 /*! \class Atom
 \brief A variant type that may be a Number or Symbol or the default type None.
 
@@ -33,9 +29,6 @@ public:
 
 	/// Construct an Atom of type Symbol named value
 	Atom(const std::string& value);
-
-	/// Construct an Atom of type list with the value list
-	Atom(const std::list<Atom>& value);
 
 	/// Construct an Atom directly from a Token
 	Atom(const Token& token);
@@ -61,9 +54,6 @@ public:
 	/// predicate to determine if an Atom is of type Symbol
 	bool isSymbol() const noexcept;
 
-	/// predicate to determine if an Atom is of type List
-	bool isList() const noexcept;
-
 	/// value of Atom as a number, return 0 if not a Number
 	double asNumber() const noexcept;
 
@@ -74,16 +64,13 @@ public:
 	/// value of Atom as a string, returns empty-string if not a Symbol
 	std::string asSymbol() const noexcept;
 
-	/// value of Atom as a list, returns empty-list if not a list
-	std::list<Atom> asList() const noexcept;
-
 	/// equality comparison based on type and value
 	bool operator==(const Atom& right) const noexcept;
 
 private:
 
 	// internal enum of known types
-	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind, ListKind};
+	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind};
 
 	// track the type
 	Type m_type;
@@ -94,7 +81,6 @@ private:
 		double numberValue;
 		std::string stringValue;
 		complex complexValue;
-		std::list<Atom>* atomList;
 	};
 
 	// Helper function to make numbers smaller than or equal to epsilon equal to zero
@@ -108,9 +94,6 @@ private:
 
 	// helper to set type and value of Symbol
 	void setSymbol(const std::string& value);
-
-	// helper to set type and value of List
-	void setList(const std::list<Atom>& value);
 };
 
 /// inequality comparison for Atom

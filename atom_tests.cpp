@@ -12,7 +12,6 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
 	{
@@ -23,7 +22,6 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
 	{
@@ -34,7 +32,6 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(a.isComplex());
 		REQUIRE(!a.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
 	{
@@ -45,21 +42,8 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(a.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
-	{
-		INFO("List Constructor");
-		Atom a({Atom(1), Atom(7.1), Atom("a"), Atom(complex(0, 1))});
-
-		REQUIRE(!a.isNone());
-		REQUIRE(!a.isNumber());
-		REQUIRE(!a.isComplex());
-		REQUIRE(!a.isSymbol());
-		REQUIRE(a.isList());
-	}
-
-	// TODO: Write tests for inputting complex number tokens
 	{
 		INFO("Token Constructor");
 		Token t("hi");
@@ -76,35 +60,24 @@ TEST_CASE("Test constructors", "[atom]") {
 		Atom a("hi");
 		Atom b(1.0);
 		Atom c(complex(1, 1));
-		Atom d({a, b, c});
 
-		Atom e = a;
+		Atom d = a;
+		REQUIRE(!d.isNone());
+		REQUIRE(!d.isNumber());
+		REQUIRE(!d.isComplex());
+		REQUIRE(d.isSymbol());
+
+		Atom e = b;
 		REQUIRE(!e.isNone());
-		REQUIRE(!e.isNumber());
+		REQUIRE(e.isNumber());
 		REQUIRE(!e.isComplex());
-		REQUIRE(e.isSymbol());
-		REQUIRE(!e.isList());
+		REQUIRE(!e.isSymbol());
 
-		Atom f = b;
+		Atom f = c;
 		REQUIRE(!f.isNone());
-		REQUIRE(f.isNumber());
-		REQUIRE(!f.isComplex());
+		REQUIRE(!f.isNumber());
+		REQUIRE(f.isComplex());
 		REQUIRE(!f.isSymbol());
-		REQUIRE(!f.isList());
-
-		Atom g = c;
-		REQUIRE(!g.isNone());
-		REQUIRE(!g.isNumber());
-		REQUIRE(g.isComplex());
-		REQUIRE(!g.isSymbol());
-		REQUIRE(!g.isList());
-
-		Atom h = d;
-		REQUIRE(!h.isNone());
-		REQUIRE(!h.isNumber());
-		REQUIRE(!h.isComplex());
-		REQUIRE(!h.isSymbol());
-		REQUIRE(h.isList());
 	}
 }
 
@@ -119,7 +92,6 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
 	{
@@ -131,7 +103,6 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
 	{
@@ -143,7 +114,6 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
 	{
@@ -155,19 +125,6 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
-		REQUIRE(!a.isList());
-	}
-
-	{
-		INFO("default to list");
-		Atom a;
-		Atom b(std::list<Atom>{a});
-		b = a;
-		REQUIRE(b.isNone());
-		REQUIRE(!b.isNumber());
-		REQUIRE(!b.isComplex());
-		REQUIRE(!b.isSymbol());
-		REQUIRE(!a.isList());
 	}
 
 	{
@@ -199,20 +156,11 @@ TEST_CASE("Test assignment", "[atom]") {
 
 	{
 		INFO("number to symbol");
-		Atom a(1.0);
-		Atom b("hi");
+		Atom a("hi");
+		Atom b(1.0);
 		b = a;
-		REQUIRE(b.isNumber());
-		REQUIRE(b.asNumber() == 1.0);
-	}
-
-	{
-		INFO("number to list");
-		Atom a(1.0);
-		Atom b(std::list<Atom>{a});
-		b = a;
-		REQUIRE(b.isNumber());
-		REQUIRE(b.asNumber() == 1.0);
+		REQUIRE(b.isSymbol());
+		REQUIRE(b.asSymbol() == "hi");
 	}
 
 	{
@@ -246,15 +194,6 @@ TEST_CASE("Test assignment", "[atom]") {
 		INFO("symbol to symbol");
 		Atom a("hi");
 		Atom b("bye");
-		b = a;
-		REQUIRE(b.isSymbol());
-		REQUIRE(b.asSymbol() == "hi");
-	}
-
-	{
-		INFO("symbol to list");
-		Atom a("hi");
-		Atom b(std::list<Atom>{a});
 		b = a;
 		REQUIRE(b.isSymbol());
 		REQUIRE(b.asSymbol() == "hi");
@@ -295,15 +234,6 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(b.isComplex());
 		REQUIRE(b.asComplex() == complex(1, 1));
 	}
-
-	{
-		INFO("complex to list");
-		Atom a(complex(1, 1));
-		Atom b(std::list<Atom>{a});
-		b = a;
-		REQUIRE(b.isComplex());
-		REQUIRE(b.asComplex() == complex(1, 1));
-	}
 }
 
 TEST_CASE("test comparison", "[atom]") {
@@ -333,13 +263,6 @@ TEST_CASE("test comparison", "[atom]") {
 		INFO("compare default to symbol");
 		Atom a;
 		Atom b("hi");
-		REQUIRE(a != b);
-	}
-
-	{
-		INFO("compare default to list");
-		Atom a;
-		Atom b(std::list<Atom>{});
 		REQUIRE(a != b);
 	}
 
@@ -374,13 +297,6 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
-		INFO("compare number to list");
-		Atom a(1.0);
-		Atom b(std::list<Atom>{a});
-		REQUIRE(a != b);
-	}
-
-	{
 		INFO("compare symbol to default");
 		Atom a("hi");
 		Atom b;
@@ -411,13 +327,6 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
-		INFO("symbol number to list");
-		Atom a("hi");
-		Atom b(std::list<Atom>{a});
-		REQUIRE(a != b);
-	}
-
-	{
 		INFO("compare complex to default");
 		Atom a(complex(1, 1));
 		Atom b;
@@ -432,9 +341,9 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
-		INFO("compare complex to symbol");
+		INFO("compare complex to complex");
 		Atom a(complex(1, 2));
-		Atom b("hi");
+		Atom b(complex(1, 1));
 		REQUIRE(a != b);
 	}
 
@@ -445,55 +354,6 @@ TEST_CASE("test comparison", "[atom]") {
 		Atom c(complex(1, 2));
 		REQUIRE(a == b);
 		REQUIRE(a != c);
-	}
-
-	{
-		INFO("compare complex to list");
-		Atom a(complex(1, 1));
-		Atom b(std::list<Atom>{Atom(1.0)});
-		REQUIRE(a != b);
-	}
-
-	{
-		INFO("compare list to default");
-		Atom a(std::list<Atom>{});
-		Atom b;
-		REQUIRE(a != b);
-	}
-
-	{
-		INFO("compare list to number");
-		Atom a(std::list<Atom>{});
-		Atom b(1.0);
-		REQUIRE(a != b);
-	}
-
-	{
-		INFO("compare list to complex");
-		Atom a(std::list<Atom>{});
-		Atom b(complex(1, 1));
-		REQUIRE(a != b);
-	}
-
-	{
-		INFO("compare list to symbol");
-		Atom a(std::list<Atom>{});
-		Atom b("hi");
-		REQUIRE(a != b);
-	}
-
-	{
-		INFO("compare list to list");
-		Atom a(std::list<Atom>{Atom(1.0), Atom("hi"), Atom(complex(1, 1))});
-		Atom b(std::list<Atom>{Atom(1.0), Atom("hi"), Atom(complex(1, 1))});
-		Atom c(std::list<Atom>{Atom(1.0), Atom("bye"), Atom(complex(1, 1))});
-
-		// embedded lists
-		Atom d(std::list<Atom>{Atom(1.0), std::list<Atom>{Atom("bye"), Atom(complex(1, 1))}});
-		Atom e(std::list<Atom>{Atom(1.0), std::list<Atom>{Atom("bye"), Atom(complex(1, 1))}});
-		REQUIRE(a == b);
-		REQUIRE(a != c);
-		REQUIRE(d == e);
 	}
 }
 
@@ -518,12 +378,6 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 	}
 
 	{
-		INFO("complex as list");
-		Atom a(1.7);
-		REQUIRE(a.asList() == std::list<Atom>{});
-	}
-
-	{
 		INFO("complex as number");
 		Atom a(complex(0, 1));
 		REQUIRE(a.asNumber() == 0);
@@ -542,12 +396,6 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 	}
 
 	{
-		INFO("complex as list");
-		Atom a(complex(0, 1));
-		REQUIRE(a.asList() == std::list<Atom>{});
-	}
-
-	{
 		INFO("symbol as number");
 		Atom a("A");
 		REQUIRE(a.asNumber() == 0);
@@ -563,35 +411,5 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 		INFO("symbol as symbol");
 		Atom a("A");
 		REQUIRE(a.asSymbol() == "A");
-	}
-
-	{
-		INFO("symbol as list");
-		Atom a("A");
-		REQUIRE(a.asList() == std::list<Atom>{});
-	}
-
-	{
-		INFO("list as number");
-		Atom a(std::list<Atom>{Atom(1)});
-		REQUIRE(a.asNumber() == 0);
-	}
-
-	{
-		INFO("list as complex");
-		Atom a(std::list<Atom>{Atom(1)});
-		REQUIRE(a.asComplex() == complex(0, 0));
-	}
-
-	{
-		INFO("list as symbol");
-		Atom a(std::list<Atom>{Atom(1)});
-		REQUIRE(a.asSymbol() == "");
-	}
-
-	{
-		INFO("list as list");
-		Atom a(std::list<Atom>{Atom(1)});
-		REQUIRE(a.asList() == std::list<Atom>{Atom(1)});
 	}
 }
