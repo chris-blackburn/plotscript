@@ -596,6 +596,71 @@ TEST_CASE("Testing list specific functions (join)", "[Interpreter]") {
 	}
 }
 
+TEST_CASE("Testing list specific functions (range)", "[Interpreter]") {
+	{
+		std::string program = "(range 0 2 1)";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(0), Expression(1), Expression(2)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(range 0 .22 .11)";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(0), Expression(.11), Expression(.22)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(range -1 1 1)";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(-1), Expression(0), Expression(1)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(range -4 -2 1)";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(-4), Expression(-3), Expression(-2)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(range 2 5 4)";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(2)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(range (list) (2) (2))",
+			"(range (2) (list) (2))",
+			"(range (2) (2) (list))",
+			"(range (1))",
+			"(range (1) (3))",
+			"(range (2) (1) (1))",
+			"(range (2) (3) (-1))"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Test a medium-sized expression", "[interpreter]") {
 
 	{

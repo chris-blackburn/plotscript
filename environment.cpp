@@ -440,6 +440,43 @@ Expression join(const std::vector<Expression>& args) {
 	throw SemanticError("Error: wrong number of arguments for join which takes two arguments");
 }
 
+Expression range(const std::vector<Expression>& args) {
+	if (nargs_equal(args, 3)) {
+		if (args[0].isHeadNumber() && args[1].isHeadNumber() && args[2].isHeadNumber()) {
+			if (args[1].head().asNumber() > args[0].head().asNumber()) {
+				if (args[2].head().asNumber() > 0) {
+					double begin = args[0].head().asNumber();
+					double end = args[1].head().asNumber();
+					double step = args[2].head().asNumber();
+
+					// pre-allocate memory into the results vector
+					std::vector<Expression> result;
+					result.reserve(sizeof(Expression) * ((end - begin) / step));
+
+					// Actually perform the count and save to result
+					for (double i = begin; i <= end; i = i + step) {
+						result.push_back(Expression(i));
+					}
+
+					return Expression(result);
+				}
+
+				// The step argument is not positive
+				throw SemanticError("Error: negative or zero increment in range");
+			}
+
+			// The second number in the range is larger than the first
+			throw SemanticError("Error: end should be greater than begin in range");
+		}
+
+		// if there is one argument that is not a number,
+		throw SemanticError("Error: one of the arguments to range is not a number");
+	}
+
+	// This will only get triggered when there is the wrong number of arguments
+	throw SemanticError("Error: wrong number of arguments for range which takes three arguments");
+}
+
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const complex I = complex(0, 1);
@@ -589,4 +626,7 @@ void Environment::reset() {
 
 	// Procedure: join
 	envmap.emplace("join", EnvResult(ProcedureType, join));
+
+	// Procedure: range
+	envmap.emplace("range", EnvResult(ProcedureType, range));
 }
