@@ -550,6 +550,7 @@ TEST_CASE("Testing list specific functions (append)", "[Interpreter]") {
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
+			"(append (2) (list))",
 			"(append (list) (2) (3))",
 			"(append (+ 17 (* 1 I)))"
 		};
@@ -1156,6 +1157,9 @@ TEST_CASE("Test some semantically invalid expresions", "[interpreter]") {
 		"(@ none)", // so such procedure
 		"(- 1 1 2)", // too many arguments
 		"(define begin 1)", // redefine special form
+		"(define define 1)",
+		"(define list 1)",
+		"(define 1 1)",
 		"(define pi 3.14)" // redefine builtin symbol
 	};
 

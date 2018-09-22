@@ -402,7 +402,7 @@ Expression append(const std::vector<Expression>& args) {
 		}
 
 		// if there is one argument that is not a list,
-		throw SemanticError("Error: one of the arguments to append is not a list");
+		throw SemanticError("Error: the first argument to append should be a list");
 	}
 
 	// This will only get triggered when there is the wrong number of arguments

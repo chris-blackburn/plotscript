@@ -53,9 +53,6 @@ void Atom::copy(const Atom& x) {
 	case SymbolKind:
 		setSymbol(x.stringValue);
 		break;
-	case ListRootKind:
-		setListRoot();
-		break;
 	}
 }
 
@@ -95,10 +92,6 @@ bool Atom::isSymbol() const noexcept {
 	return m_type == SymbolKind;
 }
 
-bool Atom::isListRoot() const noexcept {
-	return m_type == ListRootKind;
-}
-
 double Atom::truncateToZero(double value) {
 
 	// if the value is smaller than or equal to epsilon, just make it zero
@@ -132,10 +125,6 @@ void Atom::setSymbol(const std::string& value) {
 
 	// copy construct in place
 	new (&stringValue) std::string(value);
-}
-
-void Atom::setListRoot() {
-	m_type = ListRootKind;
 }
 
 double Atom::asNumber() const noexcept {
@@ -173,10 +162,6 @@ bool Atom::operator==(const Atom& right) const noexcept {
 
 		// Avoid the default case for NoneKind - if both are NoneKind, then it will return
 		// true once outside this switch statement
-		break;
-	case ListRootKind:
-
-		// Avoid defaulting to false
 		break;
 	case NumberKind:
 		{

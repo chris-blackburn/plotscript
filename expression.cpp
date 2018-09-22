@@ -7,9 +7,7 @@
 
 Expression::Expression() {}
 
-Expression::Expression(const std::vector<Expression>& a): m_head(Atom()), m_tail(a) {
-	m_head.setListRoot();
-}
+Expression::Expression(const std::vector<Expression>& a): m_head(Atom("list")), m_tail(a) {}
 
 Expression::Expression(const Atom& a): m_head(a) {}
 
@@ -57,7 +55,7 @@ bool Expression::isHeadSymbol() const noexcept {
 }
 
 bool Expression::isHeadListRoot() const noexcept {
-	return m_head.isListRoot();
+	return m_head.isSymbol() && m_head.asSymbol() == "list";
 }
 
 void Expression::append(const Atom& a) {
@@ -146,7 +144,7 @@ Expression Expression::handle_define(Environment& env) {
 
 	// but tail[0] must not be a special-form or procedure
 	std::string s = m_tail[0].head().asSymbol();
-	if (s == "define" || s == "begin") {
+	if (s == "define" || s == "begin" || s == "list") {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
 
@@ -180,11 +178,11 @@ Expression Expression::handle_list(Environment& env) {
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment& env) {
-	if(m_head.isSymbol() && m_head.asSymbol() == "begin") {
+	if (m_head.isSymbol() && m_head.asSymbol() == "begin") {
 
 		// handle begin special-form
 		return handle_begin(env);
-	} else if(m_head.isSymbol() && m_head.asSymbol() == "define") {
+	} else if (m_head.isSymbol() && m_head.asSymbol() == "define") {
 
 		// handle define special-form
 		return handle_define(env);
@@ -208,7 +206,9 @@ Expression Expression::eval(Environment& env) {
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 	out << "(";
-	out << exp.head();
+	if (!exp.isHeadListRoot()) {
+		out << exp.head();
+	}
 
 	for (auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e) {
 		if (e != exp.tailConstBegin()) {
