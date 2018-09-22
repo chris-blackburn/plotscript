@@ -362,15 +362,31 @@ Expression rest(const std::vector<Expression>& args) {
 			}
 
 			// When the iterators for beginnging and end are equal,the list is empty
-			throw SemanticError("Error: argument to first is an empty list");
+			throw SemanticError("Error: argument to rest is an empty list");
 		}
 
 		// if there is one argument that is not a list,
-		throw SemanticError("Error: argument to first is not a list");
+		throw SemanticError("Error: argument to rest is not a list");
 	}
 
 	// This will only get triggered when there is more than one argument pass to first
-	throw SemanticError("Error: more than one argument in call to first");
+	throw SemanticError("Error: more than one argument in call to rest");
+}
+
+Expression length(const std::vector<Expression>& args) {
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadListRoot()) {
+			std::vector<Expression>::const_iterator cbegin = args[0].tailConstBegin();
+			std::vector<Expression>::const_iterator cend = args[0].tailConstEnd();
+			return Expression(std::distance(cbegin, cend));
+		}
+
+		// if there is one argument that is not a list,
+		throw SemanticError("Error: argument to length is not a list");
+	}
+
+	// This will only get triggered when there is more than one argument pass to first
+	throw SemanticError("Error: more than one argument in call to length");
 }
 
 const double PI = std::atan2(0, -1);
@@ -513,4 +529,7 @@ void Environment::reset() {
 
 	// Procedure: rest
 	envmap.emplace("rest", EnvResult(ProcedureType, rest));
+
+	// Procedure: length
+	envmap.emplace("length", EnvResult(ProcedureType, length));
 }
