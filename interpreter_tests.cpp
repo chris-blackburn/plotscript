@@ -528,6 +528,39 @@ TEST_CASE("Testing list specific functions (length)", "[Interpreter]") {
 	}
 }
 
+TEST_CASE("Testing list specific functions (append)", "[Interpreter]") {
+	{
+		std::string program = "(append (list) (1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(1)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(append (list) (list 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(std::vector<Expression>{Expression(1)})};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(append (list) (2) (3))",
+			"(append (+ 17 (* 1 I)))",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Test a medium-sized expression", "[interpreter]") {
 
 	{

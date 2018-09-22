@@ -389,6 +389,26 @@ Expression length(const std::vector<Expression>& args) {
 	throw SemanticError("Error: more than one argument in call to length");
 }
 
+Expression append(const std::vector<Expression>& args) {
+	if (nargs_equal(args, 2)) {
+		if (args[0].isHeadListRoot()) {
+			std::vector<Expression>::const_iterator cbegin = args[0].tailConstBegin();
+			std::vector<Expression>::const_iterator cend = args[0].tailConstEnd();
+
+			// Copy the list and add the second argument to the new list
+			std::vector<Expression> result(cbegin, cend);
+			result.push_back(args[1]);
+			return Expression(result);
+		}
+
+		// if there is one argument that is not a list,
+		throw SemanticError("Error: first argument to append is not a list");
+	}
+
+	// This will only get triggered when there is more than one argument pass to first
+	throw SemanticError("Error: more than two arguments in call to append");
+}
+
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const complex I = complex(0, 1);
@@ -532,4 +552,7 @@ void Environment::reset() {
 
 	// Procedure: length
 	envmap.emplace("length", EnvResult(ProcedureType, length));
+
+	// Procedure: append
+	envmap.emplace("append", EnvResult(ProcedureType, append));
 }
