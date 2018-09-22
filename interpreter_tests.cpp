@@ -396,7 +396,7 @@ TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
 			"(imag (list (* 1 I)))",
 			"(mag (list (* 1 I)))",
 			"(arg (list (* 1 I)))",
-			"(conj (list (* 1 I)))",
+			"(conj (list (* 1 I)))"
 		};
 
 		for (auto s : programs) {
@@ -431,7 +431,7 @@ TEST_CASE("Testing list specific functions (first)", "[Interpreter]") {
 			"(first (list 1) 1)",
 			"(first (list))",
 			"(first (1))",
-			"(first (+ 17 (* 1 I)))",
+			"(first (+ 17 (* 1 I)))"
 		};
 
 		for (auto s : programs) {
@@ -476,7 +476,7 @@ TEST_CASE("Testing list specific functions (rest)", "[Interpreter]") {
 			"(rest (list 1) 1)",
 			"(rest (list))",
 			"(rest (1))",
-			"(rest (+ 17 (* 1 I)))",
+			"(rest (+ 17 (* 1 I)))"
 		};
 
 		for (auto s : programs) {
@@ -518,7 +518,7 @@ TEST_CASE("Testing list specific functions (length)", "[Interpreter]") {
 		std::vector<std::string> programs = {
 			"(length (list 1) 1)",
 			"(length (1))",
-			"(length (+ 17 (* 1 I)))",
+			"(length (+ 17 (* 1 I)))"
 		};
 
 		for (auto s : programs) {
@@ -551,7 +551,42 @@ TEST_CASE("Testing list specific functions (append)", "[Interpreter]") {
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(append (list) (2) (3))",
-			"(append (+ 17 (* 1 I)))",
+			"(append (+ 17 (* 1 I)))"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
+TEST_CASE("Testing list specific functions (join)", "[Interpreter]") {
+	{
+		std::string program = "(join (list) (list 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(1)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(join (list (* I 2)) (list 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(complex(0, 2)), Expression(1)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(join (list) (2) (3))",
+			"(join (list) (2))",
+			"(join (2) (list))",
+			"(join (+ 17 (* 1 I)))"
 		};
 
 		for (auto s : programs) {

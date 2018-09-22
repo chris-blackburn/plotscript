@@ -369,7 +369,7 @@ Expression rest(const std::vector<Expression>& args) {
 		throw SemanticError("Error: argument to rest is not a list");
 	}
 
-	// This will only get triggered when there is more than one argument pass to first
+	// This will only get triggered when there is more than one argument that passes
 	throw SemanticError("Error: more than one argument in call to rest");
 }
 
@@ -385,7 +385,7 @@ Expression length(const std::vector<Expression>& args) {
 		throw SemanticError("Error: argument to length is not a list");
 	}
 
-	// This will only get triggered when there is more than one argument pass to first
+	// This will only get triggered when there is more than one argument that passes
 	throw SemanticError("Error: more than one argument in call to length");
 }
 
@@ -402,11 +402,42 @@ Expression append(const std::vector<Expression>& args) {
 		}
 
 		// if there is one argument that is not a list,
-		throw SemanticError("Error: first argument to append is not a list");
+		throw SemanticError("Error: one of the arguments to append is not a list");
 	}
 
-	// This will only get triggered when there is more than one argument pass to first
-	throw SemanticError("Error: more than two arguments in call to append");
+	// This will only get triggered when there is the wrong number of arguments
+	throw SemanticError("Error: wrong number of arguments for append which takes two arguments");
+}
+
+Expression join(const std::vector<Expression>& args) {
+	if (nargs_equal(args, 2)) {
+		if (args[0].isHeadListRoot() && args[1].isHeadListRoot()) {
+
+			// Iterators for first list
+			std::vector<Expression>::const_iterator cbegin1 = args[0].tailConstBegin();
+			std::vector<Expression>::const_iterator cend1 = args[0].tailConstEnd();
+
+			// iterators for second list
+			std::vector<Expression>::const_iterator cbegin2 = args[1].tailConstBegin();
+			std::vector<Expression>::const_iterator cend2 = args[1].tailConstEnd();
+
+			// preallocate space in the new result vector
+			std::vector<Expression> result;
+			result.reserve(std::distance(cbegin1, cend1) + std::distance(cbegin2, cend2));
+
+			// Add the elements from the first list then from the second list to the result vector
+			result.insert(result.end(), cbegin1, cend1);
+			result.insert(result.end(), cbegin2, cend2);
+
+			return Expression(result);
+		}
+
+		// if there is one argument that is not a list,
+		throw SemanticError("Error: one of the arguments to join is not a list");
+	}
+
+	// This will only get triggered when there is the wrong number of arguments
+	throw SemanticError("Error: wrong number of arguments for join which takes two arguments");
 }
 
 const double PI = std::atan2(0, -1);
@@ -555,4 +586,7 @@ void Environment::reset() {
 
 	// Procedure: append
 	envmap.emplace("append", EnvResult(ProcedureType, append));
+
+	// Procedure: join
+	envmap.emplace("join", EnvResult(ProcedureType, join));
 }
