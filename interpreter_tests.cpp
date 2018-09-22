@@ -406,7 +406,7 @@ TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
 	}
 }
 
-TEST_CASE("Testing list specific functions", "[Interpreter]") {
+TEST_CASE("Testing list specific functions (first)", "[Interpreter]") {
 
 	{
 		std::string program = "(first (list 1 2 3))";
@@ -432,6 +432,51 @@ TEST_CASE("Testing list specific functions", "[Interpreter]") {
 			"(first (list))",
 			"(first (1))",
 			"(first (+ 17 (* 1 I)))",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
+TEST_CASE("Testing list specific functions (rest)", "[Interpreter]") {
+
+	{
+		std::string program = "(rest (list 1 2 3))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(2), Expression(3)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(rest (list 1 (list 2)))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(std::vector<Expression>{Expression(2)})};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(rest (list 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(rest (list 1) 1)",
+			"(rest (list))",
+			"(rest (1))",
+			"(rest (+ 17 (* 1 I)))",
 		};
 
 		for (auto s : programs) {
