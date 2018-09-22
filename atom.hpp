@@ -54,6 +54,12 @@ public:
 	/// predicate to determine if an Atom is of type Symbol
 	bool isSymbol() const noexcept;
 
+	/// Set the type of the atom to ListRootKind
+	void setListRoot();
+
+	/// predicate to determine if an Atom is of type RootKind
+	bool isListRoot() const noexcept;
+
 	/// value of Atom as a number, return 0 if not a Number
 	double asNumber() const noexcept;
 
@@ -70,7 +76,8 @@ public:
 private:
 
 	// internal enum of known types
-	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind};
+	// ListRootKind atoms have no value - they are used to mark the head of an expression AST
+	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind, ListRootKind};
 
 	// track the type
 	Type m_type;
@@ -82,6 +89,9 @@ private:
 		std::string stringValue;
 		complex complexValue;
 	};
+
+	// Helper function for copy construct and copy assignment
+	void copy(const Atom& x);
 
 	// Helper function to make numbers smaller than or equal to epsilon equal to zero
 	double truncateToZero(double value);

@@ -8,6 +8,7 @@ TEST_CASE("Test default expression", "[expression]") {
 	REQUIRE(!exp.isHeadNumber());
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
+	REQUIRE(!exp.isHeadListRoot());
 }
 
 TEST_CASE("Test expression list constructor", "[expression]") {
@@ -15,10 +16,10 @@ TEST_CASE("Test expression list constructor", "[expression]") {
 		Expression(Atom("hi"))};
 	Expression exp(list);
 
-	// The head atom is of type NoneKind - it acts like a place holder
 	REQUIRE(!exp.isHeadNumber());
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
+	REQUIRE(exp.isHeadListRoot());
 }
 
 TEST_CASE("Test double expression", "[expression]") {
@@ -27,6 +28,7 @@ TEST_CASE("Test double expression", "[expression]") {
 	REQUIRE(exp.isHeadNumber());
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
+	REQUIRE(!exp.isHeadListRoot());
 }
 
 TEST_CASE("Test complex expression", "[expression]") {
@@ -35,6 +37,7 @@ TEST_CASE("Test complex expression", "[expression]") {
 	REQUIRE(!exp.isHeadNumber());
 	REQUIRE(exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
+	REQUIRE(!exp.isHeadListRoot());
 }
 
 TEST_CASE("Test symbol expression", "[expression]") {
@@ -43,4 +46,5 @@ TEST_CASE("Test symbol expression", "[expression]") {
 	REQUIRE(!exp.isHeadNumber());
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(exp.isHeadSymbol());
+	REQUIRE(!exp.isHeadListRoot());
 }

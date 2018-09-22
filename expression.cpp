@@ -1,14 +1,15 @@
 #include "expression.hpp"
 
 #include <sstream>
-#include <list>
 
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
 Expression::Expression() {}
 
-Expression::Expression(const std::vector<Expression>& a): m_head(Atom()), m_tail(a) {}
+Expression::Expression(const std::vector<Expression>& a): m_head(Atom()), m_tail(a) {
+	m_head.setListRoot();
+}
 
 Expression::Expression(const Atom& a): m_head(a) {}
 
@@ -35,7 +36,6 @@ Expression& Expression::operator=(const Expression& a) {
 	return *this;
 }
 
-
 Atom& Expression::head() {
 	return m_head;
 }
@@ -54,6 +54,10 @@ bool Expression::isHeadComplex() const noexcept {
 
 bool Expression::isHeadSymbol() const noexcept {
 	return m_head.isSymbol();
+}
+
+bool Expression::isHeadListRoot() const noexcept {
+	return m_head.isListRoot();
 }
 
 void Expression::append(const Atom& a) {

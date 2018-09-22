@@ -39,27 +39,33 @@ Atom::Atom(const std::string& value): Atom() {
 	setSymbol(value);
 }
 
-Atom::Atom(const Atom& x): Atom() {
-	if (x.isNumber()) {
+void Atom::copy(const Atom& x) {
+	switch (x.m_type) {
+	case NoneKind:
+		m_type = NoneKind;
+		break;
+	case NumberKind:
 		setNumber(x.numberValue);
-	} else if (x.isComplex()) {
+		break;
+	case ComplexKind:
 		setComplex(x.complexValue);
-	} else if (x.isSymbol()) {
+		break;
+	case SymbolKind:
 		setSymbol(x.stringValue);
+		break;
+	case ListRootKind:
+		setListRoot();
+		break;
 	}
+}
+
+Atom::Atom(const Atom& x): Atom() {
+	copy(x);
 }
 
 Atom& Atom::operator=(const Atom& x) {
 	if (this != &x) {
-		if (x.m_type == NoneKind) {
-			m_type = NoneKind;
-		} else if (x.m_type == NumberKind) {
-			setNumber(x.numberValue);
-		} else if (x.m_type == ComplexKind) {
-			setComplex(x.complexValue);
-		} else if (x.m_type == SymbolKind) {
-			setSymbol(x.stringValue);
-		}
+		copy(x);
 	}
 
 	return *this;
@@ -87,6 +93,10 @@ bool Atom::isComplex() const noexcept {
 
 bool Atom::isSymbol() const noexcept {
 	return m_type == SymbolKind;
+}
+
+bool Atom::isListRoot() const noexcept {
+	return m_type == ListRootKind;
 }
 
 double Atom::truncateToZero(double value) {
@@ -124,6 +134,10 @@ void Atom::setSymbol(const std::string& value) {
 	new (&stringValue) std::string(value);
 }
 
+void Atom::setListRoot() {
+	m_type = ListRootKind;
+}
+
 double Atom::asNumber() const noexcept {
 	return (m_type == NumberKind) ? numberValue : 0.0;
 }
@@ -159,6 +173,10 @@ bool Atom::operator==(const Atom& right) const noexcept {
 
 		// Avoid the default case for NoneKind - if both are NoneKind, then it will return
 		// true once outside this switch statement
+		break;
+	case ListRootKind:
+
+		// Avoid defaulting to false
 		break;
 	case NumberKind:
 		{

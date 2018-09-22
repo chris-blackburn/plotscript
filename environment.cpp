@@ -331,6 +331,26 @@ Expression conj(const std::vector<Expression>& args) {
 	return Expression(result);
 }
 
+// ******** List related functions ********
+Expression first(const std::vector<Expression>& args) {
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadListRoot()) {
+			if (args[0].tailConstBegin() != args[0].tailConstEnd()) {
+				return Expression(*args[0].tailConstBegin());
+			}
+
+			// When the iterators for beginnging and end are equal,the list is empty
+			throw SemanticError("Error: argument to first is an empty list");
+		}
+
+		// if there is one argument that is not a list,
+		throw SemanticError("Error: argument to first is not a list");
+	}
+
+	// This will only get triggered when there is more than one argument pass to first
+	throw SemanticError("Error: more than one argument in call to first");
+}
+
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const complex I = complex(0, 1);
@@ -465,4 +485,7 @@ void Environment::reset() {
 
 	// Procedure: conj
 	envmap.emplace("conj", EnvResult(ProcedureType, conj));
+
+	// Procedure: first
+	envmap.emplace("first", EnvResult(ProcedureType, first));
 }

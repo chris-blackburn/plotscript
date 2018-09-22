@@ -406,6 +406,41 @@ TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
 	}
 }
 
+TEST_CASE("Testing list specific functions", "[Interpreter]") {
+
+	{
+		std::string program = "(first (list 1 2 3))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(1));
+	}
+
+	{
+		std::string program = "(first (list (list 1) 2 3))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(1)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(first (list 1) 1)",
+			"(first (list))",
+			"(first (1))",
+			"(first (+ 17 (* 1 I)))",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Test a medium-sized expression", "[interpreter]") {
 
 	{

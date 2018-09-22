@@ -12,6 +12,19 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isListRoot());
+	}
+
+	{
+		INFO("Default Constructor (set as root)");
+		Atom a;
+		a.setListRoot();
+
+		REQUIRE(!a.isNone());
+		REQUIRE(!a.isNumber());
+		REQUIRE(!a.isComplex());
+		REQUIRE(!a.isSymbol());
+		REQUIRE(a.isListRoot());
 	}
 
 	{
@@ -22,6 +35,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isListRoot());
 	}
 
 	{
@@ -32,6 +46,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isListRoot());
 	}
 
 	{
@@ -42,6 +57,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(a.isSymbol());
+		REQUIRE(!a.isListRoot());
 	}
 
 	{
@@ -53,6 +69,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(a.isSymbol());
+		REQUIRE(!a.isListRoot());
 	}
 
 	{
@@ -60,24 +77,36 @@ TEST_CASE("Test constructors", "[atom]") {
 		Atom a("hi");
 		Atom b(1.0);
 		Atom c(complex(1, 1));
+		Atom d;
+		d.setListRoot();
 
-		Atom d = a;
-		REQUIRE(!d.isNone());
-		REQUIRE(!d.isNumber());
-		REQUIRE(!d.isComplex());
-		REQUIRE(d.isSymbol());
-
-		Atom e = b;
+		Atom e(a);
 		REQUIRE(!e.isNone());
-		REQUIRE(e.isNumber());
+		REQUIRE(!e.isNumber());
 		REQUIRE(!e.isComplex());
-		REQUIRE(!e.isSymbol());
+		REQUIRE(e.isSymbol());
+		REQUIRE(!e.isListRoot());
 
-		Atom f = c;
+		Atom f(b);
 		REQUIRE(!f.isNone());
-		REQUIRE(!f.isNumber());
-		REQUIRE(f.isComplex());
+		REQUIRE(f.isNumber());
+		REQUIRE(!f.isComplex());
 		REQUIRE(!f.isSymbol());
+		REQUIRE(!f.isListRoot());
+
+		Atom g(c);
+		REQUIRE(!g.isNone());
+		REQUIRE(!g.isNumber());
+		REQUIRE(g.isComplex());
+		REQUIRE(!g.isSymbol());
+		REQUIRE(!g.isListRoot());
+
+		Atom h(d);
+		REQUIRE(!h.isNone());
+		REQUIRE(!h.isNumber());
+		REQUIRE(!h.isComplex());
+		REQUIRE(!h.isSymbol());
+		REQUIRE(h.isListRoot());
 	}
 }
 
@@ -92,6 +121,7 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isListRoot());
 	}
 
 	{
@@ -103,6 +133,7 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isListRoot());
 	}
 
 	{
@@ -114,6 +145,7 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isListRoot());
 	}
 
 	{
@@ -125,6 +157,20 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isListRoot());
+	}
+
+	{
+		INFO("default to root");
+		Atom a;
+		Atom b;
+		b.setListRoot();
+		b = a;
+		REQUIRE(b.isNone());
+		REQUIRE(!b.isNumber());
+		REQUIRE(!b.isComplex());
+		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isListRoot());
 	}
 
 	{
@@ -156,11 +202,21 @@ TEST_CASE("Test assignment", "[atom]") {
 
 	{
 		INFO("number to symbol");
-		Atom a("hi");
-		Atom b(1.0);
+		Atom a(1.0);
+		Atom b("hi");
 		b = a;
-		REQUIRE(b.isSymbol());
-		REQUIRE(b.asSymbol() == "hi");
+		REQUIRE(b.isNumber());
+		REQUIRE(b.asNumber() == 1.0);
+	}
+
+	{
+		INFO("number to root");
+		Atom a(1.0);
+		Atom b;
+		b.setListRoot();
+		b = a;
+		REQUIRE(b.isNumber());
+		REQUIRE(b.asNumber() == 1.0);
 	}
 
 	{
@@ -234,6 +290,52 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(b.isComplex());
 		REQUIRE(b.asComplex() == complex(1, 1));
 	}
+
+	{
+		INFO("root to default");
+		Atom a;
+		a.setListRoot();
+		Atom b;
+		b = a;
+		REQUIRE(b.isListRoot());
+	}
+
+	{
+		INFO("root to number");
+		Atom a;
+		a.setListRoot();
+		Atom b(1.0);
+		b = a;
+		REQUIRE(b.isListRoot());
+	}
+
+	{
+		INFO("root to complex")
+		Atom a;
+		a.setListRoot();
+		Atom b(complex(1, 1));
+		b = a;
+		REQUIRE(b.isListRoot());
+	}
+
+	{
+		INFO("root to symbol")
+		Atom a;
+		a.setListRoot();
+		Atom b("hi");
+		b = a;
+		REQUIRE(b.isListRoot());
+	}
+
+	{
+		INFO("root to root")
+		Atom a;
+		a.setListRoot();
+		Atom b;
+		b.setListRoot();
+		b = a;
+		REQUIRE(b.isListRoot());
+	}
 }
 
 TEST_CASE("test comparison", "[atom]") {
@@ -263,6 +365,14 @@ TEST_CASE("test comparison", "[atom]") {
 		INFO("compare default to symbol");
 		Atom a;
 		Atom b("hi");
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare default to root");
+		Atom a;
+		Atom b;
+		b.setListRoot();
 		REQUIRE(a != b);
 	}
 
@@ -297,6 +407,14 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
+		INFO("compare number to root");
+		Atom a(1.0);
+		Atom b;
+		b.setListRoot();
+		REQUIRE(a != b);
+	}
+
+	{
 		INFO("compare symbol to default");
 		Atom a("hi");
 		Atom b;
@@ -327,6 +445,14 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
+		INFO("compare symbol to root");
+		Atom a("hi");
+		Atom b;
+		b.setListRoot();
+		REQUIRE(a != b);
+	}
+
+	{
 		INFO("compare complex to default");
 		Atom a(complex(1, 1));
 		Atom b;
@@ -342,18 +468,65 @@ TEST_CASE("test comparison", "[atom]") {
 
 	{
 		INFO("compare complex to complex");
-		Atom a(complex(1, 2));
-		Atom b(complex(1, 1));
-		REQUIRE(a != b);
-	}
-
-	{
-		INFO("compare complex to complex");
 		Atom a(complex(1, 1));
 		Atom b(complex(1, 1));
 		Atom c(complex(1, 2));
 		REQUIRE(a == b);
 		REQUIRE(a != c);
+	}
+
+	{
+		INFO("compare complex to root");
+		Atom a("hi");
+		Atom b;
+		b.setListRoot();
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("Compare root to default") {
+			Atom a;
+			a.setListRoot();
+			Atom b;
+			REQUIRE(a != b);
+		}
+	}
+
+	{
+		INFO("Compare root to number") {
+			Atom a;
+			a.setListRoot();
+			Atom b(1.0);
+			REQUIRE(a != b);
+		}
+	}
+
+	{
+		INFO("Compare root to complex") {
+			Atom a;
+			a.setListRoot();
+			Atom b(complex(1, 1));
+			REQUIRE(a != b);
+		}
+	}
+
+	{
+		INFO("Compare root to symbol") {
+			Atom a;
+			a.setListRoot();
+			Atom b("hi");
+			REQUIRE(a != b);
+		}
+	}
+
+	{
+		INFO("Compare root to root") {
+			Atom a;
+			a.setListRoot();
+			Atom b;
+			b.setListRoot();
+			REQUIRE(a == b);
+		}
 	}
 }
 
@@ -411,5 +584,26 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 		INFO("symbol as symbol");
 		Atom a("A");
 		REQUIRE(a.asSymbol() == "A");
+	}
+
+	{
+		INFO("root as number");
+		Atom a;
+		a.setListRoot();
+		REQUIRE(a.asNumber() == 0);
+	}
+
+	{
+		INFO("root as complex");
+		Atom a;
+		a.setListRoot();
+		REQUIRE(a.asComplex() == complex(0, 0));
+	}
+
+	{
+		INFO("root as symbol");
+		Atom a;
+		a.setListRoot();
+		REQUIRE(a.asSymbol() == "");
 	}
 }
