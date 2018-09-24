@@ -132,7 +132,7 @@ Expression Expression::handle_begin(Environment& env) {
 
 Expression Expression::handle_define(Environment& env) {
 
-	// tail must have size 3 or error
+	// tail must have size 2 or error
 	if (m_tail.size() != 2) {
 		throw SemanticError("Error during evaluation: invalid number of arguments to define");
 	}
@@ -144,7 +144,7 @@ Expression Expression::handle_define(Environment& env) {
 
 	// but tail[0] must not be a special-form or procedure
 	std::string s = m_tail[0].head().asSymbol();
-	if (s == "define" || s == "begin" || s == "list") {
+	if (s == "define" || s == "begin" || s == "list" || s == "lambda") {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
 
@@ -156,7 +156,8 @@ Expression Expression::handle_define(Environment& env) {
 	Expression result = m_tail[1].eval(env);
 
 	if (env.is_exp(m_tail[0].head())) {
-		throw SemanticError("Error during evaluation: attempt to redefine a previously defined symbol");
+		throw SemanticError("Error during evaluation: attempt to redefine a previously defined "
+			"symbol");
 	}
 
 	//and add to env
@@ -172,6 +173,46 @@ Expression Expression::handle_list(Environment& env) {
 	}
 
 	return Expression(result);
+}
+
+#include <iostream>
+Expression Expression::handle_lambda(Environment& env) {
+
+	// Lambda needs a list of arguments and an expression to evaluate those arguments in
+	if (m_tail.size() != 2) {
+		throw SemanticError("Error during evaluation: invalid number of arguments to lambda");
+	}
+
+	// Reference the tail as the parts it should be
+	Expression& lambdaArgs = m_tail[0];
+
+	// NOTE: Check if each argument is in the expression - that will help with shadowing > capturing
+	Expression& lambdaExp = m_tail[1];
+
+	// Start evaluating the possible arguments for the lambda function. Start by moving the head to
+	// the tail of the lambdaArgs expression
+	lambdaArgs.m_tail.insert(lambdaArgs.tailConstBegin(), lambdaArgs.head());
+	lambdaArgs.m_head = Atom("list");
+	for (Expression& arg : lambdaArgs.m_tail) {
+
+		// Need to ensure each argument is a symbol type expression that does not point to a procedure
+		if (arg.isHeadSymbol()) {
+			if (env.is_proc(arg.head())) {
+
+				// Cannot use a built-in procedure as an argument (i.e. +, -, cos, etc.)
+				throw SemanticError("Error during evaluation: a procedure cannot be an argument for "
+					"a lambda function");
+			}
+		}
+	}
+
+
+	env.is_exp(m_tail[0].head());
+
+	// After processing the user's lambda function, the tail will contain the necessary information
+	// NOTE: I will need to return a procedure, so somehow, that procedure's arguments need to map
+	// NOTE: to the arguments I have listed here
+	return Expression(std::vector<Expression>{lambdaArgs, lambdaExp});
 }
 
 // this is a simple recursive version. the iterative version is more
@@ -190,6 +231,10 @@ Expression Expression::eval(Environment& env) {
 
 		// handle list special-form
 		return handle_list(env);
+	} else if (m_head.isSymbol() && m_head.asSymbol() == "lambda") {
+
+		// handle lambda special-form
+		return handle_lambda(env);
 	} else if (m_tail.empty()) {
 		return handle_lookup(m_head, env);
 	} else {
