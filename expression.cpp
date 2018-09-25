@@ -7,7 +7,7 @@
 
 Expression::Expression() {}
 
-Expression::Expression(const std::vector<Expression>& a): m_head(Atom("list")), m_tail(a) {}
+Expression::Expression(const std::vector<Expression>& a): m_head(ListRoot), m_tail(a) {}
 
 Expression::Expression(const Atom& a): m_head(a) {}
 
@@ -55,7 +55,11 @@ bool Expression::isHeadSymbol() const noexcept {
 }
 
 bool Expression::isHeadListRoot() const noexcept {
-	return m_head.isSymbol() && m_head.asSymbol() == "list";
+	return m_head == ListRoot;
+}
+
+bool Expression::isHeadLambdaRoot() const noexcept {
+	return m_head == LambdaRoot;
 }
 
 void Expression::append(const Atom& a) {
@@ -143,8 +147,8 @@ Expression Expression::handle_define(Environment& env) {
 	}
 
 	// but tail[0] must not be a special-form or procedure
-	std::string s = m_tail[0].head().asSymbol();
-	if (s == "define" || s == "begin" || s == "list" || s == "lambda") {
+	Atom head = m_tail[0].head();
+	if (head.asSymbol() == "define" || head.asSymbol() == "begin" || head == ListRoot || head == LambdaRoot) {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
 
@@ -175,7 +179,6 @@ Expression Expression::handle_list(Environment& env) {
 	return Expression(result);
 }
 
-#include <iostream>
 Expression Expression::handle_lambda(Environment& env) {
 
 	// Lambda needs a list of arguments and an expression to evaluate those arguments in
@@ -183,16 +186,18 @@ Expression Expression::handle_lambda(Environment& env) {
 		throw SemanticError("Error during evaluation: invalid number of arguments to lambda");
 	}
 
-	// Reference the tail as the parts it should be
-	Expression& lambdaArgs = m_tail[0];
+	// Copy this instance of the expression to avoid mutating itself
+	Expression lambda(*this);
 
-	// NOTE: Check if each argument is in the expression - that will help with shadowing > capturing
-	Expression& lambdaExp = m_tail[1];
+	// Reference the first element of the tail as the function arguments. The second expression
+	// in the tail is the expression related to the lambda function itself. It gets
+	// evaluated at run time
+	Expression& lambdaArgs = lambda.m_tail[0];
 
 	// Start evaluating the possible arguments for the lambda function. Start by moving the head to
 	// the tail of the lambdaArgs expression
 	lambdaArgs.m_tail.insert(lambdaArgs.tailConstBegin(), lambdaArgs.head());
-	lambdaArgs.m_head = Atom("list");
+	lambdaArgs.m_head = ListRoot;
 	for (Expression& arg : lambdaArgs.m_tail) {
 
 		// Need to ensure each argument is a symbol type expression that does not point to a procedure
@@ -200,19 +205,21 @@ Expression Expression::handle_lambda(Environment& env) {
 			if (env.is_proc(arg.head())) {
 
 				// Cannot use a built-in procedure as an argument (i.e. +, -, cos, etc.)
-				throw SemanticError("Error during evaluation: a procedure cannot be an argument for "
+				throw SemanticError("Error during evaluation: procedures cannot be an argument for "
 					"a lambda function");
 			}
+		} else if (arg.isHeadNumber()) {
+			
+			// Numbers cannot be arguments in a lambda function
+				throw SemanticError("Error during evaluation: numbers cannot be an argument for "
+					"a lambda function");
 		}
 	}
 
-
-	env.is_exp(m_tail[0].head());
-
-	// After processing the user's lambda function, the tail will contain the necessary information
-	// NOTE: I will need to return a procedure, so somehow, that procedure's arguments need to map
-	// NOTE: to the arguments I have listed here
-	return Expression(std::vector<Expression>{lambdaArgs, lambdaExp});
+	// After processing the user's lambda function, the copied expression will contain the
+	// lambda functions information. We just need to set the head to a lambda type
+	lambda.m_head = LambdaRoot;
+	return lambda;
 }
 
 // this is a simple recursive version. the iterative version is more
@@ -227,11 +234,11 @@ Expression Expression::eval(Environment& env) {
 
 		// handle define special-form
 		return handle_define(env);
-	} else if (m_head.isSymbol() && m_head.asSymbol() == "list") {
+	} else if (m_head == ListRoot) {
 
 		// handle list special-form
 		return handle_list(env);
-	} else if (m_head.isSymbol() && m_head.asSymbol() == "lambda") {
+	} else if (m_head == LambdaRoot) {
 
 		// handle lambda special-form
 		return handle_lambda(env);
@@ -251,7 +258,7 @@ Expression Expression::eval(Environment& env) {
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 	out << "(";
-	if (!exp.isHeadListRoot()) {
+	if (!exp.isHeadListRoot() || !exp.isHeadLambdaRoot()) {
 		out << exp.head();
 	}
 
