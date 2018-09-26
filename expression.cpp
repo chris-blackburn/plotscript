@@ -205,19 +205,19 @@ Expression Expression::handle_lambda(Environment& env) {
 			if (env.is_proc(arg.head())) {
 
 				// Cannot use a built-in procedure as an argument (i.e. +, -, cos, etc.)
-				throw SemanticError("Error during evaluation: procedures cannot be an argument for "
+				throw SemanticError("Error during evaluation: procedures cannot be arguments for "
 					"a lambda function");
 			}
 		} else if (arg.isHeadNumber()) {
-			
+
 			// Numbers cannot be arguments in a lambda function
-				throw SemanticError("Error during evaluation: numbers cannot be an argument for "
-					"a lambda function");
+			throw SemanticError("Error during evaluation: numbers cannot be arguments for "
+				"a lambda function");
 		}
 	}
 
 	// After processing the user's lambda function, the copied expression will contain the
-	// lambda functions information. We just need to set the head to a lambda type
+	// lambda function's information. We just need to set the head to a lambda type
 	lambda.m_head = LambdaRoot;
 	return lambda;
 }
@@ -234,11 +234,11 @@ Expression Expression::eval(Environment& env) {
 
 		// handle define special-form
 		return handle_define(env);
-	} else if (m_head == ListRoot) {
+	} else if (isHeadListRoot()) {
 
 		// handle list special-form
 		return handle_list(env);
-	} else if (m_head == LambdaRoot) {
+	} else if (isHeadLambdaRoot()) {
 
 		// handle lambda special-form
 		return handle_lambda(env);
@@ -258,8 +258,14 @@ Expression Expression::eval(Environment& env) {
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 	out << "(";
-	if (!exp.isHeadListRoot() || !exp.isHeadLambdaRoot()) {
+	if (!exp.isHeadListRoot() && !exp.isHeadLambdaRoot()) {
 		out << exp.head();
+		if (exp.isHeadSymbol() && exp.tailConstBegin() != exp.tailConstEnd()) {
+
+			// Symbols need to have a space after them (Symbols that have expressions in the tail
+			// are procedures)
+			out << " ";
+		}
 	}
 
 	for (auto e = exp.tailConstBegin(); e != exp.tailConstEnd(); ++e) {

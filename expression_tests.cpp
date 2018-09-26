@@ -9,6 +9,7 @@ TEST_CASE("Test default expression", "[expression]") {
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
 	REQUIRE(!exp.isHeadListRoot());
+	REQUIRE(!exp.isHeadLambdaRoot());
 }
 
 TEST_CASE("Test expression list constructor", "[expression]") {
@@ -20,6 +21,7 @@ TEST_CASE("Test expression list constructor", "[expression]") {
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(exp.isHeadSymbol());
 	REQUIRE(exp.isHeadListRoot());
+	REQUIRE(!exp.isHeadLambdaRoot());
 }
 
 TEST_CASE("Test double expression", "[expression]") {
@@ -29,6 +31,7 @@ TEST_CASE("Test double expression", "[expression]") {
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
 	REQUIRE(!exp.isHeadListRoot());
+	REQUIRE(!exp.isHeadLambdaRoot());
 }
 
 TEST_CASE("Test complex expression", "[expression]") {
@@ -38,6 +41,7 @@ TEST_CASE("Test complex expression", "[expression]") {
 	REQUIRE(exp.isHeadComplex());
 	REQUIRE(!exp.isHeadSymbol());
 	REQUIRE(!exp.isHeadListRoot());
+	REQUIRE(!exp.isHeadLambdaRoot());
 }
 
 TEST_CASE("Test symbol expression", "[expression]") {
@@ -47,4 +51,5 @@ TEST_CASE("Test symbol expression", "[expression]") {
 	REQUIRE(!exp.isHeadComplex());
 	REQUIRE(exp.isHeadSymbol());
 	REQUIRE(!exp.isHeadListRoot());
+	REQUIRE(!exp.isHeadLambdaRoot());
 }

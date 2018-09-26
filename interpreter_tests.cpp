@@ -406,6 +406,78 @@ TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
 	}
 }
 
+TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
+
+	{ // Simple lambda
+		std::string program = "(begin (define f (lambda (x) (- x))) (f 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(-1));
+	}
+
+	{ // Shadowing test
+		std::string program = "(begin (define x 3) (define f (lambda (x) (- x))) (f 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(-1));
+	}
+
+	{ // Capture test
+		std::string program = "(begin (define a 3) (define f (lambda (x) (- a x))) (f 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(2));
+	}
+
+	{ // multiple arguments
+		std::string program = "(begin (define f (lambda (x y) (- y x))) (f 1 2))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(1));
+	}
+
+	{ // More complicated expression
+		std::string program = "(begin (define f (lambda (x y) (+ 1 (- x (* y I))))) (f 1 2))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(complex(2, -2)));
+	}
+
+	{ // Embedded lambda
+		std::string program = "(begin (define f (lambda (x) (lambda (y) (- y))) (f 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(-1));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(lambda)",
+			"(lambda (1))",
+			"(lambda (x))",
+			"(lambda (x) (1) (1))",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Testing list specific functions (first)", "[Interpreter]") {
 
 	{
