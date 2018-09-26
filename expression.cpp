@@ -133,7 +133,6 @@ Expression Expression::handle_begin(Environment& env) {
 	return result;
 }
 
-
 Expression Expression::handle_define(Environment& env) {
 
 	// tail must have size 2 or error
@@ -148,7 +147,8 @@ Expression Expression::handle_define(Environment& env) {
 
 	// but tail[0] must not be a special-form or procedure
 	Atom head = m_tail[0].head();
-	if (head.asSymbol() == "define" || head.asSymbol() == "begin" || head == ListRoot || head == LambdaRoot) {
+	if (head.asSymbol() == "define" || head.asSymbol() == "begin" ||
+		head == ListRoot || head == LambdaRoot) {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
 
@@ -262,7 +262,7 @@ std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 		out << exp.head();
 		if (exp.isHeadSymbol() && exp.tailConstBegin() != exp.tailConstEnd()) {
 
-			// Symbols need to have a space after them (Symbols that have expressions in the tail
+			// Procedures need to have a space after them (Symbols that have expressions in the tail
 			// are procedures)
 			out << " ";
 		}
