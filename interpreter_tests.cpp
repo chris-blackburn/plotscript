@@ -409,21 +409,21 @@ TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
 TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 
 	{ // Simple lambda
-		std::string program = "(begin (define f (lambda (x) (- x))) (f 1))";
+		std::string program = "(begin (define f (lambda (x) (- x))) (f 7))";
 		INFO(program);
 		Expression result = run(program);
 
 		std::vector<Expression> expected;
-		REQUIRE(result == Expression(-1));
+		REQUIRE(result == Expression(-7));
 	}
 
 	{ // Shadowing test
-		std::string program = "(begin (define x 3) (define f (lambda (x) (- x))) (f 1))";
+		std::string program = "(begin (define x 3) (define f (lambda (x) (- x))) (f 7))";
 		INFO(program);
 		Expression result = run(program);
 
 		std::vector<Expression> expected;
-		REQUIRE(result == Expression(-1));
+		REQUIRE(result == Expression(-7));
 	}
 
 	{ // Capture test

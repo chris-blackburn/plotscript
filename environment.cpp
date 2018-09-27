@@ -515,35 +515,17 @@ Expression Environment::get_exp(const Atom& sym) const {
 	return exp;
 }
 
-void Environment::add_exp(const Atom& sym, const Expression& exp) {
+void Environment::add_exp(const Atom& sym, const Expression& exp, bool overwrite) {
 	if (!sym.isSymbol()) {
 		throw SemanticError("Attempt to add non-symbol to environment");
 	}
 
 	// error if overwriting symbol map
-	if (envmap.find(sym.asSymbol()) != envmap.end()) {
+	if (!overwrite && envmap.find(sym.asSymbol()) != envmap.end()) {
 		throw SemanticError("Attempt to overwrite symbol in environemnt");
 	}
 
-	// If the head of the expression is a lambda type, then we add it as a procedure
-	if (exp.isHeadLambdaRoot()) {
-
-		// TODO: Create the lambda procedure here
-		// Expression& lambdaArgs = exp.tailConstBegin();
-		// Expression& lambdaExpr = exp.tailConstEnd();
-		Expression lambda = [&](const std::vector<Expression>& args) {
-
-			// Need to make a copy of the environment to mutate it
-			Environment lambdaEnv(*this);
-			lambdaEnv.is_exp(Atom("I"));
-			return Expression(args.size());
-		};
-
-		typedef decltype(lambda) Procedure;
-		envmap.emplace(sym.asSymbol(), EnvResult(ProcedureType, lambda));
-	} else {
-		envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
-	}
+	envmap.emplace(sym.asSymbol(), EnvResult(ExpressionType, exp));
 }
 
 bool Environment::is_proc(const Atom& sym) const {

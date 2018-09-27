@@ -84,6 +84,34 @@ Expression::ConstIteratorType Expression::tailConstEnd() const noexcept {
 	return m_tail.cend();
 }
 
+Expression apply_lambda(const Expression& lambda, const std::vector<Expression>& args, Environment env) {
+
+	// Reference the arguments and expression of the lambda function. Only the expression needs to be copied
+	const Expression& lambdaArgs(*lambda.tailConstBegin());
+	Expression lambdaExp(*std::prev(lambda.tailConstEnd()));
+
+	// Get the iterators for both the arguments of the lambda functions
+	auto lBegin = lambdaArgs.tailConstBegin();
+	auto lEnd = lambdaArgs.tailConstEnd();
+
+	// Make sure the number of argumentes between the lambda function and the passed in args match
+	if (std::distance(lBegin, lEnd) == std::distance(args.cbegin(), args.cend())) {
+		
+		// loop through each argument and add it to the copied environment with the lambda arguments as the symbols
+		auto ut = args.cbegin();
+		for (auto lt = lBegin; lt != lEnd; lt++, ut++) {
+
+			// specify that we want to overwrite expressions in the environment
+			env.add_exp(lt->head(), *ut, true);
+		}
+
+		// Evaluate the expression with the modified environment
+		return lambdaExp.eval(env);
+	} else {
+		throw SemanticError("Error during evaluation: incorrect number of arguments to lambda function");
+	}
+}
+
 Expression apply(const Atom & op, const std::vector<Expression>& args, const Environment& env) {
 
 	// head must be a symbol
@@ -93,7 +121,14 @@ Expression apply(const Atom & op, const std::vector<Expression>& args, const Env
 
 	// must map to a proc
 	if (!env.is_proc(op)) {
-		throw SemanticError("Error during evaluation: symbol does not name a procedure");
+
+		// check if it is a lambda function
+		Expression lambda = env.get_exp(op);
+		if (lambda.isHeadLambdaRoot()) {
+			return apply_lambda(lambda, args, env);
+		} else {
+			throw SemanticError("Error during evaluation: symbol does not name a procedure");
+		}
 	}
 
 	// map from symbol to proc
