@@ -90,7 +90,7 @@ Expression apply_lambda(const Expression& lambda, const std::vector<Expression>&
 	const Expression& lambdaArgs(*lambda.tailConstBegin());
 	Expression lambdaExp(*std::prev(lambda.tailConstEnd()));
 
-	// Get the iterators for both the arguments of the lambda functions
+	// Get the iterators for the arguments of the lambda function
 	auto lBegin = lambdaArgs.tailConstBegin();
 	auto lEnd = lambdaArgs.tailConstEnd();
 
