@@ -305,7 +305,7 @@ Expression Expression::handle_map(Environment& env) {
 			// pre-evaluate the second expression to create a list
 			Expression list = m_tail[1].eval(env);
 			if (!list.isHeadListRoot()) {
-				throw SemanticError("Error: second argument to apply not a list");
+				throw SemanticError("Error: second argument to map not a list");
 			}
 
 			// create the list
@@ -334,10 +334,10 @@ Expression Expression::handle_map(Environment& env) {
 				}
 			}
 
-			throw SemanticError("Error: first argument to apply not a procedure");
+			throw SemanticError("Error: first argument to map not a procedure");
 		}
 
-		throw SemanticError("Error: wrong number of arguments to apply which takes two arguments");
+		throw SemanticError("Error: wrong number of arguments to map which takes two arguments");
 }
 
 // this is a simple recursive version. the iterative version is more
