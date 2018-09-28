@@ -109,7 +109,7 @@ Expression div(const std::vector<Expression>& args) {
 	complex result;
 	bool isComplexProcedure = false;
 
-	// If there is just one argument, we want to return the negative of that number
+	// If there is just one argument, we want to return the inverse of that number
 	if (nargs_equal(args, 1)) {
 		if (args[0].isHeadNumber()) {
 			result = 1 / args[0].head().asNumber();

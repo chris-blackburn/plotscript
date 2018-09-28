@@ -281,19 +281,14 @@ Expression Expression::handle_apply(Environment& env) {
 		if (proc.m_tail.empty() && env.is_proc(proc.head())) {
 			return env.get_proc(proc.head())(applyArgs);
 
-		// If the procedure is a pre-defined lambda function
-		} else if (env.is_exp(proc.head())) {
+		// If the procedure is a pre-defined or anonymous lambda function
+		} else {
+			Expression lambda = proc.eval(env);
 
-			// If there is a matching expression, then see if it's a lambda expression
-			Expression lambda = env.get_exp(proc.head());
+			// If we have a lambda function, evaluate the with that function
 			if (lambda.isHeadLambdaRoot()) {
 				return apply_lambda(lambda, applyArgs, env);
 			}
-
-		// If the procedure is an anonymous lambda function,
-		} else if (proc.head() == LambdaRoot) {
-			Expression lambda = proc.handle_lambda(env);
-			return apply_lambda(lambda, applyArgs, env);
 		}
 
 		throw SemanticError("Error: first argument to apply not a procedure");
@@ -325,11 +320,11 @@ Expression Expression::handle_map(Environment& env) {
 
 				return Expression(mapList);
 
-			// If the procedure is a pre-defined lambda function
-			} else if (env.is_exp(proc.head())) {
+			// The procedure could be a pre-defined lambda or anonymous lambda
+			} else {
+				Expression lambda = proc.eval(env);
 
-				// If there is a matching expression, then see if it's a lambda expression
-				Expression lambda = env.get_exp(proc.head());
+				// If we have a lambda function, evaluate the map with that function
 				if (lambda.isHeadLambdaRoot()) {
 					for (Expression& a : mapList) {
 						a = apply_lambda(lambda, std::vector<Expression>{a}, env);
@@ -337,15 +332,6 @@ Expression Expression::handle_map(Environment& env) {
 
 					return Expression(mapList);
 				}
-
-			// If the procedure is an anonymous lambda function,
-			} else if (proc.head() == LambdaRoot) {
-				Expression lambda = proc.handle_lambda(env);
-				for (Expression& a : mapList) {
-					a = apply_lambda(lambda, std::vector<Expression>{a}, env);
-				}
-
-				return Expression(mapList);
 			}
 
 			throw SemanticError("Error: first argument to apply not a procedure");
