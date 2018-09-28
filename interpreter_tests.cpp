@@ -295,10 +295,18 @@ TEST_CASE("Test Interpreter result with simple procedures (div)", "[interpreter]
 		REQUIRE(result == Expression(0.5));
 	}
 
+	{ // Inverse of complex
+		std::string program = "(/ (* I 1))";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(complex(0, -1)));
+	}
+
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
-			"(/ 1 2 3)"
+			"(/ 1 2 3)",
+			"(/ (list 1))"
 		};
 
 		for (auto s : programs) {
