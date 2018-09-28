@@ -102,4 +102,11 @@ TEST_CASE("Test semeantic errors", "[environment]") {
 
 		REQUIRE_THROWS_AS(exp.eval(env), SemanticError);
 	}
+
+	{
+		INFO("Redefinition");
+		env.add_exp(Atom("hello"), Expression(1.0));
+
+		REQUIRE_THROWS_AS(env.add_exp(Atom("hello"), Expression(2.0)), SemanticError);
+	}
 }

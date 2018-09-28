@@ -96,7 +96,7 @@ Expression apply_lambda(const Expression& lambda, const std::vector<Expression>&
 
 	// Make sure the number of argumentes between the lambda function and the passed in args match
 	if (std::distance(lBegin, lEnd) == std::distance(args.cbegin(), args.cend())) {
-		
+
 		// loop through each argument and add it to the copied environment with the lambda arguments as the symbols
 		auto ut = args.cbegin();
 		for (auto lt = lBegin; lt != lEnd; lt++, ut++) {
@@ -122,7 +122,7 @@ Expression apply(const Atom & op, const std::vector<Expression>& args, const Env
 	// must map to a proc
 	if (!env.is_proc(op)) {
 
-		// check if it is a lambda function
+		// check if there is a lambda function in the environment
 		Expression lambda = env.get_exp(op);
 		if (lambda.isHeadLambdaRoot()) {
 			return apply_lambda(lambda, args, env);

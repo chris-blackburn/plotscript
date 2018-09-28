@@ -343,6 +343,18 @@ TEST_CASE("Test Interpreter special forms: begin and define", "[interpreter]") {
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(0, 1)));
 	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(begin (define a 1) (define a 2))",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
 }
 
 TEST_CASE("Test Interpreter special forms: list", "[interpreter]") {
@@ -453,15 +465,6 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 		REQUIRE(result == Expression(complex(2, -2)));
 	}
 
-	{ // Embedded lambda
-		std::string program = "(begin (define f (lambda (x) (lambda (y) (- y))) (f 1))";
-		INFO(program);
-		Expression result = run(program);
-
-		std::vector<Expression> expected;
-		REQUIRE(result == Expression(-1));
-	}
-
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
@@ -469,6 +472,9 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 			"(lambda (1))",
 			"(lambda (x))",
 			"(lambda (x) (1) (1))",
+			"(begin (define f (lambda (x) (- x))) (f 7 1))",
+			"(lambda (+) (+ + 1))",
+			"(lambda (8) (+ 8 1))"
 		};
 
 		for (auto s : programs) {
@@ -758,6 +764,18 @@ TEST_CASE("Test arithmetic procedures", "[interpreter]") {
 		for (auto s : programs) {
 			Expression result = run(s);
 			REQUIRE(result == Expression(-1.));
+		}
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(ab 1 2)",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
 		}
 	}
 }
