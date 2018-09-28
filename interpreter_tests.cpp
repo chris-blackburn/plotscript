@@ -787,6 +787,54 @@ TEST_CASE("Testing functional procedure (apply)", "[interpreter]") {
 	}
 }
 
+TEST_CASE("Testing functional procedure (map)", "[interpreter]") {
+
+	{ // standard procedure
+		std::string program = "(map - (list 1 2))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(-1), Expression(-2)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{ // pre-defined lambda
+		std::string program = "(begin (define f (lambda (x) (+ 1 x))) (map f (list 1 2)))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(2), Expression(3)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{ // anonymous lambda
+		std::string program = "(map (lambda (x) (+ 1 x)) (list 1 2))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(2), Expression(3)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(map)",
+			"(map +)",
+			"(map + (list 1) (1))",
+			"(map + (1))",
+			"(map 1 (list 1))",
+			"(map e (list 1))",
+			"(map (+ z I) (list 0))"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Test a medium-sized expression", "[interpreter]") {
 
 	{
@@ -1298,6 +1346,7 @@ TEST_CASE("Test some semantically invalid expresions", "[interpreter]") {
 		"(define list 1)",
 		"(define lambda 1)",
 		"(define apply 1)",
+		"(define map 1)",
 		"(define 1 1)",
 		"(define pi 3.14)" // redefine builtin symbol
 	};

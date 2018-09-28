@@ -186,8 +186,9 @@ Expression Expression::handle_define(Environment& env) {
 
 	// but tail[0] must not be a special-form or procedure
 	Atom head = m_tail[0].head();
-	if (head.asSymbol() == "define" || head.asSymbol() == "begin" || head.asSymbol() == "apply" ||
-		head == ListRoot || head == LambdaRoot) {
+	std::string s = head.asSymbol();
+	if (s == "define" || s == "begin" || s == "apply" || s == "map" || head == ListRoot ||
+		head == LambdaRoot) {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
 
@@ -278,7 +279,7 @@ Expression Expression::handle_apply(Environment& env) {
 		// to be a valid procedure, the expression should be JUST the procedure symbol
 		Expression& proc = m_tail[0];
 		if (proc.m_tail.empty() && env.is_proc(proc.head())) {
-			return apply(proc.head(), applyArgs, env);
+			return env.get_proc(proc.head())(applyArgs);
 
 		// If the procedure is a pre-defined lambda function
 		} else if (env.is_exp(proc.head())) {
@@ -301,6 +302,58 @@ Expression Expression::handle_apply(Environment& env) {
 	throw SemanticError("Error: wrong number of arguments to apply which takes two arguments");
 }
 
+Expression Expression::handle_map(Environment& env) {
+
+		// The first expression is a procedure, and the second is the list of expressions
+		if (m_tail.size() == 2) {
+
+			// pre-evaluate the second expression to create a list
+			Expression list = m_tail[1].eval(env);
+			if (!list.isHeadListRoot()) {
+				throw SemanticError("Error: second argument to apply not a list");
+			}
+
+			// create the list
+			std::vector<Expression> mapList(list.tailConstBegin(), list.tailConstEnd());
+
+			// to be a valid procedure, the expression should be JUST the procedure symbol
+			Expression& proc = m_tail[0];
+			if (proc.m_tail.empty() && env.is_proc(proc.head())) {
+				for (Expression& a : mapList) {
+					a = env.get_proc(proc.head())(std::vector<Expression>{a});
+				}
+
+				return Expression(mapList);
+
+			// If the procedure is a pre-defined lambda function
+			} else if (env.is_exp(proc.head())) {
+
+				// If there is a matching expression, then see if it's a lambda expression
+				Expression lambda = env.get_exp(proc.head());
+				if (lambda.isHeadLambdaRoot()) {
+					for (Expression& a : mapList) {
+						a = apply_lambda(lambda, std::vector<Expression>{a}, env);
+					}
+
+					return Expression(mapList);
+				}
+
+			// If the procedure is an anonymous lambda function,
+			} else if (proc.head() == LambdaRoot) {
+				Expression lambda = proc.handle_lambda(env);
+				for (Expression& a : mapList) {
+					a = apply_lambda(lambda, std::vector<Expression>{a}, env);
+				}
+
+				return Expression(mapList);
+			}
+
+			throw SemanticError("Error: first argument to apply not a procedure");
+		}
+
+		throw SemanticError("Error: wrong number of arguments to apply which takes two arguments");
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
@@ -317,6 +370,10 @@ Expression Expression::eval(Environment& env) {
 
 		// handle apply special-form
 		return handle_apply(env);
+	} else if (m_head.asSymbol() == "map") {
+
+		// handle map special-form
+		return handle_map(env);
 	} else if (isHeadListRoot()) {
 
 		// handle list special-form

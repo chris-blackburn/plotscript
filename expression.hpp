@@ -103,6 +103,7 @@ private:
 	Expression handle_list(Environment& env);
 	Expression handle_lambda(Environment& env);
 	Expression handle_apply(Environment& env);
+	Expression handle_map(Environment& env);
 };
 
 /// Render expression to output stream
