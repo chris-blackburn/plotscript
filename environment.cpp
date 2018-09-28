@@ -538,9 +538,6 @@ bool Environment::is_proc(const Atom& sym) const {
 }
 
 Procedure Environment::get_proc(const Atom& sym) const {
-
-	//Procedure proc = default_proc;
-
 	if (sym.isSymbol()) {
 		auto result = envmap.find(sym.asSymbol());
 		if (result != envmap.end() && result->second.type == ProcedureType) {

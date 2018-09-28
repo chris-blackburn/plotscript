@@ -740,6 +740,51 @@ TEST_CASE("Testing list specific functions (range)", "[Interpreter]") {
 	}
 }
 
+TEST_CASE("Testing functional procedure (apply)", "[interpreter]") {
+
+	{ // standard procedure
+		std::string program = "(apply + (list 1 2 3 4))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(10));
+	}
+
+	{ // defined lambda function
+		std::string program = "(begin (define f (lambda (x) (list x (+ x 1)))) (apply f (list 7)))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(7), Expression(8)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{ // anonymous lambda function
+		std::string program = "(apply (lambda (x) (list x (+ x 1))) (list 7))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(7), Expression(8)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(apply)",
+			"(apply +)",
+			"(apply + (list 1) (1))",
+			"(apply + (1))",
+			"(apply 1 (list 1))"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Test a medium-sized expression", "[interpreter]") {
 
 	{
@@ -1249,6 +1294,8 @@ TEST_CASE("Test some semantically invalid expresions", "[interpreter]") {
 		"(define begin 1)", // redefine special form
 		"(define define 1)",
 		"(define list 1)",
+		"(define lambda 1)",
+		"(define apply 1)",
 		"(define 1 1)",
 		"(define pi 3.14)" // redefine builtin symbol
 	};

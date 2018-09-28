@@ -84,9 +84,11 @@ Expression::ConstIteratorType Expression::tailConstEnd() const noexcept {
 	return m_tail.cend();
 }
 
-Expression apply_lambda(const Expression& lambda, const std::vector<Expression>& args, Environment env) {
+Expression apply_lambda(const Expression& lambda, const std::vector<Expression>& args,
+	Environment env) {
 
-	// Reference the arguments and expression of the lambda function. Only the expression needs to be copied
+	// Reference the arguments and expression of the lambda function. Only the expression needs
+	// to be copied
 	const Expression& lambdaArgs(*lambda.tailConstBegin());
 	Expression lambdaExp(*std::prev(lambda.tailConstEnd()));
 
@@ -97,7 +99,8 @@ Expression apply_lambda(const Expression& lambda, const std::vector<Expression>&
 	// Make sure the number of argumentes between the lambda function and the passed in args match
 	if (std::distance(lBegin, lEnd) == std::distance(args.cbegin(), args.cend())) {
 
-		// loop through each argument and add it to the copied environment with the lambda arguments as the symbols
+		// loop through each argument and add it to the copied environment with the lambda arguments
+		// as the symbols
 		auto ut = args.cbegin();
 		for (auto lt = lBegin; lt != lEnd; lt++, ut++) {
 
@@ -108,7 +111,8 @@ Expression apply_lambda(const Expression& lambda, const std::vector<Expression>&
 		// Evaluate the expression with the modified environment
 		return lambdaExp.eval(env);
 	} else {
-		throw SemanticError("Error during evaluation: incorrect number of arguments to lambda function");
+		throw SemanticError("Error during evaluation: incorrect number of arguments to "
+			"lambda function");
 	}
 }
 
@@ -182,7 +186,7 @@ Expression Expression::handle_define(Environment& env) {
 
 	// but tail[0] must not be a special-form or procedure
 	Atom head = m_tail[0].head();
-	if (head.asSymbol() == "define" || head.asSymbol() == "begin" ||
+	if (head.asSymbol() == "define" || head.asSymbol() == "begin" || head.asSymbol() == "apply" ||
 		head == ListRoot || head == LambdaRoot) {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
@@ -257,18 +261,49 @@ Expression Expression::handle_lambda(Environment& env) {
 	return lambda;
 }
 
+Expression Expression::handle_apply(Environment& env) {
+
+	// The first expression is a procedure, and the second is the list of expressions
+	if (m_tail.size() == 2) {
+
+		// pre-evaluate the second expression to create a list
+		Expression list = m_tail[1].eval(env);
+		if (!list.isHeadListRoot()) {
+			throw SemanticError("Error: second argument to apply not a list");
+		}
+
+		// Test the first expression to see if it is a procedure, defined lambda, or anonymous
+		Atom& op = m_tail[0].head();
+		std::vector<Expression> applyArgs(list.tailConstBegin(), list.tailConstEnd());
+		if (env.is_proc(op) || env.get_exp(op).isHeadLambdaRoot()) {
+			return apply(m_tail[0].head(), applyArgs, env);
+		} else if (op == LambdaRoot) {
+			Expression lambda = m_tail[0].handle_lambda(env);
+			return apply_lambda(lambda, applyArgs, env);
+		}
+
+		throw SemanticError("Error: first argument to apply not a procedure");
+	}
+
+	throw SemanticError("Error: wrong number of arguments to apply which takes two arguments");
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment& env) {
-	if (m_head.isSymbol() && m_head.asSymbol() == "begin") {
+	if (m_head.asSymbol() == "begin") {
 
 		// handle begin special-form
 		return handle_begin(env);
-	} else if (m_head.isSymbol() && m_head.asSymbol() == "define") {
+	} else if (m_head.asSymbol() == "define") {
 
 		// handle define special-form
 		return handle_define(env);
+	} else if (m_head.asSymbol() == "apply") {
+
+		// handle apply special-form
+		return handle_apply(env);
 	} else if (isHeadListRoot()) {
 
 		// handle list special-form
