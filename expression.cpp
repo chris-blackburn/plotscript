@@ -272,13 +272,26 @@ Expression Expression::handle_apply(Environment& env) {
 			throw SemanticError("Error: second argument to apply not a list");
 		}
 
-		// Test the first expression to see if it is a procedure, defined lambda, or anonymous
-		Atom& op = m_tail[0].head();
+		// create the list
 		std::vector<Expression> applyArgs(list.tailConstBegin(), list.tailConstEnd());
-		if (env.is_proc(op) || env.get_exp(op).isHeadLambdaRoot()) {
-			return apply(m_tail[0].head(), applyArgs, env);
-		} else if (op == LambdaRoot) {
-			Expression lambda = m_tail[0].handle_lambda(env);
+
+		// to be a valid procedure, the expression should be JUST the procedure symbol
+		Expression& proc = m_tail[0];
+		if (proc.m_tail.empty() && env.is_proc(proc.head())) {
+			return apply(proc.head(), applyArgs, env);
+
+		// If the procedure is a pre-defined lambda function
+		} else if (env.is_exp(proc.head())) {
+
+			// If there is a matching expression, then see if it's a lambda expression
+			Expression lambda = env.get_exp(proc.head());
+			if (lambda.isHeadLambdaRoot()) {
+				return apply_lambda(lambda, applyArgs, env);
+			}
+
+		// If the procedure is an anonymous lambda function,
+		} else if (proc.head() == LambdaRoot) {
+			Expression lambda = proc.handle_lambda(env);
 			return apply_lambda(lambda, applyArgs, env);
 		}
 

@@ -775,7 +775,9 @@ TEST_CASE("Testing functional procedure (apply)", "[interpreter]") {
 			"(apply +)",
 			"(apply + (list 1) (1))",
 			"(apply + (1))",
-			"(apply 1 (list 1))"
+			"(apply 1 (list 1))",
+			"(apply e (list 1))",
+			"(apply (+ z I) (list 0))"
 		};
 
 		for (auto s : programs) {
