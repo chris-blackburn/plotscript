@@ -47,7 +47,7 @@ Expression add(const std::vector<Expression>& args) {
 		}
 	}
 
-	return (isComplexProcedure) ? Expression(result): Expression(result.real());
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression mul(const std::vector<Expression>& args) {
@@ -68,7 +68,7 @@ Expression mul(const std::vector<Expression>& args) {
 		}
 	}
 
-	return (isComplexProcedure) ? Expression(result): Expression(result.real());
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression subneg(const std::vector<Expression>& args) {
@@ -102,14 +102,24 @@ Expression subneg(const std::vector<Expression>& args) {
 		throw SemanticError("Error in call to subtraction or negation: invalid number of arguments.");
 	}
 
-	return (isComplexProcedure) ? Expression(result): Expression(result.real());
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression div(const std::vector<Expression>& args) {
 	complex result;
 	bool isComplexProcedure = false;
 
-	if (nargs_equal(args, 2)) {
+	// If there is just one argument, we want to return the negative of that number
+	if (nargs_equal(args, 1)) {
+		if (args[0].isHeadNumber()) {
+			result = 1 / args[0].head().asNumber();
+		} else if(args[0].isHeadComplex()) {
+			isComplexProcedure = true;
+			result = complex(1, 0) / args[0].head().asComplex();
+		} else {
+			throw SemanticError("Error in call to division: invalid argument.");
+		}
+	} else if (nargs_equal(args, 2)) {
 		if (args[0].isHeadNumber() && args[1].isHeadNumber()) {
 			result = args[0].head().asNumber() / args[1].head().asNumber();
 		} else if (args[0].isHeadComplex() || args[1].isHeadComplex()) {
@@ -124,7 +134,7 @@ Expression div(const std::vector<Expression>& args) {
 		throw SemanticError("Error in call to division: invalid number of arguments.");
 	}
 
-	return (isComplexProcedure) ? Expression(result): Expression(result.real());
+	return (isComplexProcedure) ? Expression(result) : Expression(result.real());
 };
 
 Expression sqrt(const std::vector<Expression>& args) {

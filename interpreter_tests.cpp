@@ -288,6 +288,13 @@ TEST_CASE("Test Interpreter result with simple procedures (div)", "[interpreter]
 		REQUIRE(result == Expression(complex(1, 0)));
 	}
 
+	{ // Inverse
+		std::string program = "(/ 2)";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(0.5));
+	}
+
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
