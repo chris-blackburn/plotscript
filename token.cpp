@@ -5,9 +5,10 @@
 #include <iostream>
 
 // define constants for special characters
-const char OPENCHAR = '(';
-const char CLOSECHAR = ')';
-const char COMMENTCHAR = ';';
+#define OPENCHAR '('
+#define CLOSECHAR ')'
+#define COMMENTCHAR ';'
+#define QUOTECHAR '"'
 
 Token::Token(TokenType t): m_type(t) {}
 
@@ -43,6 +44,8 @@ TokenSequenceType tokenize(std::istream& seq) {
 	TokenSequenceType tokens;
 	std::string token;
 
+	// For keeping track of when you exclude spaces
+	bool openQuote = false;
 	while (true) {
 		char c = seq.get();
 		if (seq.eof()) {
@@ -65,8 +68,27 @@ TokenSequenceType tokenize(std::istream& seq) {
 		} else if(c == CLOSECHAR) {
 			store_ifnot_empty(token, tokens);
 			tokens.push_back(Token::TokenType::CLOSE);
-		} else if(isspace(c)) {
 			store_ifnot_empty(token, tokens);
+		} else if (c == QUOTECHAR) {
+			token.push_back(c);
+
+			// If we are at a close quote, then store the result. This gets checked
+			// before updating the boolean since it will be true when it hits a
+			// closing quote
+			if (openQuote) {
+				store_ifnot_empty(token, tokens);
+			}
+
+			// Toggle boolean to keep track of quotes
+			openQuote = !openQuote;
+		} else if(isspace(c)) {
+
+			// Check if it is specifically whitespace inside quotes
+			if (c == 0x20 && openQuote) {
+				token.push_back(c);
+			} else {
+				store_ifnot_empty(token, tokens);
+			}
 		} else {
 			token.push_back(c);
 		}

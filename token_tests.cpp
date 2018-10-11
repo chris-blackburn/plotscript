@@ -19,6 +19,52 @@ TEST_CASE("Test Token creation", "[token]") {
 	REQUIRE(tks.asString() == "thevalue");
 }
 
+TEST_CASE("Tokenize string literals", "[token]") {
+	std::string input = R"(
+		("This is a string")
+		)";
+
+	std::istringstream iss(input);
+	TokenSequenceType tokens = tokenize(iss);
+
+	REQUIRE(tokens.front().type() == Token::OPEN);
+	tokens.pop_front();
+
+	REQUIRE(tokens.front().type() == Token::STRING);
+	REQUIRE(tokens.front().asString() == "\"This is a string\"");
+	tokens.pop_front();
+
+	REQUIRE(tokens.front().type() == Token::CLOSE);
+	tokens.pop_front();
+
+	REQUIRE(tokens.empty());
+}
+
+TEST_CASE("Tokenize bad string literals", "[token]") {
+	std::string input = R"(
+		("This is a "string")
+		)";
+
+	std::istringstream iss(input);
+	TokenSequenceType tokens = tokenize(iss);
+
+	REQUIRE(tokens.front().type() == Token::OPEN);
+	tokens.pop_front();
+
+	REQUIRE(tokens.front().type() == Token::STRING);
+	REQUIRE(tokens.front().asString() == "\"This is a \"");
+	tokens.pop_front();
+
+	REQUIRE(tokens.front().type() == Token::STRING);
+	REQUIRE(tokens.front().asString() == "string\"");
+	tokens.pop_front();
+
+	REQUIRE(tokens.front().type() == Token::CLOSE);
+	tokens.pop_front();
+
+	REQUIRE(tokens.empty());
+}
+
 TEST_CASE("Test tokenize", "[token]") {
 	std::string input = R"(
 ( A a aa )aal ; a comment

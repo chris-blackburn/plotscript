@@ -461,7 +461,7 @@ Expression range(const std::vector<Expression>& args) {
 
 					// pre-allocate memory into the results vector
 					std::vector<Expression> result;
-					result.reserve(sizeof(Expression) * ((end - begin) / step));
+					result.reserve(((end - begin) / step));
 
 					// Actually perform the count and save to result
 					for (double i = begin; i <= end; i = i + step) {
