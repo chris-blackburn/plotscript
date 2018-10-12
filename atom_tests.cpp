@@ -60,6 +60,22 @@ TEST_CASE("Test constructors", "[atom]") {
 	}
 
 	{
+		INFO("Symbol Constructor (malformed string literal)");
+
+		// This would not be a string literal since there is a quote in between the start and end
+		// quotes - this should just create a symbol with the string value passed in
+		Atom a("\"h\"i\"");
+
+		REQUIRE(!a.isNone());
+		REQUIRE(!a.isNumber());
+		REQUIRE(!a.isComplex());
+		REQUIRE(a.isSymbol());
+		REQUIRE(!a.isStringLiteral());
+
+		REQUIRE(a.asSymbol() == "\"h\"i\"");
+	}
+
+	{
 		INFO("Token Constructor");
 		Token t("hi");
 		Atom a(t);
@@ -343,6 +359,13 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
+		INFO("compare default to string literal");
+		Atom a;
+		Atom b("\"hi\"");
+		REQUIRE(a != b);
+	}
+
+	{
 		INFO("compare number to default");
 		Atom a(1.0);
 		Atom b;
@@ -369,6 +392,13 @@ TEST_CASE("test comparison", "[atom]") {
 		INFO("compare number to symbol");
 		Atom a(1.0);
 		Atom b("hi");
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare number to string literal");
+		Atom a(1.0);
+		Atom b("\"hi\"");
 		REQUIRE(a != b);
 	}
 
@@ -403,6 +433,13 @@ TEST_CASE("test comparison", "[atom]") {
 	}
 
 	{
+		INFO("compare symbol to string literal");
+		Atom a("hi");
+		Atom b("\"hi\"");
+		REQUIRE(a != b);
+	}
+
+	{
 		INFO("compare complex to default");
 		Atom a(complex(1, 1));
 		Atom b;
@@ -423,6 +460,48 @@ TEST_CASE("test comparison", "[atom]") {
 		Atom c(complex(1, 2));
 		REQUIRE(a == b);
 		REQUIRE(a != c);
+	}
+
+	{
+		INFO("compare complex to string literal");
+		Atom a(complex(1, 1));
+		Atom b("\"hi\"");
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare string literal to default");
+		Atom a("\"hi\"");
+		Atom b;
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare string literal to number");
+		Atom a("\"hi\"");
+		Atom b(1.0);
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare string literal to complex");
+		Atom a("\"hi\"");
+		Atom b(complex(1, 1));
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare string literal to symbol");
+		Atom a("\"hi\"");
+		Atom b("hi");
+		REQUIRE(a != b);
+	}
+
+	{
+		INFO("compare string literal to string literal");
+		Atom a("\"hi\"");
+		Atom b("\"hi\"");
+		REQUIRE(a == b);
 	}
 }
 
@@ -480,5 +559,29 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 		INFO("symbol as symbol");
 		Atom a("A");
 		REQUIRE(a.asSymbol() == "A");
+	}
+
+	{
+		INFO("string literal as number");
+		Atom a("\"hi\"");
+		REQUIRE(a.asNumber() == 0);
+	}
+
+	{
+		INFO("string literal as complex");
+		Atom a("\"hi\"");
+		REQUIRE(a.asComplex() == complex(0, 0));
+	}
+
+	{
+		INFO("string literal as symbol");
+		Atom a("\"hi\"");
+		REQUIRE(a.asSymbol() == "\"hi\"");
+	}
+
+	{
+		INFO("string literal as symbol");
+		Atom a("\"hi\"");
+		REQUIRE(a.asSymbol() == "\"hi\"");
 	}
 }
