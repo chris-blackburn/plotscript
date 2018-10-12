@@ -67,11 +67,13 @@ public:
 	/// convienience member to determine if head atom is a symbol
 	bool isHeadSymbol() const noexcept;
 
+	/// convienience member to determine if head atom is a string literal
+	bool isHeadStringLiteral() const noexcept;
+
 	/// convienience member to determine if head atom is the root of a list
 	bool isHeadListRoot() const noexcept;
 
-	/// convienience member to determine if head atom is the root of a
-	/// lambda expression
+	/// convienience member to determine if head atom is the root of a lambda expression
 	bool isHeadLambdaRoot() const noexcept;
 
 	/// Evaluate expression using a post-order traversal (recursive)
@@ -95,6 +97,9 @@ private:
 	// Macros for the heads of special types of expressions.
 	#define ListRoot Atom("list")
 	#define LambdaRoot Atom("lambda")
+
+	// internal helper method to determin if an Atom is a special form (list, begin, define, etc.)
+	bool isSpecialForm(const Atom& head) const;
 
 	// internal helper methods
 	Expression handle_lookup(const Atom& head, const Environment& env);

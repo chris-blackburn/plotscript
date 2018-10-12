@@ -54,6 +54,10 @@ bool Expression::isHeadSymbol() const noexcept {
 	return m_head.isSymbol();
 }
 
+bool Expression::isHeadStringLiteral() const noexcept {
+	return m_head.isStringLiteral();
+}
+
 bool Expression::isHeadListRoot() const noexcept {
 	return m_head == ListRoot;
 }
@@ -151,7 +155,7 @@ Expression Expression::handle_lookup(const Atom& head, const Environment& env) {
 		} else {
 			throw SemanticError("Error during evaluation: unknown symbol");
 		}
-	} else if (head.isNumber() || head.isComplex()) {
+	} else if (head.isNumber() || head.isComplex() || head.isStringLiteral()) {
 			return Expression(head);
 	} else {
 		throw SemanticError("Error during evaluation: Invalid type in terminal expression");
@@ -172,6 +176,16 @@ Expression Expression::handle_begin(Environment& env) {
 	return result;
 }
 
+bool Expression::isSpecialForm(const Atom& head) const {
+	std::string s = head.asSymbol();
+	return s == "define" ||
+		s == "begin" ||
+		s == "apply" ||
+		s == "map" ||
+		head == ListRoot ||
+		head == LambdaRoot;
+}
+
 Expression Expression::handle_define(Environment& env) {
 
 	// tail must have size 2 or error
@@ -185,10 +199,7 @@ Expression Expression::handle_define(Environment& env) {
 	}
 
 	// but tail[0] must not be a special-form or procedure
-	Atom head = m_tail[0].head();
-	std::string s = head.asSymbol();
-	if (s == "define" || s == "begin" || s == "apply" || s == "map" || head == ListRoot ||
-		head == LambdaRoot) {
+	if (isSpecialForm(m_tail[0].head())) {
 		throw SemanticError("Error during evaluation: attempt to redefine a special-form");
 	}
 

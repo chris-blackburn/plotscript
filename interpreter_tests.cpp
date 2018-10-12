@@ -306,7 +306,9 @@ TEST_CASE("Test Interpreter result with simple procedures (div)", "[interpreter]
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(/ 1 2 3)",
-			"(/ (list 1))"
+			"(/ (list 1))",
+			"(/ \"eggs\" 1)",
+			"(/ \"eggs\")"
 		};
 
 		for (auto s : programs) {
@@ -357,6 +359,13 @@ TEST_CASE("Test Interpreter special forms: begin and define", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 		REQUIRE(result == Expression(complex(0, 1)));
+	}
+
+	{
+		std::string program = "(define a \"eggs\")";
+		INFO(program);
+		Expression result = run(program);
+		REQUIRE(result == Expression(Atom("\"eggs\"")));
 	}
 
 	{
@@ -519,6 +528,14 @@ TEST_CASE("Testing list specific functions (first)", "[Interpreter]") {
 	}
 
 	{
+		std::string program = "(first (list \"eggs\" 2 3))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(Atom("\"eggs\"")));
+	}
+
+	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(first (list 1) 1)",
@@ -560,6 +577,16 @@ TEST_CASE("Testing list specific functions (rest)", "[Interpreter]") {
 		Expression result = run(program);
 
 		std::vector<Expression> expected;
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(rest (list 1 \"eggs\" \"milk\"))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(Atom("\"eggs\"")),
+			Expression(Atom("\"milk\""))};
 		REQUIRE(result == Expression(expected));
 	}
 
@@ -607,6 +634,15 @@ TEST_CASE("Testing list specific functions (length)", "[Interpreter]") {
 	}
 
 	{
+		std::string program = "(length (list \"sausage\" \"eggs\" \"milk\"))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(3));
+	}
+
+	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(length (list 1) 1)",
@@ -641,6 +677,16 @@ TEST_CASE("Testing list specific functions (append)", "[Interpreter]") {
 	}
 
 	{
+		std::string program = "(append (list \"eggs\") \"milk\")";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(Atom("\"eggs\"")),
+			Expression(Atom("\"milk\""))};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(append (2) (list))",
@@ -671,6 +717,16 @@ TEST_CASE("Testing list specific functions (join)", "[Interpreter]") {
 		Expression result = run(program);
 
 		std::vector<Expression> expected = {Expression(complex(0, 2)), Expression(1)};
+		REQUIRE(result == Expression(expected));
+	}
+
+	{
+		std::string program = "(join (list \"eggs\") (list \"milk\"))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected = {Expression(Atom("\"eggs\"")),
+			Expression(Atom("\"milk\""))};
 		REQUIRE(result == Expression(expected));
 	}
 
@@ -745,7 +801,8 @@ TEST_CASE("Testing list specific functions (range)", "[Interpreter]") {
 			"(range (1))",
 			"(range (1) (3))",
 			"(range (2) (1) (1))",
-			"(range (2) (3) (-1))"
+			"(range (2) (3) (-1))",
+			"(range (list \"eggs\"))"
 		};
 
 		for (auto s : programs) {
@@ -881,6 +938,10 @@ TEST_CASE("Test arithmetic procedures", "[interpreter]") {
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(ab 1 2)",
+			"(+ \"eggs\" 1)",
+			"(- \"eggs\" 1)",
+			"(- \"eggs\")",
+			"(* \"eggs\" 1)"
 		};
 
 		for (auto s : programs) {
@@ -1015,6 +1076,7 @@ TEST_CASE("Test procedures (square root)", "[interpreter]") {
 			"(define sqrt 1)",
 			"(sqrt 1 2)",
 			"(sqrt 1 I)",
+			"(sqrt \"eggs\")"
 		};
 
 		for (auto s : programs) {
@@ -1096,7 +1158,8 @@ TEST_CASE("Test procedures (pow)", "[interpreter]") {
 		std::vector<std::string> programs = {
 			"(define ^ 1)",
 			"(^ 1)",
-			"(^ 1 2 3)"
+			"(^ 1 2 3)",
+			"(^ \"eggs\" 2)"
 		};
 
 		for (auto s : programs) {
@@ -1143,7 +1206,8 @@ TEST_CASE("Test procedures (ln)", "[interpreter]") {
 		std::vector<std::string> programs = {
 			"(define ln 1)",
 			"(ln 1 2)",
-			"(ln -1)"
+			"(ln -1)",
+			"(ln \"eggs\")"
 		};
 
 		for (auto s : programs) {
@@ -1196,7 +1260,8 @@ TEST_CASE("Test procedures (sin)", "[interpreter]") {
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define sin 1)",
-			"(sin 1 2)"
+			"(sin 1 2)",
+			"(sin \"eggs\")"
 		};
 
 		for (auto s : programs) {
@@ -1281,7 +1346,8 @@ TEST_CASE("Test procedures (tan)", "[interpreter]") {
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
 			"(define tan 1)",
-			"(tan 1 2)"
+			"(tan 1 2)",
+			"(tan \"eggs\")"
 		};
 
 		for (auto s : programs) {
@@ -1343,6 +1409,11 @@ TEST_CASE("Test complex-unique procedures", "[interpreter]") {
 			"(mag 1 2)",
 			"(arg 1 2)",
 			"(conj 1 2)",
+			"(real \"eggs\")",
+			"(imag \"eggs\")",
+			"(mag \"eggs\")",
+			"(arg \"eggs\")",
+			"(conj \"eggs\")"
 		};
 
 		for (auto s : programs) {

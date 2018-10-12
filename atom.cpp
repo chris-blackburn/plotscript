@@ -193,8 +193,6 @@ bool Atom::operator==(const Atom& right) const noexcept {
 		return stringValue == right.stringValue;
 	case StringLiteralKind:
 		return stringValue == right.stringValue;
-	default:
-		return false;
 	}
 
 	return true;
