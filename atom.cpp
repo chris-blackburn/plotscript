@@ -53,6 +53,9 @@ void Atom::copy(const Atom& x) {
 	case SymbolKind:
 		setSymbol(x.stringValue);
 		break;
+	case StringLiteralKind:
+		setSymbol(x.stringValue);
+		break;
 	}
 }
 
@@ -92,6 +95,10 @@ bool Atom::isSymbol() const noexcept {
 	return m_type == SymbolKind;
 }
 
+bool Atom::isStringLiteral() const noexcept {
+	return m_type == StringLiteralKind;
+}
+
 double Atom::truncateToZero(double value) {
 
 	// if the value is smaller than or equal to epsilon, just make it zero
@@ -117,11 +124,16 @@ void Atom::setComplex(complex value) {
 void Atom::setSymbol(const std::string& value) {
 
 	// we need to ensure the destructor of the symbol string is called
-	if(m_type == SymbolKind){
+	if(m_type == SymbolKind || m_type == StringLiteralKind){
 		stringValue.~basic_string();
 	}
 
-	m_type = SymbolKind;
+	// Check if there are quotes (only) surrounding the value - this makes it a string literal
+	if (value.front() == '"' && value.find('"', 1) == value.length() - 1) {
+		m_type = StringLiteralKind;
+	} else {
+		m_type = SymbolKind;
+	}
 
 	// copy construct in place
 	new (&stringValue) std::string(value);
@@ -145,7 +157,7 @@ complex Atom::asComplex() const noexcept {
 std::string Atom::asSymbol() const noexcept {
 	std::string result;
 
-	if(m_type == SymbolKind){
+	if(m_type == SymbolKind || m_type == StringLiteralKind){
 		result = stringValue;
 	}
 
@@ -179,6 +191,8 @@ bool Atom::operator==(const Atom& right) const noexcept {
 		return complexValue == right.complexValue;
 	case SymbolKind:
 		return stringValue == right.stringValue;
+	case StringLiteralKind:
+		return stringValue == right.stringValue;
 	default:
 		return false;
 	}
@@ -195,7 +209,7 @@ std::ostream& operator<<(std::ostream& out, const Atom& a) {
 		out << a.asNumber();
 	} else if (a.isComplex()) {
 		out << a.asComplex().real() << "," << a.asComplex().imag();
-	} else if (a.isSymbol()) {
+	} else if (a.isSymbol() || a.isStringLiteral()) {
 		out << a.asSymbol();
 	}
 

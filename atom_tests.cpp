@@ -12,6 +12,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isStringLiteral());
 	}
 
 	{
@@ -22,6 +23,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isStringLiteral());
 	}
 
 	{
@@ -32,6 +34,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(a.isComplex());
 		REQUIRE(!a.isSymbol());
+		REQUIRE(!a.isStringLiteral());
 	}
 
 	{
@@ -42,6 +45,18 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(a.isSymbol());
+		REQUIRE(!a.isStringLiteral());
+	}
+
+	{
+		INFO("Symbol Constructor (String Literal)");
+		Atom a("\"hi\"");
+
+		REQUIRE(!a.isNone());
+		REQUIRE(!a.isNumber());
+		REQUIRE(!a.isComplex());
+		REQUIRE(!a.isSymbol());
+		REQUIRE(a.isStringLiteral());
 	}
 
 	{
@@ -53,6 +68,7 @@ TEST_CASE("Test constructors", "[atom]") {
 		REQUIRE(!a.isNumber());
 		REQUIRE(!a.isComplex());
 		REQUIRE(a.isSymbol());
+		REQUIRE(!a.isStringLiteral());
 	}
 
 	{
@@ -60,24 +76,35 @@ TEST_CASE("Test constructors", "[atom]") {
 		Atom a("hi");
 		Atom b(1.0);
 		Atom c(complex(1, 1));
+		Atom d("\"hi\"");
 
 		Atom z(a);
 		REQUIRE(!z.isNone());
 		REQUIRE(!z.isNumber());
 		REQUIRE(!z.isComplex());
 		REQUIRE(z.isSymbol());
+		REQUIRE(!z.isStringLiteral());
 
 		Atom y(b);
 		REQUIRE(!y.isNone());
 		REQUIRE(y.isNumber());
 		REQUIRE(!y.isComplex());
 		REQUIRE(!y.isSymbol());
+		REQUIRE(!y.isStringLiteral());
 
 		Atom x(c);
 		REQUIRE(!x.isNone());
 		REQUIRE(!x.isNumber());
 		REQUIRE(x.isComplex());
 		REQUIRE(!x.isSymbol());
+		REQUIRE(!x.isStringLiteral());
+
+		Atom w(d);
+		REQUIRE(!w.isNone());
+		REQUIRE(!w.isNumber());
+		REQUIRE(!w.isComplex());
+		REQUIRE(!w.isSymbol());
+		REQUIRE(w.isStringLiteral());
 	}
 }
 
@@ -92,6 +119,7 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isStringLiteral());
 	}
 
 	{
@@ -103,6 +131,7 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isStringLiteral());
 	}
 
 	{
@@ -114,6 +143,7 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isStringLiteral());
 	}
 
 	{
@@ -125,6 +155,7 @@ TEST_CASE("Test assignment", "[atom]") {
 		REQUIRE(!b.isNumber());
 		REQUIRE(!b.isComplex());
 		REQUIRE(!b.isSymbol());
+		REQUIRE(!b.isStringLiteral());
 	}
 
 	{
@@ -233,6 +264,51 @@ TEST_CASE("Test assignment", "[atom]") {
 		b = a;
 		REQUIRE(b.isComplex());
 		REQUIRE(b.asComplex() == complex(1, 1));
+	}
+
+	{
+		INFO("string literal to default");
+		Atom a("\"hi\"");
+		Atom b;
+		b = a;
+		REQUIRE(b.isStringLiteral());
+		REQUIRE(b.asSymbol() == "\"hi\"");
+	}
+
+	{
+		INFO("string literal to number");
+		Atom a("\"hi\"");
+		Atom b(1.0);
+		b = a;
+		REQUIRE(b.isStringLiteral());
+		REQUIRE(b.asSymbol() == "\"hi\"");
+	}
+
+	{
+		INFO("string literal to complex");
+		Atom a("\"hi\"");
+		Atom b(complex(2, 2));
+		b = a;
+		REQUIRE(b.isStringLiteral());
+		REQUIRE(b.asSymbol() == "\"hi\"");
+	}
+
+	{
+		INFO("string literal to symbol");
+		Atom a("\"hi\"");
+		Atom b("hi");
+		b = a;
+		REQUIRE(b.isStringLiteral());
+		REQUIRE(b.asSymbol() == "\"hi\"");
+	}
+
+	{
+		INFO("string literal to string literal");
+		Atom a("\"hi\"");
+		Atom b("\"bye\"");
+		b = a;
+		REQUIRE(b.isStringLiteral());
+		REQUIRE(b.asSymbol() == "\"hi\"");
 	}
 }
 

@@ -54,6 +54,9 @@ public:
 	/// predicate to determine if an Atom is of type Symbol
 	bool isSymbol() const noexcept;
 
+	/// predicate to determine if an Atom is of type StringLiteral
+	bool isStringLiteral() const noexcept;
+
 	/// value of Atom as a number, return 0 if not a Number
 	double asNumber() const noexcept;
 
@@ -71,7 +74,7 @@ private:
 
 	// internal enum of known types
 	// ListRootKind atoms have no value - they are used to mark the head of an expression AST
-	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind};
+	enum Type {NoneKind, NumberKind, ComplexKind, SymbolKind, StringLiteralKind};
 
 	// track the type
 	Type m_type;
