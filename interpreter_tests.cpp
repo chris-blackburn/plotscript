@@ -540,11 +540,79 @@ TEST_CASE("Test Interpreter special forms: set-property", "[interpreter]") {
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
+			"(define set-property 10)",
 			"(set-property)",
 			"(set-property \"number\")",
 			"(set-property \"number\" \"one\")",
 			"(set-property \"number\" \"one\" 1 1)",
-			"(set-property 1 \"one\" 1)",
+			"(set-property 1 \"one\" 1)"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
+TEST_CASE("Test Interpreter special forms: get-property", "[interpreter]") {
+
+	{ // try to get a property from anonymous expression with no properties
+		std::string program = "(get-property \"note\" (+ 1 2))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression());
+	}
+
+	{ // try to get a property from anonymous expression with properties
+		std::string program = "(get-property \"note\" "
+			"(set-property \"note\" \"a complex number\" (+ 1 I)))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(Atom("\"a complex number\"")));
+	}
+
+	{ // try to get a property from something defined without setting the property
+		std::string program = "(begin "
+			"(define a (+ 1 I)) "
+			"(get-property \"note\" a))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression());
+	}
+
+	{ // get an existing property from something defined
+		std::string program = "(begin "
+			"(define a (+ 1 I)) "
+			"(define b (set-property \"note\" \"a complex number\" a)) "
+			"(get-property \"note\" b))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(Atom("\"a complex number\"")));
+	}
+
+	{ // try to get an invalid property from something defined that has properties
+		std::string program = "(begin "
+			"(define a (+ 1 I)) "
+			"(define b (set-property \"note\" \"a complex number\" a)) "
+			"(get-property \"foo\" b))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression());
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(define get-property 10)",
+			"(get-property)",
+			"(get-property \"number\")",
+			"(get-property 1 \"one\")"
 		};
 
 		for (auto s : programs) {

@@ -17,6 +17,8 @@ Expression::Expression(const Expression& a) {
 	for (auto e : a.m_tail) {
 		m_tail.push_back(e);
 	}
+
+	m_props = a.m_props;
 }
 
 Expression& Expression::operator=(const Expression& a) {
@@ -29,6 +31,9 @@ Expression& Expression::operator=(const Expression& a) {
 		for (auto e : a.m_tail) {
 			m_tail.push_back(e);
 		}
+
+		m_props.clear();
+		m_props = a.m_props;
 	}
 
 	return *this;
@@ -183,7 +188,9 @@ bool Expression::isSpecialForm(const Atom& head) const {
 		s == "apply" ||
 		s == "map" ||
 		head == ListRoot ||
-		head == LambdaRoot;
+		head == LambdaRoot ||
+		s == "set-property" ||
+		s == "get-property";
 }
 
 Expression Expression::handle_define(Environment& env) {
@@ -356,22 +363,52 @@ Expression Expression::handle_setProperty(Environment& env) {
 		if (m_tail[0].isHeadStringLiteral()) {
 
 			// grab the evaluated expression to apply the property to
+			// TODO: If the expression already exists, we need to edit that expression specifically
 			Expression exp = m_tail[2].eval(env);
 
-			// if the pointer to the map of the expression is empty, then allocate a new map
-			if (exp.m_props.get() == nullptr) {
-				exp.m_props = std::unique_ptr<PropertyMap>(new PropertyMap);
+			// Add the key and the evaluated expression to the map
+			exp.m_props.emplace(m_tail[0].head().asSymbol(), m_tail[1].eval(env));
+
+			// if the expression came from a definition in the environment, then we need to save the
+			// updated version in the environment. Otherwise it was just an anonymous expression
+			if (env.is_exp(m_tail[2].head())) {
+				env.add_exp(m_tail[2].head(), exp, true);
 			}
 
-			// Add the key and the evaluated expression to the map
-			exp.m_props->emplace(m_tail[0].head().asSymbol(), m_tail[1].eval(env));
 			return exp;
 		}
 
 		throw SemanticError("Error: first argument to set-property not a string literal");
 	}
 
-	throw SemanticError("Error: wrong number of arguments to map which takes two arguments");
+	throw SemanticError("Error: wrong number of arguments to set-property which takes three "
+		"arguments");
+}
+
+Expression Expression::handle_getProperty(Environment& env) {
+	if (m_tail.size() == 2) {
+		if (m_tail[0].isHeadStringLiteral()) {
+
+			// Get the expression from the environment or just evaluate it
+			Expression exp = m_tail[1].eval(env);
+
+			// get the property's value
+			auto result = exp.m_props.find(m_tail[0].head().asSymbol());
+
+			// If a result was found, then return it
+			if (result != exp.m_props.end()) {
+				return result->second;
+			}
+
+			// return a none type expression if no property was found
+			return Expression();
+		}
+
+		throw SemanticError("Error: first argument to get-property not a string literal");
+	}
+
+	throw SemanticError("Error: wrong number of arguments to get-property which takes two "
+		"arguments");
 }
 
 // this is a simple recursive version. the iterative version is more
@@ -406,6 +443,10 @@ Expression Expression::eval(Environment& env) {
 
 		// handle set-property special-form
 		return handle_setProperty(env);
+	} else if (m_head.asSymbol() == "get-property") {
+
+		// handle get-property special-form
+		return handle_getProperty(env);
 	} else if (m_tail.empty()) {
 		return handle_lookup(m_head, env);
 	} else {
@@ -421,6 +462,11 @@ Expression Expression::eval(Environment& env) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
+	if (exp.head().isNone()) {
+		out << "NONE";
+		return out;
+	}
+
 	out << "(";
 	if (!exp.isHeadListRoot() && !exp.isHeadLambdaRoot()) {
 		out << exp.head();
