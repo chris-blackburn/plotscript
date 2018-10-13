@@ -508,6 +508,52 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 	}
 }
 
+TEST_CASE("Test Interpreter special forms: set-property", "[interpreter]") {
+
+	{
+		std::string program = "(set-property \"number\" \"one\" (+ 0 1))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(1));
+	}
+
+	{
+		std::string program = "(set-property \"number\" 1 \"MyNumber\")";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(Atom("\"MyNumber\"")));
+	}
+
+	{
+		std::string program = "(begin (define a \"hi\") (set-property \"number\" 1 \"hi\"))";
+		INFO(program);
+		Expression result = run(program);
+
+		std::vector<Expression> expected;
+		REQUIRE(result == Expression(Atom("\"hi\"")));
+	}
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(set-property)",
+			"(set-property \"number\")",
+			"(set-property \"number\" \"one\")",
+			"(set-property \"number\" \"one\" 1 1)",
+			"(set-property 1 \"one\" 1)",
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
 TEST_CASE("Testing list specific functions (first)", "[Interpreter]") {
 
 	{

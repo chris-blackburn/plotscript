@@ -351,6 +351,29 @@ Expression Expression::handle_map(Environment& env) {
 		throw SemanticError("Error: wrong number of arguments to map which takes two arguments");
 }
 
+Expression Expression::handle_setProperty(Environment& env) {
+	if (m_tail.size() == 3) {
+		if (m_tail[0].isHeadStringLiteral()) {
+
+			// grab the evaluated expression to apply the property to
+			Expression exp = m_tail[2].eval(env);
+
+			// if the pointer to the map of the expression is empty, then allocate a new map
+			if (exp.m_props.get() == nullptr) {
+				exp.m_props = std::unique_ptr<PropertyMap>(new PropertyMap);
+			}
+
+			// Add the key and the evaluated expression to the map
+			exp.m_props->emplace(m_tail[0].head().asSymbol(), m_tail[1].eval(env));
+			return exp;
+		}
+
+		throw SemanticError("Error: first argument to set-property not a string literal");
+	}
+
+	throw SemanticError("Error: wrong number of arguments to map which takes two arguments");
+}
+
 // this is a simple recursive version. the iterative version is more
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
@@ -379,6 +402,10 @@ Expression Expression::eval(Environment& env) {
 
 		// handle lambda special-form
 		return handle_lambda(env);
+	} else if (m_head.asSymbol() == "set-property") {
+
+		// handle set-property special-form
+		return handle_setProperty(env);
 	} else if (m_tail.empty()) {
 		return handle_lookup(m_head, env);
 	} else {
