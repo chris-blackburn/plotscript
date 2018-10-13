@@ -74,7 +74,7 @@ Atom& Atom::operator=(const Atom& x) {
 Atom::~Atom() {
 
 	// we need to ensure the destructor of the symbol string is called
-	if (m_type == SymbolKind) {
+	if (m_type == SymbolKind || m_type == StringLiteralKind) {
 		stringValue.~basic_string();
 	}
 }

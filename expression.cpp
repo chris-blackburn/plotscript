@@ -14,10 +14,7 @@ Expression::Expression(const Atom& a): m_head(a) {}
 // recursive copy
 Expression::Expression(const Expression& a) {
 	m_head = a.m_head;
-	for (auto e : a.m_tail) {
-		m_tail.push_back(e);
-	}
-
+	m_tail = a.m_tail;
 	m_props = a.m_props;
 }
 
@@ -26,13 +23,11 @@ Expression& Expression::operator=(const Expression& a) {
 	// prevent self-assignment
 	if (this != &a) {
 		m_head = a.m_head;
+
 		m_tail.clear();
+		m_tail = a.m_tail;
 
-		for (auto e : a.m_tail) {
-			m_tail.push_back(e);
-		}
-
-		m_props.clear();
+		m_props.erase(m_props.begin(), m_props.end());
 		m_props = a.m_props;
 	}
 
