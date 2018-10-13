@@ -7,6 +7,7 @@ Defines the Expression type and assiciated functions.
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 
 #include "token.hpp"
 #include "atom.hpp"
@@ -92,10 +93,10 @@ private:
 	// and cache coherence, at the cost of wasted memory.
 	std::vector<Expression> m_tail;
 
-	// Map of properties linked to this expression
-	// NOTE: update to be a pointer after getting basic functionality
+	// Map of properties linked to this expression. I used a pointer here because not every
+	// expression will make use of this property list
 	typedef std::map<std::string, Expression> PropertyMap;
-	PropertyMap m_props;
+	std::unique_ptr<PropertyMap> m_props;
 
 	// convenience typedef
 	typedef std::vector<Expression>::iterator IteratorType;

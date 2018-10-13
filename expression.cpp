@@ -15,7 +15,11 @@ Expression::Expression(const Atom& a): m_head(a) {}
 Expression::Expression(const Expression& a) {
 	m_head = a.m_head;
 	m_tail = a.m_tail;
-	m_props = a.m_props;
+
+	// Deep copy the map from "a" and create a new unique pointer from it
+	if (a.m_props.get() != nullptr) {
+		m_props = std::unique_ptr<PropertyMap>(new PropertyMap(*a.m_props));
+	}
 }
 
 Expression& Expression::operator=(const Expression& a) {
@@ -27,8 +31,9 @@ Expression& Expression::operator=(const Expression& a) {
 		m_tail.clear();
 		m_tail = a.m_tail;
 
-		m_props.erase(m_props.begin(), m_props.end());
-		m_props = a.m_props;
+		if (a.m_props.get() != nullptr) {
+			m_props = std::unique_ptr<PropertyMap>(new PropertyMap(*a.m_props));
+		}
 	}
 
 	return *this;
@@ -358,11 +363,15 @@ Expression Expression::handle_setProperty(Environment& env) {
 		if (m_tail[0].isHeadStringLiteral()) {
 
 			// grab the evaluated expression to apply the property to
-			// TODO: If the expression already exists, we need to edit that expression specifically
 			Expression exp = m_tail[2].eval(env);
 
+			// Construct a new property list if one doesn't already exist
+			if (exp.m_props.get() == nullptr) {
+				exp.m_props = std::unique_ptr<PropertyMap>(new PropertyMap);
+			}
+
 			// Add the key and the evaluated expression to the map
-			exp.m_props.emplace(m_tail[0].head().asSymbol(), m_tail[1].eval(env));
+			exp.m_props->emplace(m_tail[0].head().asSymbol(), m_tail[1].eval(env));
 
 			// if the expression came from a definition in the environment, then we need to save the
 			// updated version in the environment. Otherwise it was just an anonymous expression
@@ -387,12 +396,15 @@ Expression Expression::handle_getProperty(Environment& env) {
 			// Get the expression from the environment or just evaluate it
 			Expression exp = m_tail[1].eval(env);
 
-			// get the property's value
-			auto result = exp.m_props.find(m_tail[0].head().asSymbol());
+			if (exp.m_props.get() != nullptr) {
 
-			// If a result was found, then return it
-			if (result != exp.m_props.end()) {
-				return result->second;
+				// get the property's value
+				auto result = exp.m_props->find(m_tail[0].head().asSymbol());
+
+				// If a result was found, then return it
+				if (result != exp.m_props->end()) {
+					return result->second;
+				}
 			}
 
 			// return a none type expression if no property was found
