@@ -10,6 +10,13 @@
 	))
 
 	; Creation of a line object
+	; Returns a list of two points with property "object-name": "line", "thickness": 1
+	(define make-line (lambda (p1 p2)
+		(set-property "object-name" "line"
+		(set-property "thickness" 1
+			(list p1 p2)
+		))
+	))
 
 	; Creation of a text object
 )

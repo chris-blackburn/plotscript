@@ -51,6 +51,16 @@ class TestREPL(unittest.TestCase):
 		self.assertEqual(output.strip(), "(0)")
 
 		# Default line
+		output = self.wrapper.run_command(u'(define p1 (make-point 17 5))')
+		self.assertEqual(output.strip(), "((17) (5))")
+		output = self.wrapper.run_command(u'(define p2 (make-point 2 9))')
+		self.assertEqual(output.strip(), "((2) (9))")
+		output = self.wrapper.run_command(u'(define l (make-line p1 p2))')
+		self.assertEqual(output.strip(), "(((17) (5)) ((2) (9)))")
+		output = self.wrapper.run_command(u'(get-property "object-name" l)')
+		self.assertEqual(output.strip(), '("line")')
+		output = self.wrapper.run_command(u'(get-property "thickness" l)')
+		self.assertEqual(output.strip(), "(1)")
 
 		# Default text
 
