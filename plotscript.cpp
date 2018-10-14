@@ -5,6 +5,7 @@
 
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
+#include "startup_config.hpp"
 
 void prompt() {
 	std::cout << "\nplotscript> ";
@@ -25,9 +26,29 @@ void info(const std::string& err_str) {
 	std::cout << "Info: " << err_str << std::endl;
 }
 
+void load_startup_file(Interpreter& interp) {
+	std::ifstream ifs(STARTUP_FILE);
+
+	if (!ifs) {
+		error("Could not open startup file for reading.");
+		return;
+	}
+
+	if (!interp.parseStream(ifs)) {
+		error("Invalid Program in startup file. Could not parse.");
+	} else {
+		try {
+			interp.evaluate();
+		} catch (const SemanticError& ex) {
+			std::cerr << ex.what() << " [startup]" << std::endl;
+		}
+	}
+}
+
 int eval_from_stream(std::istream& stream) {
 	Interpreter interp;
 
+	load_startup_file(interp);
 	if (!interp.parseStream(stream)) {
 		error("Invalid Program. Could not parse.");
 		return EXIT_FAILURE;
@@ -65,6 +86,7 @@ int eval_from_command(std::string argexp) {
 void repl() {
 	Interpreter interp;
 
+	load_startup_file(interp);
 	while (!std::cin.eof()) {
 
 		prompt();

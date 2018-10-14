@@ -43,6 +43,10 @@ set(gui_test_src
   notebook_test.cpp
 )
 
+# Include generate startup_config.hpp in build directory
+set(STARTUP_FILE ${CMAKE_SOURCE_DIR}/startup.pls)
+configure_file(${CMAKE_SOURCE_DIR}/startup_config.hpp.in ${CMAKE_BINARY_DIR}/startup_config.hpp)
+include_directories(${CMAKE_BINARY_DIR})
 
 # ------------------------------------------------
 # You should not need to edit any files below here
@@ -124,7 +128,7 @@ endif()
 # --------------------------------------------------------
 
 if (Qt5Widgets_FOUND AND Qt5Test_FOUND)
-  
+
   add_executable(notebook ${gui_main} ${gui_src})
   if(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
     target_link_libraries(notebook interpreter Qt5::Widgets pthread gcov)
@@ -140,7 +144,7 @@ if (Qt5Widgets_FOUND AND Qt5Test_FOUND)
   endif()
 
   add_test(notebook_test notebook_test)
-  
+
 else (Qt5Widgets_FOUND AND Qt5Test_FOUND)
   message("Qt >= 5.9  needs to be installed to build the notebook interface and related tests.")
 endif (Qt5Widgets_FOUND AND Qt5Test_FOUND)
@@ -166,4 +170,3 @@ if (DOXYGEN_FOUND)
 else (DOXYGEN_FOUND)
   message("Doxygen need to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
-
