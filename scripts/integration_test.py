@@ -43,11 +43,11 @@ class TestREPL(unittest.TestCase):
 	def test_graphic_primitives(self):
 
 		# Default point
-		output = self.wrapper.run_command(u'(make-point 17 5)')
+		output = self.wrapper.run_command(u'(define p (make-point 17 5))')
 		self.assertEqual(output.strip(), "((17) (5))")
-		output = self.wrapper.run_command(u'(get-property "object-name" (make-point 17 5))')
+		output = self.wrapper.run_command(u'(get-property "object-name" p)')
 		self.assertEqual(output.strip(), '("point")')
-		output = self.wrapper.run_command(u'(get-property "size" (make-point 17 5))')
+		output = self.wrapper.run_command(u'(get-property "size" p)')
 		self.assertEqual(output.strip(), "(0)")
 
 		# Default line
@@ -63,6 +63,12 @@ class TestREPL(unittest.TestCase):
 		self.assertEqual(output.strip(), "(1)")
 
 		# Default text
+		output = self.wrapper.run_command(u'(define t (make-text "Hi"))')
+		self.assertEqual(output.strip(), '("Hi")')
+		output = self.wrapper.run_command(u'(get-property "object-name" t)')
+		self.assertEqual(output.strip(), '("text")')
+		output = self.wrapper.run_command(u'(get-property "position" t)')
+		self.assertEqual(output.strip(), "((0) (0))")
 
 class TestExecuteCommandline(unittest.TestCase):
 

@@ -19,4 +19,11 @@
 	))
 
 	; Creation of a text object
+	; Returns a string literal with property "object-name": "text", "position": (0 0)
+	(define make-text (lambda (str)
+		(set-property "object-name" "text"
+		(set-property "position" (list 0 0)
+			(str)
+		))
+	))
 )
