@@ -100,8 +100,8 @@ void repl() {
 
 		if (!interp.parseStream(expression)) {
 			error("Invalid Expression. Could not parse.");
-		} else{
-			try{
+		} else {
+			try {
 				Expression exp = interp.evaluate();
 				std::cout << exp << std::endl;
 			} catch(const SemanticError& ex) {

@@ -6,3 +6,7 @@ OutputWidget::OutputWidget(QWidget* parent): QWidget(parent) {}
 void OutputWidget::update(const QString& str) {
 	qDebug() << str;
 }
+
+void OutputWidget::error(const QString& str) {
+	qDebug() << str;
+}
