@@ -35,6 +35,7 @@ set(tui_src
 # EDIT
 # add source for any GUI modules here
 set(gui_src
+  notebook_app.hpp notebook_app.cpp
   )
 
 # EDIT
