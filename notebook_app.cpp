@@ -1,9 +1,18 @@
 #include "notebook_app.hpp"
 
-NotebookApp::NotebookApp(QWidget* parent) {
+#include <QLayout>
 
-	// Keep compiler from compaining
-	if (parent) {
-		return;
-	}
+NotebookApp::NotebookApp(QWidget* parent): QWidget(parent) {
+	input = new InputWidget(this);
+	input->setObjectName("input");
+
+	output= new OutputWidget(this);
+	output->setObjectName("output");
+
+	// Setup the layout
+	auto layout = new QVBoxLayout;
+	layout->addWidget(input);
+	layout->addWidget(output);
+
+	setLayout(layout);
 }
