@@ -9,6 +9,8 @@ public:
 	InputWidget(QWidget* parent = nullptr);
 
 	void keyPressEvent(QKeyEvent* e) override;
+signals:
+	void publish(const QString& str);
 };
 
 #endif

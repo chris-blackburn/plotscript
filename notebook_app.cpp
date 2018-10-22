@@ -6,9 +6,12 @@ NotebookApp::NotebookApp(QWidget* parent): QWidget(parent) {
 	input = new InputWidget(this);
 	input->setObjectName("input");
 
-	// TODO: Use qdebug for output, then implement output widget
-	// output= new OutputWidget(this);
-	// output->setObjectName("output");
+	output = new OutputWidget(this);
+	output->setObjectName("output");
+
+	// Connect the input widget to the output widget
+	connect(input, &InputWidget::publish,
+		output, &OutputWidget::update);
 
 	// Setup the layout
 	auto layout = new QVBoxLayout;

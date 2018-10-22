@@ -12,7 +12,7 @@ public:
 	NotebookApp(QWidget* parent = nullptr);
 private:
 	InputWidget* input;
-	// OutputWidget* output;
+	OutputWidget* output;
 };
 
 #endif

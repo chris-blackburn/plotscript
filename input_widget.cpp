@@ -2,15 +2,14 @@
 
 InputWidget::InputWidget(QWidget* parent): QPlainTextEdit(parent) {}
 
-#include <QDebug>
 void InputWidget::keyPressEvent(QKeyEvent* e) {
 
-	// if the user pressed Shift+Enter, then we need to execute what they typed and clear the screen
+	// if the user pressed Shift+Enter,
 	if ((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter) &&
-		e->modifiers() & Qt::ShiftModifier) {
+		(e->modifiers() & Qt::ShiftModifier)) {
 
-		// TODO: Connect the user's input to a signal
-		qDebug() << toPlainText();
+		// publish the text in the text box and clear it
+		publish(toPlainText());
 		clear();
 	} else {
 
