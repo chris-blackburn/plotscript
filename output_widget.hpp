@@ -1,5 +1,5 @@
-#ifndef OUTPUT_WIDGET_HPP 
-#define OUTPUT_WIDGET_HPP 
+#ifndef OUTPUT_WIDGET_HPP
+#define OUTPUT_WIDGET_HPP
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
