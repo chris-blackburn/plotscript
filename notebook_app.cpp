@@ -9,7 +9,7 @@ NotebookApp::NotebookApp(QWidget* parent): QWidget(parent) {
 	output = new OutputWidget(this);
 	output->setObjectName("output");
 
-	// Connect the input widget to the process slot of this class
+	// Whenever the user sends an input, we need to process that input
 	connect(input, &InputWidget::publish,
 		this, &NotebookApp::process);
 
@@ -22,18 +22,19 @@ NotebookApp::NotebookApp(QWidget* parent): QWidget(parent) {
 	setWindowTitle(tr("Plotscript Notebook"));
 }
 
-#include <QDebug>
-#include <istream>
 void NotebookApp::process(const QString& str) {
+
+	// Clear the output widget then process the user's input
+	output->clear();
 	std::istringstream expression(str.toStdString());
 
+	// Parse and process the user's expression
 	if (!interp.parseStream(expression)) {
 		output->error("Invalid Expression. Could not parse.");
 	} else {
 		try {
-
-			// TODO: Should this get handled in output or should a simple string get handed to output?
-			interp.evaluate();
+			Expression result = interp.evaluate();
+			output->processExpression(result);
 		} catch(const SemanticError& ex) {
 			output->error(ex.what());
 		}
