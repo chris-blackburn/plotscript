@@ -78,6 +78,10 @@ public:
 	/// convienience member to determine if head atom is the root of a lambda expression
 	bool isHeadLambdaRoot() const noexcept;
 
+	/// return the value of a certain property of the expression. If no such property exists,
+	/// an empty expression is returned
+	Expression getProperty(const std::string& property) const noexcept;
+
 	/// Evaluate expression using a post-order traversal (recursive)
 	Expression eval(Environment& env);
 

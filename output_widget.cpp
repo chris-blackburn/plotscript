@@ -11,12 +11,26 @@ OutputWidget::OutputWidget(QWidget* parent): QWidget(parent) {
 	setLayout(layout);
 }
 
+void OutputWidget::addText(const std::string& str) {
+	scene->addText(QString::fromStdString(str));
+}
+
+void OutputWidget::addText(const QString& str) {
+	scene->addText(str);
+}
+
+void OutputWidget::handleObject(const Expression& exp, const std::string& objectName) {
+	exp.head();
+	addText(objectName);
+	return;
+}
+
 void OutputWidget::processExpression(const Expression& exp) {
 
 	// lambda functions don't get printed out
 	if (!exp.isHeadLambdaRoot()) {
 		if (exp.head().isNone()) {
-			scene->addText("NONE");
+			addText((QString)"NONE");
 		} else if (exp.isHeadListRoot()) {
 
 			// As of now, items in lists just get printed out on top of each other. We just recurse
@@ -26,17 +40,24 @@ void OutputWidget::processExpression(const Expression& exp) {
 			}
 		} else {
 
-			// Everything else prints the same as the REPL, the head is just wrapped in
-			// a set of parentheses
-			std::stringstream out;
-			out << "(" << exp.head() << ")";
-			scene->addText(QString::fromStdString(out.str()));
+			// First, check if the expression has an object-name property that matches one of
+			// the graphic primitive types
+			Expression objectName = exp.getProperty("object-name");
+			if (!objectName.head().isNone()) {
+				handleObject(exp, objectName.head().asSymbol());
+			} else {
+				// Everything else prints the same as the REPL, the head is just wrapped in
+				// a set of parentheses
+				std::stringstream out;
+				out << "(" << exp.head() << ")";
+				addText(out.str());
+			}
 		}
 	}
 }
 
 void OutputWidget::error(const QString& str) {
-	scene->addText(str);
+	addText(str);
 }
 
 void OutputWidget::clear() {

@@ -71,6 +71,20 @@ bool Expression::isHeadLambdaRoot() const noexcept {
 	return m_head == LambdaRoot;
 }
 
+Expression Expression::getProperty(const std::string& property) const noexcept {
+	if (m_props.get() != nullptr) {
+		auto it = m_props->find(property);
+
+		// if it was found, return the value
+		if (it != m_props->cend()) {
+			return it->second;
+		}
+	}
+
+	// if no match was found, return an empty expression
+	return Expression();
+}
+
 void Expression::append(const Atom& a) {
 	m_tail.emplace_back(a);
 }

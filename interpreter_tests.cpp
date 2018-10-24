@@ -606,6 +606,22 @@ TEST_CASE("Test Interpreter special forms: get-property", "[interpreter]") {
 		REQUIRE(result == Expression());
 	}
 
+	{ // Test the get property public function for expressions
+		std::string program = "(set-property \"note\" \"a number\" 3)";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result.getProperty("\"note\"") == Expression(Atom("\"a number\"")));
+	}
+
+	{ // Test the get property public function for expressions, no property
+		std::string program = "(set-property \"note\" \"a number\" 3)";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result.getProperty("\"not\"") == Expression());
+	}
+
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
