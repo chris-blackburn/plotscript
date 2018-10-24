@@ -13,8 +13,6 @@ Q_OBJECT
 public:
 	OutputWidget(QWidget* parent = nullptr);
 
-	void addText(const QString& str);
-
 	void processExpression(const Expression& exp);
 
 	void error(const QString& str);
