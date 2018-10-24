@@ -99,8 +99,12 @@ private:
 	// helper to set the type and value of a complex number
 	void setComplex(complex value);
 
-	// helper to set type and value of Symbol
+	// helper to set type and value of Symbol. If the string is surrounded by quotes, it
+	// will set it as a string literal.
 	void setSymbol(const std::string& value);
+
+	// helper to set type and value of String Literal.
+	void setStringLiteral(const std::string& value);
 };
 
 /// inequality comparison for Atom

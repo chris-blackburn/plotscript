@@ -54,7 +54,7 @@ void Atom::copy(const Atom& x) {
 		setSymbol(x.stringValue);
 		break;
 	case StringLiteralKind:
-		setSymbol(x.stringValue);
+		setStringLiteral(x.stringValue);
 		break;
 	}
 }
@@ -124,18 +124,28 @@ void Atom::setComplex(complex value) {
 void Atom::setSymbol(const std::string& value) {
 
 	// we need to ensure the destructor of the symbol string is called
-	if(m_type == SymbolKind || m_type == StringLiteralKind){
+	if (m_type == SymbolKind){
 		stringValue.~basic_string();
 	}
 
 	// Check if there are quotes (only) surrounding the value - this makes it a string literal
 	if (value.front() == '"' && value.find('"', 1) == value.length() - 1) {
-		m_type = StringLiteralKind;
+
+		// set as a string literal without the quotes
+		setStringLiteral(value.substr(1, value.find_last_of('"') - 1));
 	} else {
 		m_type = SymbolKind;
+		new (&stringValue) std::string(value);
+	}
+}
+
+void Atom::setStringLiteral(const std::string& value) {
+	if (m_type == StringLiteralKind){
+		stringValue.~basic_string();
+	} else {
+		m_type = StringLiteralKind;
 	}
 
-	// copy construct in place
 	new (&stringValue) std::string(value);
 }
 
@@ -157,8 +167,12 @@ complex Atom::asComplex() const noexcept {
 std::string Atom::asSymbol() const noexcept {
 	std::string result;
 
-	if(m_type == SymbolKind || m_type == StringLiteralKind){
+	if (m_type == SymbolKind){
 		result = stringValue;
+	} else if (m_type == StringLiteralKind) {
+
+		// Add quotes around the result if it is a string literal
+		result = '"' + stringValue + '"';
 	}
 
 	return result;
