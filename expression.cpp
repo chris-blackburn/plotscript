@@ -385,7 +385,7 @@ Expression Expression::handle_setProperty(Environment& env) {
 			}
 
 			// Add the key and the evaluated expression to the map. Add the key without quotes
-			exp.m_props->emplace(m_tail[0].head().asSymbol(true), m_tail[1].eval(env));
+			(*exp.m_props)[m_tail[0].head().asSymbol(true)] = m_tail[1].eval(env);
 
 			// if the expression came from a definition in the environment, then we need to save the
 			// updated version in the environment. Otherwise it was just an anonymous expression

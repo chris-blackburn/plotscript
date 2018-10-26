@@ -606,6 +606,18 @@ TEST_CASE("Test Interpreter special forms: get-property", "[interpreter]") {
 		REQUIRE(result == Expression());
 	}
 
+	{ // Overwrite old property
+		std::string program = "(begin "
+			"(define a (+ 1 I)) "
+			"(define b (set-property \"note\" \"a number\" a)) "
+			"(set-property \"note\" \"a *complex number\" b) "
+			"(get-property \"note\" b))";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(Atom("\"a *complex number\"")));
+	}
+
 	{ // Test the get property public function for expressions
 		std::string program = "(set-property \"note\" \"a number\" 3)";
 		INFO(program);

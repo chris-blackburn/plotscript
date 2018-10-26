@@ -28,6 +28,9 @@ private:
 
 	// helper function to determine the time of object and delegate the object to other functions
 	void handleObject(const Expression& exp, const std::string& objectName);
+
+	// helper functions to help with graphics
+	void handlePointGraphic(const Expression& exp);
 };
 
 #endif
