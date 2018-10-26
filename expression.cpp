@@ -384,8 +384,8 @@ Expression Expression::handle_setProperty(Environment& env) {
 				exp.m_props = std::unique_ptr<PropertyMap>(new PropertyMap);
 			}
 
-			// Add the key and the evaluated expression to the map
-			exp.m_props->emplace(m_tail[0].head().asSymbol(), m_tail[1].eval(env));
+			// Add the key and the evaluated expression to the map. Add the key without quotes
+			exp.m_props->emplace(m_tail[0].head().asSymbol(true), m_tail[1].eval(env));
 
 			// if the expression came from a definition in the environment, then we need to save the
 			// updated version in the environment. Otherwise it was just an anonymous expression
@@ -413,7 +413,7 @@ Expression Expression::handle_getProperty(Environment& env) {
 			if (exp.m_props.get() != nullptr) {
 
 				// get the property's value
-				auto result = exp.m_props->find(m_tail[0].head().asSymbol());
+				auto result = exp.m_props->find(m_tail[0].head().asSymbol(true));
 
 				// If a result was found, then return it
 				if (result != exp.m_props->end()) {

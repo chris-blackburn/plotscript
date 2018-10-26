@@ -65,7 +65,7 @@ public:
 	complex asComplex() const noexcept;
 
 	/// value of Atom as a string, returns empty-string if not a Symbol
-	std::string asSymbol() const noexcept;
+	std::string asSymbol(bool noQuotes = false) const noexcept;
 
 	/// equality comparison based on type and value
 	bool operator==(const Atom& right) const noexcept;

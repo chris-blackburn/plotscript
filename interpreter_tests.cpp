@@ -611,7 +611,7 @@ TEST_CASE("Test Interpreter special forms: get-property", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		REQUIRE(result.getProperty("\"note\"") == Expression(Atom("\"a number\"")));
+		REQUIRE(result.getProperty("note") == Expression(Atom("\"a number\"")));
 	}
 
 	{ // Test the get property public function for expressions, no property
@@ -619,7 +619,7 @@ TEST_CASE("Test Interpreter special forms: get-property", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		REQUIRE(result.getProperty("\"not\"") == Expression());
+		REQUIRE(result.getProperty("not") == Expression());
 	}
 
 	{

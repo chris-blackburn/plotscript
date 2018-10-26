@@ -164,14 +164,15 @@ complex Atom::asComplex() const noexcept {
 	}
 }
 
-std::string Atom::asSymbol() const noexcept {
+std::string Atom::asSymbol(bool noQuotes) const noexcept {
 	std::string result;
 
-	if (m_type == SymbolKind){
-		result = stringValue;
+	// Just get the string value for symbol kinds and string literals with no quotes
+	if (m_type == SymbolKind || (m_type == StringLiteralKind && noQuotes)){
+		return stringValue;
 	} else if (m_type == StringLiteralKind) {
 
-		// Add quotes around the result if it is a string literal
+		// Add quotes around the result if it is a string literal and if noQuotes is false
 		result = '"' + stringValue + '"';
 	}
 

@@ -44,8 +44,9 @@ void OutputWidget::processExpression(const Expression& exp) {
 			// the graphic primitive types
 			Expression objectName = exp.getProperty("object-name");
 			if (!objectName.head().isNone()) {
-				handleObject(exp, objectName.head().asSymbol());
+				handleObject(exp, objectName.head().asSymbol(true));
 			} else {
+
 				// Everything else prints the same as the REPL, the head is just wrapped in
 				// a set of parentheses
 				std::stringstream out;

@@ -583,5 +583,8 @@ TEST_CASE("Retrieving Atoms as a certain type", "[atom]") {
 		INFO("string literal as symbol");
 		Atom a("\"hi\"");
 		REQUIRE(a.asSymbol() == "\"hi\"");
+
+		bool noQuotes = true;
+		REQUIRE(a.asSymbol(noQuotes) == "hi");
 	}
 }
