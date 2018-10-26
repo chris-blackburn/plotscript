@@ -29,9 +29,8 @@ void OutputWidget::handlePointGraphic(const Expression& exp) {
 		auto y = exp.tailConstEnd() - 1;
 
 		// if x != y, then there are only two expression in the list. Also check if both expressions
-		// are numbers that are positive
-		if (x != y && (x->isHeadNumber() && y->isHeadNumber()) &&
-			(x->head().asNumber() >= 0 && y->head().asNumber() >= 0)) {
+		// are numbers
+		if (x != y && (x->isHeadNumber() && y->isHeadNumber())) {
 
 				// verify the size parameter of the point object
 				Expression size = exp.getProperty("size");
@@ -44,7 +43,7 @@ void OutputWidget::handlePointGraphic(const Expression& exp) {
 					return;
 				}
 
-				error("Error: invalid size property");
+				error("Error: invalid size of point object");
 				return;
 		}
 

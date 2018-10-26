@@ -29,12 +29,12 @@ void NotebookApp::loadStartupFile() {
 	std::ifstream startup(STARTUP_FILE);
 
 	if (!startup) {
-		output->error("Could not open startup file for reading.");
+		output->error("Error: Could not open startup file for reading.");
 		return;
 	}
 
 	if (!interp.parseStream(startup)) {
-		output->error("Invalid Program in startup file. Could not parse.");
+		output->error("Error: Invalid Program in startup file. Could not parse.");
 	} else {
 		try {
 			interp.evaluate();
@@ -52,7 +52,7 @@ void NotebookApp::process(const QString& str) {
 
 	// Parse and process the user's expression
 	if (!interp.parseStream(expression)) {
-		output->error("Invalid Expression. Could not parse.");
+		output->error("Error: Invalid Expression. Could not parse.");
 	} else {
 		try {
 			Expression result = interp.evaluate();
