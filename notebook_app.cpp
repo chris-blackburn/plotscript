@@ -20,6 +20,28 @@ NotebookApp::NotebookApp(QWidget* parent): QWidget(parent) {
 
 	setLayout(layout);
 	setWindowTitle(tr("Plotscript Notebook"));
+
+	// Initialize Plotscript
+	loadStartupFile();
+}
+
+void NotebookApp::loadStartupFile() {
+	std::ifstream startup(STARTUP_FILE);
+
+	if (!startup) {
+		output->error("Could not open startup file for reading.");
+		return;
+	}
+
+	if (!interp.parseStream(startup)) {
+		output->error("Invalid Program in startup file. Could not parse.");
+	} else {
+		try {
+			interp.evaluate();
+		} catch (const SemanticError& ex) {
+			output->error(QString(ex.what()) + " [startup]");
+		}
+	}
 }
 
 void NotebookApp::process(const QString& str) {
