@@ -19,7 +19,7 @@ void OutputWidget::addText(const QString& str) {
 	scene->addText(str);
 }
 
-void OutputWidget::handlePointGraphic(const Expression& exp) {
+QRectF OutputWidget::handlePointGraphic(const Expression& exp, bool addToScene) {
 
 	// The expression should be a list of coordinates
 	if (exp.isHeadListRoot()) {
@@ -35,33 +35,83 @@ void OutputWidget::handlePointGraphic(const Expression& exp) {
 				// verify the size parameter of the point object
 				Expression sizeExp = exp.getProperty("size");
 				if (sizeExp.isHeadNumber() && sizeExp.head().asNumber() >= 0) {
-					double size = sizeExp.head().asNumber();
+					qreal size = sizeExp.head().asNumber();
 
 					// We want the point to be centered at the entered coordinates
-					double x = xExp->head().asNumber() - (size / 2);
-					double y = yExp->head().asNumber() - (size / 2);
+					qreal x = xExp->head().asNumber() - (size / 2);
+					qreal y = yExp->head().asNumber() - (size / 2);
 
-					// Create the graphic and add it to the scene
-					scene->addEllipse(x, y, size, size, QPen(), QBrush(Qt::black));
-					return;
+					// Create the graphic and add it to the scene if addToScene is true. This function
+					// defaults to adding it, but is also used by line graphics - in that case we don't
+					// want to add it to the scene
+					if (addToScene) {
+						return scene->addEllipse(x, y, size, size, QPen(), QBrush(Qt::black))->rect();
+					}
+
+					// If addToScene is false, just return an rect item with the correct proportions
+					return QRectF(x, y, size, size);
 				}
 
-				error("Error: invalid size of point object");
-				return;
+				throw SemanticError("Error: invalid size of point object");
 		}
 
-		error("Error: invalid coordinates of point object");
-		return;
+		throw SemanticError("Error: invalid coordinates of point object");
 	}
 
-	error("Error: invalid point object");
+	throw SemanticError("Error: invalid point object");
+}
+
+void OutputWidget::handleLineGraphic(const Expression& exp) {
+	if (exp.isHeadListRoot()) {
+
+		// Get the coordinate data from the two points in the list
+		auto aExp = exp.tailConstBegin();
+		auto bExp = exp.tailConstEnd() - 1;
+
+		// verify that both items in the list are point objects
+		if (aExp != bExp) {
+
+			// verify the thickness parameter of the line object
+			Expression thicknessExp = exp.getProperty("thickness");
+			if (thicknessExp.isHeadNumber() && thicknessExp.head().asNumber() >= 0) {
+				qreal thickness = thicknessExp.head().asNumber();
+
+				// get the point object rectangular parameters
+				QRectF aRect;
+				if (getObjectName(*aExp) == "point") {
+					aRect = handlePointGraphic(*aExp);
+				}
+
+				QRectF bRect;
+				if (getObjectName(*bExp) == "point") {
+					bRect = handlePointGraphic(*bExp);
+				}
+
+				scene->addLine(aRect.left(), aRect.top(), bRect.left(), bRect.top(),
+					QPen(QBrush(Qt::black), thickness));
+				return;
+			}
+
+			throw SemanticError("Error: invalid thickness of line object");
+		}
+
+		throw SemanticError("Error: invalid coordinates of line object");
+	}
+
+	throw SemanticError("Error: invalid line object");
+}
+
+std::string OutputWidget::getObjectName(const Expression& exp) const {
+	return exp.getProperty("object-name").head().asSymbol(true);
 }
 
 void OutputWidget::handleObject(const Expression& exp, const std::string& objectName) {
 	if (objectName == "point") {
 		handlePointGraphic(exp);
+	} else if (objectName == "line") {
+		handleLineGraphic(exp);
 	} else {
-		error("Error: unknown object name");
+		throw SemanticError("Error: unknown object name");
 	}
 }
 
@@ -77,7 +127,11 @@ void OutputWidget::processExpression(const Expression& exp) {
 			// the graphic primitive types
 			Expression objectName = exp.getProperty("object-name");
 			if (!objectName.head().isNone()) {
-				handleObject(exp, objectName.head().asSymbol(true));
+				try {
+					handleObject(exp, getObjectName(exp));
+				} catch (const SemanticError& ex) {
+					error(ex.what());
+				}
 			} else {
 				if (exp.isHeadListRoot()) {
 
@@ -94,7 +148,6 @@ void OutputWidget::processExpression(const Expression& exp) {
 					out << "(" << exp.head() << ")";
 					addText(out.str());
 				}
-
 			}
 		}
 	}

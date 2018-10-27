@@ -4,9 +4,11 @@
 #include <QWidget>
 #include <QGraphicsScene>
 #include <QGraphicsView>
+#include <QGraphicsItem>
 #include <QLayout>
 
 #include "expression.hpp"
+#include "semantic_error.hpp"
 
 class OutputWidget: public QWidget {
 Q_OBJECT
@@ -27,10 +29,12 @@ private:
 	void addText(const QString& str);
 
 	// helper function to determine the time of object and delegate the object to other functions
+	std::string getObjectName(const Expression& exp) const;
 	void handleObject(const Expression& exp, const std::string& objectName);
 
 	// helper functions to help with graphics
-	void handlePointGraphic(const Expression& exp);
+	QRectF handlePointGraphic(const Expression& exp, bool addToScene = true);
+	void handleLineGraphic(const Expression& exp);
 };
 
 #endif
