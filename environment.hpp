@@ -63,6 +63,12 @@ public:
 	*/
 	Expression get_exp(const Atom& sym) const;
 
+	/*! Get a pointer to the Expression the argument symbol maps to.
+		\param sym the symbol to lookup
+		\return a pointer expression the symbol maps to or an Expression of NoneType
+	*/
+	Expression* get_exp_ptr(const Atom& sym);
+
 	/*! Add a mapping from sym argument to the exp argument within the environment.
 		\param sym the symbol to add
 		\param exp the expression the symbol should map to

@@ -525,6 +525,18 @@ Expression Environment::get_exp(const Atom& sym) const {
 	return exp;
 }
 
+Expression* Environment::get_exp_ptr(const Atom& sym) {
+	if (sym.isSymbol()) {
+		auto result = envmap.find(sym.asSymbol());
+		if (result != envmap.end() && result->second.type == ExpressionType) {
+			return &result->second.exp;
+		}
+	}
+
+	// if the expression isn't found in the map, then return a null pointer
+	return nullptr;
+}
+
 void Environment::add_exp(const Atom& sym, const Expression& exp, bool overwrite) {
 	if (!sym.isSymbol()) {
 		throw SemanticError("Attempt to add non-symbol to environment");

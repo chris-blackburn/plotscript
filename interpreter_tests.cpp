@@ -449,7 +449,6 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(-7));
 	}
 
@@ -458,7 +457,6 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(-7));
 	}
 
@@ -467,7 +465,6 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(2));
 	}
 
@@ -476,7 +473,6 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(1));
 	}
 
@@ -485,8 +481,44 @@ TEST_CASE("Test Interpreter special forms: lambda", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(complex(2, -2)));
+	}
+
+	{ // Setting the property of a lambda function's return value shouldn't modify the lambda itself
+		std::string program = "(begin "
+		"(define inc (lambda (x) (+ 1 x))) "
+		"(set-property \"name\" \"inc\" (inc 1)) "
+		"(inc 7)"
+		")";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(8));
+	}
+
+	{ // Set the property of a lambda function, and still use the lambda function
+		std::string program = "(begin "
+		"(define inc (lambda (x) (+ 1 x))) "
+		"(set-property \"name\" \"inc\" (inc)) "
+		"(inc 7)"
+		")";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression(8));
+	}
+
+	{ // Set the property of a lambda function
+		std::string program = "(begin "
+		"(define inc (lambda (x) (+ 1 x))) "
+		"(set-property \"name\" \"inc\" (inc)) "
+		"(inc)"
+		")";
+		INFO(program);
+		Expression result = run(program);
+		Expression name = result.getProperty("name");
+
+		REQUIRE(name == Expression(Atom("\"inc\"")));
 	}
 
 	{
@@ -515,7 +547,6 @@ TEST_CASE("Test Interpreter special forms: set-property", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(1));
 	}
 
@@ -524,7 +555,6 @@ TEST_CASE("Test Interpreter special forms: set-property", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(Atom("\"MyNumber\"")));
 	}
 
@@ -533,8 +563,16 @@ TEST_CASE("Test Interpreter special forms: set-property", "[interpreter]") {
 		INFO(program);
 		Expression result = run(program);
 
-		std::vector<Expression> expected;
 		REQUIRE(result == Expression(Atom("\"hi\"")));
+	}
+
+	{ // test the functional set property
+		std::string program = "(1)";
+		INFO(program);
+		Expression result = run(program);
+
+		result.setProperty("number", Expression(Atom("\"one\"")));
+		REQUIRE(result.getProperty("number") == Expression(Atom("\"one\"")));
 	}
 
 	{
@@ -608,8 +646,7 @@ TEST_CASE("Test Interpreter special forms: get-property", "[interpreter]") {
 
 	{ // Overwrite old property
 		std::string program = "(begin "
-			"(define a (+ 1 I)) "
-			"(define b (set-property \"note\" \"a number\" a)) "
+			"(define b (set-property \"note\" \"a number\" (+ 1 I))) "
 			"(set-property \"note\" \"a *complex number\" b) "
 			"(get-property \"note\" b))";
 		INFO(program);

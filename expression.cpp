@@ -71,7 +71,18 @@ bool Expression::isHeadLambdaRoot() const noexcept {
 	return m_head == LambdaRoot;
 }
 
-Expression Expression::getProperty(const std::string& property) const noexcept {
+void Expression::setProperty(const std::string& key, const Expression& value) {
+
+	// Construct a new property list if one doesn't already exist
+	if (m_props.get() == nullptr) {
+		m_props = std::unique_ptr<PropertyMap>(new PropertyMap);
+	}
+
+	// Add the key and the expression to the map
+	(*m_props)[key] = value;
+}
+
+Expression Expression::getProperty(const std::string& property) const {
 	if (m_props.get() != nullptr) {
 		auto it = m_props->find(property);
 
@@ -376,24 +387,22 @@ Expression Expression::handle_setProperty(Environment& env) {
 	if (m_tail.size() == 3) {
 		if (m_tail[0].isHeadStringLiteral()) {
 
-			// grab the evaluated expression to apply the property to
-			Expression exp = m_tail[2].eval(env);
+			// If the expression already lives in the environment, we can modify it directly. Note, that
+			// if the expression found is a lambda function with arguments, we only want to set a
+			// property to its returned expression. Otherwise, if the lambda has no arguments, we can
+			// set a property to the function itself
+			Expression* expPtr = env.get_exp_ptr(m_tail[2].head());
+			if (expPtr != nullptr && (!expPtr->isHeadLambdaRoot() ||
+				(expPtr->isHeadLambdaRoot() && m_tail[2].m_tail.size() == 0))) {
+				expPtr->setProperty(m_tail[0].head().asSymbol(true), m_tail[1].eval(env));
+				return *expPtr;
+			} else {
 
-			// Construct a new property list if one doesn't already exist
-			if (exp.m_props.get() == nullptr) {
-				exp.m_props = std::unique_ptr<PropertyMap>(new PropertyMap);
+				// grab the evaluated expression to apply the property to
+				Expression exp = m_tail[2].eval(env);
+				exp.setProperty(m_tail[0].head().asSymbol(true), m_tail[1].eval(env));
+				return exp;
 			}
-
-			// Add the key and the evaluated expression to the map. Add the key without quotes
-			(*exp.m_props)[m_tail[0].head().asSymbol(true)] = m_tail[1].eval(env);
-
-			// if the expression came from a definition in the environment, then we need to save the
-			// updated version in the environment. Otherwise it was just an anonymous expression
-			if (env.is_exp(m_tail[2].head())) {
-				env.add_exp(m_tail[2].head(), exp, true);
-			}
-
-			return exp;
 		}
 
 		throw SemanticError("Error: first argument to set-property not a string literal");
@@ -409,20 +418,7 @@ Expression Expression::handle_getProperty(Environment& env) {
 
 			// Get the expression from the environment or just evaluate it
 			Expression exp = m_tail[1].eval(env);
-
-			if (exp.m_props.get() != nullptr) {
-
-				// get the property's value
-				auto result = exp.m_props->find(m_tail[0].head().asSymbol(true));
-
-				// If a result was found, then return it
-				if (result != exp.m_props->end()) {
-					return result->second;
-				}
-			}
-
-			// return a none type expression if no property was found
-			return Expression();
+			return exp.getProperty(m_tail[0].head().asSymbol(true));
 		}
 
 		throw SemanticError("Error: first argument to get-property not a string literal");
