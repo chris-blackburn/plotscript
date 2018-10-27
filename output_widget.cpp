@@ -25,21 +25,24 @@ void OutputWidget::handlePointGraphic(const Expression& exp) {
 	if (exp.isHeadListRoot()) {
 
 		// There should be two numbers acting as the coordinates
-		auto x = exp.tailConstBegin();
-		auto y = exp.tailConstEnd() - 1;
+		auto xExp = exp.tailConstBegin();
+		auto yExp = exp.tailConstEnd() - 1;
 
 		// if x != y, then there are only two expression in the list. Also check if both expressions
 		// are numbers
-		if (x != y && (x->isHeadNumber() && y->isHeadNumber())) {
+		if (xExp != yExp && (xExp->isHeadNumber() && yExp->isHeadNumber())) {
 
 				// verify the size parameter of the point object
-				Expression size = exp.getProperty("size");
-				if (size.isHeadNumber() && size.head().asNumber() >= 0) {
+				Expression sizeExp = exp.getProperty("size");
+				if (sizeExp.isHeadNumber() && sizeExp.head().asNumber() >= 0) {
+					double size = sizeExp.head().asNumber();
+
+					// We want the point to be centered at the entered coordinates
+					double x = xExp->head().asNumber() - (size / 2);
+					double y = yExp->head().asNumber() - (size / 2);
 
 					// Create the graphic and add it to the scene
-					scene->addEllipse(x->head().asNumber(), y->head().asNumber(),
-						size.head().asNumber(), size.head().asNumber(),
-						QPen(), QBrush(Qt::black));
+					scene->addEllipse(x, y, size, size, QPen(), QBrush(Qt::black));
 					return;
 				}
 
