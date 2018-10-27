@@ -16,6 +16,10 @@ private slots:
 	void findOutputScene();
 	void simpleExpressions();
 
+	// Tests for point objects
+	void testPoint();
+	// void testPointLists();
+
 	// TODO: implement additional tests here
 private:
 	NotebookApp app;
@@ -25,6 +29,7 @@ private:
 	QGraphicsScene* getScene(QWidget* output);
 	void verifyNumberOfOutputGraphics(QWidget* output, qreal n);
 	void testSimpleTextExpression(const QString& input, const QString& output);
+	void testSinglePoint(const QString& input, const QRectF& expected);
 };
 
 // ************ START: Helper functions for repeated tests ************
@@ -63,8 +68,28 @@ void NotebookTest::testSimpleTextExpression(const QString& input, const QString&
 
 	// I use contains here so I can test for errors (i.e. test if starts with "Error:")
 	QString msg = "Testing simple text expression: unexpected output for " + input +
-		". got " + graphic->toPlainText() + " expected " + output;
+		". got \"" + graphic->toPlainText() + "\" expected \"" + output + "\"";
 	QVERIFY2(graphic->toPlainText().contains(output), qPrintable(msg));
+}
+
+void NotebookTest::testSinglePoint(const QString& input, const QRectF& expected) {
+	auto ip = app.findChild<QWidget*>("input");
+	auto op = app.findChild<QWidget*>("output");
+
+	// Type in a simple expression
+	QTest::keyClicks(ip, input);
+	submitInput(ip);
+
+	// There should only be one child in the output
+	verifyNumberOfOutputGraphics(op, 1);
+
+	auto scene = getScene(op);
+	auto item = scene->items()[0];
+
+	QGraphicsEllipseItem* graphic = qgraphicsitem_cast<QGraphicsEllipseItem*>(item);
+	QVERIFY2(graphic != NULL, "Graphics item is not an ellipse item");
+
+	QCOMPARE(graphic->rect(), expected);
 }
 
 // ************ END: Helper functions for repeated tests ************
@@ -106,11 +131,31 @@ void NotebookTest::simpleExpressions() {
 		qMakePair(QString("(+ 1 (* 3 I))"), QString("(1,3)")),
 		qMakePair(QString("(first (list (list 1) 2 3))"), QString("(1)")),
 		qMakePair(QString("(begin (define inc (lambda (x) (+ 1 x))) (inc 1))"), QString("(2)")),
+		qMakePair(QString("("), QString("Error")),
+		qMakePair(QString("(+)"), QString("Error")),
+		qMakePair(QString("(first (2))"), QString("Error"))
 	});
 
 	for (auto test = tests.cbegin(); test != tests.cend(); test++) {
 		testSimpleTextExpression(test->first, test->second);
 	}
+}
+
+void NotebookTest::testPoint() {
+	testSinglePoint(QString("(make-point 0 0)"), QRectF(0, 0, 0, 0));
+	testSinglePoint(QString("(make-point 10 15)"), QRectF(10, 15, 0, 0));
+	testSinglePoint(QString("(set-property \"size\" 20 (make-point 10 10))"),
+		QRectF(0, 0, 20, 20));
+
+	// Error handling of point objects
+	testSimpleTextExpression(QString("(set-property \"size\" -1 (make-point 0 0))"),
+		QString("Error"));
+	testSimpleTextExpression(QString("(make-point I 0)"),
+		QString("Error"));
+	testSimpleTextExpression(QString("(make-point 1 2 3)"),
+		QString("Error"));
+	testSimpleTextExpression(QString("(set-property \"object-name\" \"point\" 3"),
+		QString("Error"));
 }
 
 QTEST_MAIN(NotebookTest)
