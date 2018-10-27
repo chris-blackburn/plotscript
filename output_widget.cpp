@@ -69,7 +69,7 @@ void OutputWidget::handleLineGraphic(const Expression& exp) {
 		auto bExp = exp.tailConstEnd() - 1;
 
 		// verify that both items in the list are point objects
-		if (aExp != bExp) {
+		if (aExp != bExp && (getObjectName(*aExp) == "point" && getObjectName(*bExp) == "point")) {
 
 			// verify the thickness parameter of the line object
 			Expression thicknessExp = exp.getProperty("thickness");
@@ -77,15 +77,8 @@ void OutputWidget::handleLineGraphic(const Expression& exp) {
 				qreal thickness = thicknessExp.head().asNumber();
 
 				// get the point object rectangular parameters
-				QRectF aRect;
-				if (getObjectName(*aExp) == "point") {
-					aRect = handlePointGraphic(*aExp);
-				}
-
-				QRectF bRect;
-				if (getObjectName(*bExp) == "point") {
-					bRect = handlePointGraphic(*bExp);
-				}
+				QRectF aRect = handlePointGraphic(*aExp, false);
+				QRectF bRect = handlePointGraphic(*bExp, false);
 
 				scene->addLine(aRect.left(), aRect.top(), bRect.left(), bRect.top(),
 					QPen(QBrush(Qt::black), thickness));

@@ -20,6 +20,10 @@ private slots:
 	void testPoint();
 	void testPointLists();
 
+	// Tests for line objects
+	void testLine();
+	void testLineLists();
+
 	// TODO: implement additional tests here
 private:
 	NotebookApp app;
@@ -30,6 +34,7 @@ private:
 	void verifyNumberOfOutputGraphics(QWidget* output, qreal n);
 	void testSimpleTextExpression(const QString& input, const QString& output);
 	void testSinglePoint(const QString& input, const QRectF& expected);
+	void testSingleLine(const QString& input, const QLineF& expected, const qreal& thickness);
 };
 
 // ************ START: Helper functions for repeated tests ************
@@ -90,6 +95,28 @@ void NotebookTest::testSinglePoint(const QString& input, const QRectF& expected)
 	QVERIFY2(graphic != NULL, "Graphics item is not an ellipse item");
 
 	QCOMPARE(graphic->rect(), expected);
+}
+
+void NotebookTest::testSingleLine(const QString& input, const QLineF& expected,
+	const qreal& thickness) {
+	auto ip = app.findChild<QWidget*>("input");
+	auto op = app.findChild<QWidget*>("output");
+
+	// Type in a simple expression
+	QTest::keyClicks(ip, input);
+	submitInput(ip);
+
+	// There should only be one child in the output
+	verifyNumberOfOutputGraphics(op, 1);
+
+	auto scene = getScene(op);
+	auto item = scene->items()[0];
+
+	QGraphicsLineItem* graphic = qgraphicsitem_cast<QGraphicsLineItem*>(item);
+	QVERIFY2(graphic != NULL, "Graphics item is not an ellipse item");
+
+	QCOMPARE(graphic->line(), expected);
+	QCOMPARE(graphic->pen(), QPen(QBrush(Qt::black), thickness));
 }
 
 // ************ END: Helper functions for repeated tests ************
@@ -196,6 +223,63 @@ void NotebookTest::testPointLists() {
 			third = true;
 		} else {
 			QString msg = "Uknown point in list: \"" + QString(QTest::toString(graphic->rect())) + "\"";
+			QFAIL(qPrintable(msg));
+		}
+	}
+}
+
+void NotebookTest::testLine() {
+	testSingleLine(QString("(make-line (make-point 0 0) (make-point 20 20))"),
+		QLineF(0, 0, 20, 20), (qreal)1);
+	testSingleLine(QString("(set-property \"thickness\" 4 "
+		"(make-line (make-point 15 5) (make-point 11 19)))"), QLineF(15, 5, 11, 19), (qreal)4);
+
+	// Error handling of point objects
+	testSimpleTextExpression(QString("(set-property \"thickness\" -1 "
+		"(make-line (make-point 0 0) (make-point 20 20)))"), QString("Error"));
+}
+
+void NotebookTest::testLineLists() {
+	auto ip = app.findChild<QWidget*>("input");
+	auto op = app.findChild<QWidget*>("output");
+
+	// Type in a simple expression
+	QTest::keyClicks(ip, "(list "
+		"(set-property \"thickness\" 2 (make-line (make-point 0 0) (make-point 0 20))) "
+		"(set-property \"thickness\" 4 (make-line (make-point 10 0) (make-point 10 20))) "
+		"(set-property \"thickness\" 8 (make-line (make-point 20 0) (make-point 20 20)))"
+		")");
+	submitInput(ip);
+
+	// There should only be one child in the output
+	verifyNumberOfOutputGraphics(op, 3);
+
+	auto scene = getScene(op);
+	auto items = scene->items();
+	QList<QGraphicsLineItem*> graphics;
+
+	// Make sure the graphics aren't duplicated
+	bool first = false,
+		second = false,
+		third = false;
+
+	// verify the types of each object
+	for (auto item = items.cbegin(); item != items.cend(); item++) {
+		QGraphicsLineItem* graphic = qgraphicsitem_cast<QGraphicsLineItem*>(*item);
+		QVERIFY2(graphic != NULL, "Graphics item is not a line item");
+
+		// Unsure of the order, so I use a conditional
+		if (!first && graphic->line() == QLineF(0, 0, 0, 20) &&
+			graphic->pen() == QPen(QBrush(Qt::black), 2)) {
+			first = true;
+		} else if (!second && graphic->line() == QLineF(10, 0, 10, 20) &&
+			graphic->pen() == QPen(QBrush(Qt::black), 4)) {
+			second = true;
+		} else if (!third && graphic->line() == QLineF(20, 0, 20, 20) &&
+			graphic->pen() == QPen(QBrush(Qt::black), 8)) {
+			third = true;
+		} else {
+			QString msg = "Uknown line in list";
 			QFAIL(qPrintable(msg));
 		}
 	}
