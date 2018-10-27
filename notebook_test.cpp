@@ -18,7 +18,7 @@ private slots:
 
 	// Tests for point objects
 	void testPoint();
-	// void testPointLists();
+	void testPointLists();
 
 	// TODO: implement additional tests here
 private:
@@ -156,6 +156,49 @@ void NotebookTest::testPoint() {
 		QString("Error"));
 	testSimpleTextExpression(QString("(set-property \"object-name\" \"point\" 3"),
 		QString("Error"));
+}
+
+void NotebookTest::testPointLists() {
+	auto ip = app.findChild<QWidget*>("input");
+	auto op = app.findChild<QWidget*>("output");
+
+	// Type in a simple expression
+	QTest::keyClicks(ip, "(list "
+		"(set-property \"size\" 1 (make-point 0 0)) "
+		"(set-property \"size\" 2 (make-point 4 0)) "
+		"(set-property \"size\" 4 (make-point 8 0))"
+		")");
+	submitInput(ip);
+
+	// There should only be one child in the output
+	verifyNumberOfOutputGraphics(op, 3);
+
+	auto scene = getScene(op);
+	auto items = scene->items();
+	QList<QGraphicsEllipseItem*> graphics;
+
+	// Make sure the graphics aren't duplicated
+	bool first = false,
+		second = false,
+		third = false;
+
+	// verify the types of each object
+	for (auto item = items.cbegin(); item != items.cend(); item++) {
+		QGraphicsEllipseItem* graphic = qgraphicsitem_cast<QGraphicsEllipseItem*>(*item);
+		QVERIFY2(graphic != NULL, "Graphics item is not an ellipse item");
+
+		// Unsure of the order, so I use a conditional
+		if (!first && graphic->rect() == QRectF(-0.5, -0.5, 1, 1)) {
+			first = true;
+		} else if (!second && graphic->rect() == QRectF(3, -1, 2, 2)) {
+			second = true;
+		} else if (!third && graphic->rect() == QRectF(6, -2, 4, 4)) {
+			third = true;
+		} else {
+			QString msg = "Uknown point in list: \"" + QString(QTest::toString(graphic->rect())) + "\"";
+			QFAIL(qPrintable(msg));
+		}
+	}
 }
 
 QTEST_MAIN(NotebookTest)
