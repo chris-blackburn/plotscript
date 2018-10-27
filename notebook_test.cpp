@@ -1,5 +1,8 @@
 #include <QTest>
+#include <QString>
 #include <QGraphicsItem>
+#include <QList>
+#include <QPair>
 
 #include "notebook_app.hpp"
 
@@ -11,7 +14,7 @@ private slots:
 	void findOutputWidget();
 	void findOutputView();
 	void findOutputScene();
-	void testSimpleExpressions();
+	void simpleExpressions();
 
 	// TODO: implement additional tests here
 private:
@@ -21,6 +24,7 @@ private:
 	void submitInput(QWidget* w);
 	QGraphicsScene* getScene(QWidget* output);
 	void verifyNumberOfOutputGraphics(QWidget* output, qreal n);
+	void testSimpleTextExpression(const QString& input, const QString& output);
 };
 
 // ************ START: Helper functions for repeated tests ************
@@ -39,6 +43,29 @@ void NotebookTest::verifyNumberOfOutputGraphics(QWidget* output, qreal n) {
 	QVERIFY2(children.size() == n, "Wrong number of graphics items in the output");
 }
 
+void NotebookTest::testSimpleTextExpression(const QString& input, const QString& output) {
+	auto ip = app.findChild<QWidget*>("input");
+	auto op = app.findChild<QWidget*>("output");
+
+	// Type in a simple expression
+	QTest::keyClicks(ip, input);
+	submitInput(ip);
+
+	// There should only be one child in the output
+	verifyNumberOfOutputGraphics(op, 1);
+
+	// Make sure the one graphic is a text object at the center of the scene
+	auto scene = getScene(op);
+	auto item = scene->itemAt(0, 0, QTransform());
+
+	QGraphicsTextItem* graphic = qgraphicsitem_cast<QGraphicsTextItem*>(item);
+	QVERIFY2(graphic != NULL, "Graphics item is not a text item");
+
+	// I use contains here so I can test for errors (i.e. test if starts with "Error:")
+	QString msg = "Testing simple text expression: unexpected output for " + input +
+		". got " + graphic->toPlainText() + " expected " + output;
+	QVERIFY2(graphic->toPlainText().contains(output), qPrintable(msg));
+}
 
 // ************ END: Helper functions for repeated tests ************
 void NotebookTest::findInputWidget() {
@@ -68,26 +95,22 @@ void NotebookTest::findOutputScene() {
 	QVERIFY2(scene, "Could not find a scene in the output widget");
 }
 
-void NotebookTest::testSimpleExpressions() {
-	auto ip = app.findChild<QWidget*>("input");
-	auto op = app.findChild<QWidget*>("output");
+void NotebookTest::simpleExpressions() {
 
-	// Type in a simple expression
-	QTest::keyClicks(ip, "(1)");
-	submitInput(ip);
+	// List of inputs and outputs for simple expressions
+	QList<QPair<QString, QString> > tests({
+		qMakePair(QString("(1)"), QString("(1)")),
+		qMakePair(QString("(\"test\")"), QString("(\"test\")")),
+		qMakePair(QString("(+ 1 2)"), QString("(3)")),
+		qMakePair(QString("(cos pi)"), QString("(-1)")),
+		qMakePair(QString("(+ 1 (* 3 I))"), QString("(1,3)")),
+		qMakePair(QString("(first (list (list 1) 2 3))"), QString("(1)")),
+		qMakePair(QString("(begin (define inc (lambda (x) (+ 1 x))) (inc 1))"), QString("(2)")),
+	});
 
-	// There should only be one child in the output
-	verifyNumberOfOutputGraphics(op, 1);
-
-	// Make sure the one graphic is a text object at the center of the scene
-	auto scene = getScene(op);
-	auto item = scene->itemAt(0, 0, QTransform());
-
-	QGraphicsTextItem* graphic = qgraphicsitem_cast<QGraphicsTextItem*>(item);
-	QVERIFY2(graphic != NULL,
-		"Graphics item is not a graphics item");
-
-	QVERIFY(graphic->toPlainText() == "(1)");
+	for (auto test = tests.cbegin(); test != tests.cend(); test++) {
+		testSimpleTextExpression(test->first, test->second);
+	}
 }
 
 QTEST_MAIN(NotebookTest)
