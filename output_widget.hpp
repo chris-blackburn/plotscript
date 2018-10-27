@@ -25,8 +25,8 @@ private:
 	QGraphicsView* view;
 
 	// Helper functions to add text to the scene with default settings
-	void addText(const std::string& str);
-	void addText(const QString& str);
+	QGraphicsTextItem* addText(const std::string& str);
+	QGraphicsTextItem* addText(const QString& str);
 
 	// helper function to determine the time of object and delegate the object to other functions
 	std::string getObjectName(const Expression& exp) const;
@@ -35,6 +35,7 @@ private:
 	// helper functions to help with graphics
 	QRectF handlePointGraphic(const Expression& exp, bool addToScene = true);
 	void handleLineGraphic(const Expression& exp);
+	void handleTextGraphic(const Expression& exp);
 };
 
 #endif

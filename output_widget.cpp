@@ -11,12 +11,12 @@ OutputWidget::OutputWidget(QWidget* parent): QWidget(parent) {
 	setLayout(layout);
 }
 
-void OutputWidget::addText(const std::string& str) {
-	scene->addText(QString::fromStdString(str));
+QGraphicsTextItem* OutputWidget::addText(const std::string& str) {
+	return scene->addText(QString::fromStdString(str));
 }
 
-void OutputWidget::addText(const QString& str) {
-	scene->addText(str);
+QGraphicsTextItem* OutputWidget::addText(const QString& str) {
+	return scene->addText(str);
 }
 
 QRectF OutputWidget::handlePointGraphic(const Expression& exp, bool addToScene) {
@@ -94,6 +94,29 @@ void OutputWidget::handleLineGraphic(const Expression& exp) {
 	throw SemanticError("Error: invalid line object");
 }
 
+void OutputWidget::handleTextGraphic(const Expression& exp) {
+	if (exp.isHeadStringLiteral()) {
+
+		// Grab the text expression (no quotes)
+		std::string str = exp.head().asSymbol(true);
+
+		// verify the position parameter of the text object
+		Expression posExp = exp.getProperty("position");
+		if (getObjectName(posExp) == "point") {
+			QRectF posRect = handlePointGraphic(posExp, false);
+
+			// Create the text and update its position
+			auto text = addText(str);
+			text->setPos(posRect.left(), posRect.top());
+			return;
+		}
+
+		throw SemanticError("Error: invalid position of text object");
+	}
+
+	throw SemanticError("Error: invalid text object");
+}
+
 std::string OutputWidget::getObjectName(const Expression& exp) const {
 	return exp.getProperty("object-name").head().asSymbol(true);
 }
@@ -103,6 +126,8 @@ void OutputWidget::handleObject(const Expression& exp, const std::string& object
 		handlePointGraphic(exp);
 	} else if (objectName == "line") {
 		handleLineGraphic(exp);
+	} else if (objectName == "text") {
+		handleTextGraphic(exp);
 	} else {
 		throw SemanticError("Error: unknown object name");
 	}
