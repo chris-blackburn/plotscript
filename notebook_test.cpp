@@ -325,7 +325,37 @@ void NotebookTest::testText() {
 }
 
 void NotebookTest::testTextLists() {
+	auto ip = app.findChild<QWidget*>("input");
+	auto op = app.findChild<QWidget*>("output");
 
+	// Type in a simple expression
+	QTest::keyClicks(ip, "(list "
+		"(set-property \"position\" (make-point 0 10) (make-text \"Hi\")) "
+		"(set-property \"position\" (make-point 0 0) (make-text \"Hi\")) "
+		"(set-property \"position\" (make-point 10 0) (make-text \"Hi\"))"
+		")");
+	submitInput(ip);
+
+	// There should only be one child in the output
+	verifyNumberOfOutputGraphics(op, 3);
+
+	auto scene = getScene(op);
+
+	// verify the types of each object
+	auto items = scene->items();
+	for (auto item = items.cbegin(); item != items.cend(); item++) {
+		QGraphicsTextItem* graphic = qgraphicsitem_cast<QGraphicsTextItem*>(*item);
+		QVERIFY2(graphic != NULL, "Graphics item is not a line item");
+	}
+
+	auto item = qgraphicsitem_cast<QGraphicsTextItem*>(scene->itemAt(QPointF(0, 10), QTransform()));
+	QCOMPARE(item->toPlainText(), QString("Hi"));
+
+	item = qgraphicsitem_cast<QGraphicsTextItem*>(scene->itemAt(QPointF(0, 0), QTransform()));
+	QCOMPARE(item->toPlainText(), QString("Hi"));
+
+	item = qgraphicsitem_cast<QGraphicsTextItem*>(scene->itemAt(QPointF(10, 0), QTransform()));
+	QCOMPARE(item->toPlainText(), QString("Hi"));
 }
 
 QTEST_MAIN(NotebookTest)
