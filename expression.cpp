@@ -31,6 +31,12 @@ Expression& Expression::operator=(const Expression& a) {
 		m_tail.clear();
 		m_tail = a.m_tail;
 
+		// Clear out the contents of this property map if it exists. This needs to happen regardless
+		// of the state of the right hand side's property map
+		if (m_props != nullptr) {
+			m_props->clear();
+		}
+
 		if (a.m_props.get() != nullptr) {
 			m_props = std::unique_ptr<PropertyMap>(new PropertyMap(*a.m_props));
 		}

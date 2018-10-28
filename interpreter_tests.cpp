@@ -671,6 +671,19 @@ TEST_CASE("Test Interpreter special forms: get-property", "[interpreter]") {
 		REQUIRE(result.getProperty("not") == Expression());
 	}
 
+	{ // Properties should not carry over to new expressions (expression copy assignment)
+		std::string program = "(begin "
+			"(define a (set-property \"note\" "
+			"(set-property \"what\" \"some text\" \"a number\") 3))"
+			"(set-property \"note\" \"three\" a)"
+			"(get-property \"what\" (get-property \"note\" a))"
+			")";
+		INFO(program);
+		Expression result = run(program);
+
+		REQUIRE(result == Expression());
+	}
+
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {

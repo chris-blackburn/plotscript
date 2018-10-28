@@ -6,7 +6,7 @@ Defines the Expression type and assiciated functions.
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 #include "token.hpp"
@@ -102,7 +102,7 @@ private:
 
 	// Map of properties linked to this expression. I used a pointer here because not every
 	// expression will make use of this property list
-	typedef std::map<std::string, Expression> PropertyMap;
+	typedef std::unordered_map<std::string, Expression> PropertyMap;
 	std::unique_ptr<PropertyMap> m_props;
 
 	// convenience typedef
