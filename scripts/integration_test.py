@@ -69,6 +69,10 @@ class TestREPL(unittest.TestCase):
 		self.assertEqual(output.strip(), '("text")')
 		output = self.wrapper.run_command(u'(get-property "position" t)')
 		self.assertEqual(output.strip(), "((0) (0))")
+		output = self.wrapper.run_command(u'(get-property "text-scale" t)')
+		self.assertEqual(output.strip(), "(1)")
+		output = self.wrapper.run_command(u'(get-property "text-rotation" t)')
+		self.assertEqual(output.strip(), "(0)")
 
 class TestExecuteCommandline(unittest.TestCase):
 

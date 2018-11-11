@@ -39,7 +39,8 @@ private:
 	void testSimpleExpression(const QString& input, const QString& output);
 	void testSinglePoint(const QString& input, const QRectF& expected);
 	void testSingleLine(const QString& input, const QLineF& expected, const qreal& thickness);
-	void testSingleText(const QString& input, const QString& expected, const QPointF& pos);
+	void testSingleText(const QString& input, const QString& expected, const QPointF& pos,
+		qreal rotation = 0);
 };
 
 // ************ START: Helper functions for repeated tests ************
@@ -125,7 +126,7 @@ void NotebookTest::testSingleLine(const QString& input, const QLineF& expected,
 }
 
 void NotebookTest::testSingleText(const QString& input, const QString& expected,
-	const QPointF& pos) {
+	const QPointF& pos, qreal rotation) {
 	auto ip = app.findChild<QWidget*>("input");
 	auto op = app.findChild<QWidget*>("output");
 
@@ -137,12 +138,16 @@ void NotebookTest::testSingleText(const QString& input, const QString& expected,
 	verifyNumberOfOutputGraphics(op, 1);
 
 	auto scene = getScene(op);
-	auto item = scene->itemAt(pos, QTransform());
+	auto items = scene->items();
 
-	QGraphicsTextItem* graphic = qgraphicsitem_cast<QGraphicsTextItem*>(item);
+	QVERIFY2(items.size() == 1, "Too many items in the scene");
+
+	QGraphicsTextItem* graphic = qgraphicsitem_cast<QGraphicsTextItem*>(items[0]);
 	QVERIFY2(graphic != NULL, "Graphics item is not an text item");
 
 	QCOMPARE(graphic->toPlainText(), expected);
+	QVERIFY2(graphic->pos() + graphic->boundingRect().center() == pos, "Text graphic not centered");
+	QCOMPARE(graphic->rotation(), rotation);
 }
 
 // ************ END: Helper functions for repeated tests ************
@@ -317,6 +322,8 @@ void NotebookTest::testText() {
 	testSingleText(QString("(make-text \"Hi\")"), QString("Hi"), QPointF());
 	testSingleText(QString("(set-property \"position\" (make-point 10 20) (make-text \"Hi\"))"),
 		QString("Hi"), QPointF(10, 20));
+	testSingleText(QString("(set-property \"text-rotation\" (/ pi 2) (make-text \"Hi\"))"),
+		QString("Hi"), QPointF(), 90);
 
 	// Error handling of point objects
 	testSimpleExpression(QString("(make-text 7)"), QString("Error"));

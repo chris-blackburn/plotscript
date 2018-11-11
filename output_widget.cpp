@@ -1,5 +1,8 @@
 #include "output_widget.hpp"
 
+#include <cmath>
+const double PI = std::atan2(0, -1);
+
 OutputWidget::OutputWidget(QWidget* parent): QWidget(parent) {
 	scene = new QGraphicsScene(this);
 	view = new QGraphicsView(scene);
@@ -11,12 +14,8 @@ OutputWidget::OutputWidget(QWidget* parent): QWidget(parent) {
 	setLayout(layout);
 }
 
-QGraphicsTextItem* OutputWidget::addText(const std::string& str) {
-	return scene->addText(QString::fromStdString(str));
-}
-
 QGraphicsTextItem* OutputWidget::addText(const QString& str) {
-	return scene->addText(str);
+	return scene->addText(str, QFont("Courier", 1));
 }
 
 QRectF OutputWidget::handlePointGraphic(const Expression& exp, bool addToScene) {
@@ -105,9 +104,26 @@ void OutputWidget::handleTextGraphic(const Expression& exp) {
 		if (getObjectName(posExp) == "point") {
 			QRectF posRect = handlePointGraphic(posExp, false);
 
+			// Get the optional scale property
+			Expression scaleExp = exp.getProperty("text-scale");
+			double scale = scaleExp.head().asNumber();
+			if (scale < 1) {
+				scale = 1;
+			}
+
+			// Get the optional rotation property
+			Expression rotExp = exp.getProperty("text-rotation");
+			double rot = rotExp.isHeadNumber() ? rotExp.head().asNumber() : 0;
+
 			// Create the text and update its position
-			auto text = addText(str);
-			text->setPos(posRect.left(), posRect.top());
+			auto text = addText(QString::fromStdString(str));
+
+			// Create the formatted text
+			qreal x = posRect.left() - (text->boundingRect().width() / 2);
+			qreal y = posRect.top() - (text->boundingRect().height() / 2);
+			text->setPos(x, y);
+			text->setScale(scale);
+			text->setRotation(rot * (180 / PI));
 			return;
 		}
 
@@ -138,7 +154,7 @@ void OutputWidget::processExpression(const Expression& exp) {
 	// lambda functions don't get printed out
 	if (!exp.isHeadLambdaRoot()) {
 		if (exp.head().isNone()) {
-			addText((QString)"NONE");
+			addText("NONE");
 		} else {
 
 			// First, check if the expression has an object-name property that matches one of
@@ -164,7 +180,7 @@ void OutputWidget::processExpression(const Expression& exp) {
 					// a set of parentheses
 					std::stringstream out;
 					out << "(" << exp.head() << ")";
-					addText(out.str());
+					addText(QString::fromStdString(out.str()));
 				}
 			}
 		}

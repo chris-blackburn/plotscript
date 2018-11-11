@@ -23,7 +23,9 @@
 	(define make-text (lambda (str)
 		(set-property "object-name" "text"
 		(set-property "position" (make-point 0 0)
+		(set-property "text-scale" 1
+		(set-property "text-rotation" 0
 			(str)
-		))
+		))))
 	))
 )
