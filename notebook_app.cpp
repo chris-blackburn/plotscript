@@ -61,4 +61,7 @@ void NotebookApp::process(const QString& str) {
 			output->error(ex.what());
 		}
 	}
+
+	// re-scale the output after the user's input gets processed
+	output->scale();
 }

@@ -11,6 +11,11 @@ OutputWidget::OutputWidget(QWidget* parent): QWidget(parent) {
 	auto layout = new QVBoxLayout;
 	layout->addWidget(view);
 
+	// disable scroll bars on the view
+	view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	view->setCacheMode(QGraphicsView::CacheNone);
+
 	setLayout(layout);
 }
 
@@ -193,4 +198,14 @@ void OutputWidget::error(const QString& str) {
 
 void OutputWidget::clear() {
 	scene->clear();
+}
+
+void OutputWidget::scale() {
+	scene->setSceneRect(scene->itemsBoundingRect());
+	view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+}
+
+void OutputWidget::resizeEvent(QResizeEvent* event) {
+	scale();
+	QWidget::resizeEvent(event);
 }

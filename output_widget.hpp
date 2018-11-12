@@ -19,6 +19,9 @@ public:
 
 	void error(const QString& str);
 
+	// re-scale the output to make all items inside it visible
+	void scale();
+
 	void clear();
 private:
 	QGraphicsScene* scene;
@@ -35,6 +38,9 @@ private:
 	QRectF handlePointGraphic(const Expression& exp, bool addToScene = true);
 	void handleLineGraphic(const Expression& exp);
 	void handleTextGraphic(const Expression& exp);
+
+protected:
+	void resizeEvent(QResizeEvent* event) override;
 };
 
 #endif
