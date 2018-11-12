@@ -487,6 +487,66 @@ Expression range(const std::vector<Expression>& args) {
 	throw SemanticError("Error: wrong number of arguments for range which takes three arguments");
 }
 
+// **************** Plotting procedures ****************
+// Spacing constants
+#define PlotN 20
+#define PlotA 3
+#define PlotB 3
+#define PlotC 2
+#define PlotD 2
+#define PlotP 0.5
+
+// Helper function to handle any possible options for plots (title, axis labels, etc.)
+Expression handlePlotOptions(const Expression& options) {
+
+	// the options expression should be a list
+	if (options.isHeadListRoot()) {
+
+		// TODO: Check for known options and verify they are of the correct type
+		return options;
+	}
+
+	throw SemanticError("Error: options to plot is not a list");
+}
+
+Expression discretePlot(const std::vector<Expression>& args) {
+
+	// Discrete plots can take one or two arguments (options are, optional)
+	bool justData = nargs_equal(args, 1);
+	bool dataAndOptions = nargs_equal(args, 2);
+
+	if (justData || dataAndOptions) {
+
+		// Create a reference to the data. Options will get handled later if they exist
+		const Expression& data = args[0];
+
+		// The data should be a list
+		if (data.isHeadListRoot()) {
+			
+			// Start processing the data list and scale.
+			// TODO: The scaled data should contain a list of point and line objects scaled to fit the
+			// plot dispay constraints
+			Expression scaledData = data;
+			
+			// return the scaled data and options
+			// TODO: also return AL, AU, OL, OU after the data and before the options
+			if (dataAndOptions) {
+				return join({scaledData, handlePlotOptions(args[1])});
+			}
+
+			// if no options exist, just return the data
+			return scaledData;
+		}
+
+		// Both arguements should be a list
+		throw SemanticError("Error: arguements to discrete-plot should be lists");
+	}
+
+	// This will only get triggered when there is the wrong number of arguments
+	throw SemanticError("Error: wrong number of arguments for discrete-plot which "
+		"takes one or two arguments");
+}
+
 const double PI = std::atan2(0, -1);
 const double EXP = std::exp(1);
 const complex I = complex(0, 1);
@@ -648,4 +708,7 @@ void Environment::reset() {
 
 	// Procedure: range
 	envmap.emplace("range", EnvResult(ProcedureType, range));
+
+	// Procedure: discrete-plot
+	envmap.emplace("discrete-plot", EnvResult(ProcedureType, discretePlot));
 }
