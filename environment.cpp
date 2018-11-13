@@ -496,6 +496,36 @@ Expression range(const std::vector<Expression>& args) {
 #define PlotD 2
 #define PlotP 0.5
 
+// convenience struct to hold the bounds values
+typedef struct _Bounds {
+	double AL, AU, OL, OU;
+} Bounds;
+
+// convenience struct for lines and points
+typedef struct _Point {
+	double x, y;
+} Point;
+
+typedef struct _Line {
+	double x1, x2, y1, y2;
+} Line;
+
+// Helper function to create a plotscript point object
+Expression makePointExpression(Point p) {
+	Expression point({Expression(p.x), Expression(p.y)});
+	point.setProperty("object-name", Expression(Atom("point")));
+	point.setProperty("size", Expression(0));
+	return point;
+}
+
+// Helper function to create a plotscript line object
+Expression makeLineExpression(Line l) {
+	Expression line({makePointExpression({l.x1, l.y1}), makePointExpression({l.x2, l.y2})});
+	line.setProperty("object-name", Expression(Atom("line")));
+	line.setProperty("thickness", Expression(0));
+	return line;
+}
+
 // Helper function to handle any possible options for plots (title, axis labels, etc.)
 Expression handlePlotOptions(const Expression& options) {
 
@@ -510,7 +540,7 @@ Expression handlePlotOptions(const Expression& options) {
 }
 
 // returns an std::pair of two doubles (convenience when working with point lists)
-std::pair<double, double> getPointValues(const Expression& point) {
+Point getPointValues(const Expression& point) {
 	auto cbegin = point.tailConstBegin();
 	auto cend = point.tailConstEnd();
 
@@ -520,7 +550,7 @@ std::pair<double, double> getPointValues(const Expression& point) {
 		const Expression y = *(cbegin + 1);
 
 		if (x.isHeadNumber() && y.isHeadNumber()) {
-			return std::pair<double, double>(x.head().asNumber(), y.head().asNumber());
+			return {x.head().asNumber(), y.head().asNumber()};
 		}
 
 		throw SemanticError("Error: NaN or complex value for point in plot");
@@ -530,7 +560,7 @@ std::pair<double, double> getPointValues(const Expression& point) {
 }
 
 // returns an vector of the AL, AU, OL, and OU values in that order
-std::vector<double> getBounds(const Expression& data) {
+Bounds getBoundsFromList(const Expression& data) {
 
 	// data should be a list expression when this function is called
 	auto dataBegin = data.tailConstBegin();
@@ -542,26 +572,26 @@ std::vector<double> getBounds(const Expression& data) {
 	}
 
 	// prime the bound values (grab the first point and set the bounds)
-	std::pair<double, double> firstPoint = getPointValues(*dataBegin);
-	double AL = firstPoint.first, AU = AL,
-		OL = firstPoint.second, OU = OL;
+	Point firstPoint = getPointValues(*dataBegin);
+	double AL = firstPoint.x, AU = AL,
+		OL = firstPoint.y, OU = OL;
 
 	// Traverse through the list of points to find the minima and maxima
 	// I increment dataBegin before assigning it to "it" because we already got the first point
 	for (auto it = dataBegin + 1; it != dataEnd; it++) {
-		std::pair<double, double> p = getPointValues(*it);
+		Point p = getPointValues(*it);
 
 		// update the bound values
-		if (AL > p.first) {
-			AL = p.first;
-		} else if (AU < p.first) {
-			AU = p.first;
+		if (AL > p.x) {
+			AL = p.x;
+		} else if (AU < p.x) {
+			AU = p.x;
 		}
 
-		if (OL > p.second) {
-			OL = p.second;
-		} else if (OU < p.second) {
-			OU = p.second;
+		if (OL > p.y) {
+			OL = p.y;
+		} else if (OU < p.y) {
+			OU = p.y;
 		}
 	}
 
@@ -569,12 +599,48 @@ std::vector<double> getBounds(const Expression& data) {
 }
 
 // Helper function that creates the list of line and point objects to represent the data
-Expression formatDataDiscrete(const Expression& data, double aScaleFactor, double oScaleFactor) {
+Expression formatDataDiscrete(const Expression& data, const Bounds& bounds,
+	double aScaleFactor, double oScaleFactor) {
+	std::vector<Expression> result;
 
-	// TODO: for each point in the list of data points, scale and create the line and text objects
-	// TODO: Create ordinate axis and abscissa axis if they are in the plot bounds
-	// TODO: Create the top, bottom, left, right edges of the plot box
-	return Expression();
+	// First, we need to build the edges. start by getting the scaled bound values
+	Bounds scaledB = {bounds.AL * aScaleFactor, bounds.AU * aScaleFactor,
+		bounds.OL * oScaleFactor, bounds.OU * oScaleFactor};
+
+	// Axis creation. For the abscissa, we need a number to create the stems from (absOrigin will
+	// serve as the ordinate axis value for where the line starts from)
+	double absOrigin = 0;
+	if (0 > scaledB.OL && 0 > scaledB.OU) {
+		absOrigin = scaledB.OU;
+	} else if (0 < scaledB.OL && 0 < scaledB.OU) {
+		absOrigin = scaledB.OL;
+	} else {
+
+		// If the origin is in the plot (absOrigin == 0), then we need to create another axis line
+		result.push_back(makeLineExpression({scaledB.AL, scaledB.AU, 0, 0}));
+	}
+
+	// For the ordinate axis, we can go ahead and create the line if needed
+	if (0 > scaledB.AL && 0 < scaledB.AU) {
+		result.push_back(makeLineExpression({0, 0, scaledB.OL, scaledB.OU}));
+	}
+
+	// Data bounding box edges (top, bottom, left, right)
+	result.push_back(makeLineExpression({scaledB.AL, scaledB.AU, scaledB.OU, scaledB.OU}));
+	result.push_back(makeLineExpression({scaledB.AL, scaledB.AU, scaledB.OL, scaledB.OL}));
+	result.push_back(makeLineExpression({scaledB.AL, scaledB.AL, scaledB.OU, scaledB.OL}));
+	result.push_back(makeLineExpression({scaledB.AU, scaledB.AU, scaledB.OU, scaledB.OL}));
+
+	// Now that we have all the bounding information, we can create all the lines and points
+	// that consitute the data in the plot
+	// TODO: for each point in the list of data points, scale and create the line and point objects
+
+	// TODO: Create the text objects for the plot itself
+
+	// TODO: remove
+	data.head().asNumber();
+	Expression dummy(absOrigin);
+	return Expression(result);
 }
 
 Expression discretePlot(const std::vector<Expression>& args) {
@@ -593,16 +659,15 @@ Expression discretePlot(const std::vector<Expression>& args) {
 
 			// First, we need to find the upper and lower bounds for each axis. Then we can determine
 			// the scale factor as well as the positioning for each object in the plot
-			// {AL, AU, OL, OU}
-			std::vector<double> bounds = getBounds(data);
+			Bounds b = getBoundsFromList(data);
 
 			// Determine the scale factor based off the minima and maxima of the plot
 			// TODO: If the two bounds are the same value, span from the axis to that value
-			double aScaleFactor = PlotN / (bounds[1] - bounds[0]);
-			double oScaleFactor = PlotN / (bounds[3] - bounds[2]);
+			double aScaleFactor = PlotN / (b.AU - b.AL);
+			double oScaleFactor = PlotN / (b.OU - b.OL);
 
 			// Create the list of line and point objects using the data and scale factors
-			Expression formattedData = formatDataDiscrete(data, aScaleFactor, oScaleFactor);
+			Expression formattedData = formatDataDiscrete(data, b, aScaleFactor, oScaleFactor);
 
 			// 		TODO: for the below tasks, pass in the amin and omin values for positioning
 			// TODO: Create the AL, AU, OL, OU text objects (precision of 2 decimal places)
@@ -616,7 +681,7 @@ Expression discretePlot(const std::vector<Expression>& args) {
 			}
 
 			// if no options exist, just return the data
-			return Expression();
+			return formattedData;
 		}
 
 		// Both arguements should be a list
