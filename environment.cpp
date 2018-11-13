@@ -568,6 +568,15 @@ std::vector<double> getBounds(const Expression& data) {
 	return {AL, AU, OL, OU};
 }
 
+// Helper function that creates the list of line and point objects to represent the data
+Expression formatDataDiscrete(const Expression& data, double aScaleFactor, double oScaleFactor) {
+
+	// TODO: for each point in the list of data points, scale and create the line and text objects
+	// TODO: Create ordinate axis and abscissa axis if they are in the plot bounds
+	// TODO: Create the top, bottom, left, right edges of the plot box
+	return Expression();
+}
+
 Expression discretePlot(const std::vector<Expression>& args) {
 
 	// Discrete plots can take one or two arguments (options are, optional)
@@ -579,17 +588,25 @@ Expression discretePlot(const std::vector<Expression>& args) {
 		// Create a reference to the data. Options will get handled later if they exist
 		const Expression& data = args[0];
 
-		// The data should be a list
+		// The data should be a list. Start processing the plot data
 		if (data.isHeadListRoot()) {
-
-			// Start processing the data list and scale.
-			// TODO: The scaled data should contain a list of point and line objects scaled to fit the
-			// plot dispay constraints. Also return AL, AU, OL, OU
 
 			// First, we need to find the upper and lower bounds for each axis. Then we can determine
 			// the scale factor as well as the positioning for each object in the plot
-			// TODO: If the same-axis bounds are the same value, then ...
+			// {AL, AU, OL, OU}
 			std::vector<double> bounds = getBounds(data);
+
+			// Determine the scale factor based off the minima and maxima of the plot
+			// TODO: If the two bounds are the same value, span from the axis to that value
+			double aScaleFactor = PlotN / (bounds[1] - bounds[0]);
+			double oScaleFactor = PlotN / (bounds[3] - bounds[2]);
+
+			// Create the list of line and point objects using the data and scale factors
+			Expression formattedData = formatDataDiscrete(data, aScaleFactor, oScaleFactor);
+
+			// 		TODO: for the below tasks, pass in the amin and omin values for positioning
+			// TODO: Create the AL, AU, OL, OU text objects (precision of 2 decimal places)
+			// TODO: Create the title, abscissa label, ordinate label text objects
 
 			// return the scaled data and options
 			// TODO: also return AL, AU, OL, OU after the data and before the options
