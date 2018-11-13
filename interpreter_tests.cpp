@@ -1622,9 +1622,15 @@ TEST_CASE("Simple discrete plot tests", "[interpreter]") {
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
+			"(define discrete-plot 1)",
 			"(discrete-plot 1)",
-			"(discrete-plot (list) 1)",
-			"(discrete-plot (list) (list) (list))",
+			"(discrete-plot (list))",
+			"(discrete-plot (list (List 1 2)))",
+			"(discrete-plot (list (list 1 I) (list 2 3)))",
+			"(discrete-plot (list (list 1 2) (list 2 3)) 1)",
+			"(discrete-plot (list (list 1 2 3) (list 2 3)))",
+			"(discrete-plot (list (list 1) (list 2 3)))",
+			"(discrete-plot (list (list 1 2) (list 2 3)) (list) (list))"
 		};
 
 		for (auto s : programs) {

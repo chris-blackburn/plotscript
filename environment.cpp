@@ -506,7 +506,66 @@ Expression handlePlotOptions(const Expression& options) {
 		return options;
 	}
 
-	throw SemanticError("Error: options to plot is not a list");
+	throw SemanticError("Error: options for plot is not a list");
+}
+
+// returns an std::pair of two doubles (convenience when working with point lists)
+std::pair<double, double> getPointValues(const Expression& point) {
+	auto cbegin = point.tailConstBegin();
+	auto cend = point.tailConstEnd();
+
+	// If cbegin + 2 is the end, then that means only two elements were in the point list
+	if (cbegin + 2 == cend) {
+		const Expression x = *cbegin;
+		const Expression y = *(cbegin + 1);
+
+		if (x.isHeadNumber() && y.isHeadNumber()) {
+			return std::pair<double, double>(x.head().asNumber(), y.head().asNumber());
+		}
+
+		throw SemanticError("Error: NaN or complex value for point in plot");
+	}
+
+	throw SemanticError("Error: not a valid point for plot");
+}
+
+// returns an vector of the AL, AU, OL, and OU values in that order
+std::vector<double> getBounds(const Expression& data) {
+
+	// data should be a list expression when this function is called
+	auto dataBegin = data.tailConstBegin();
+	auto dataEnd = data.tailConstEnd();
+
+	// If there are no points or just one point, then throw an exception
+	if (dataBegin == dataEnd || dataBegin + 1 == dataEnd) {
+		throw SemanticError("Error: not enough data points for plot");
+	}
+
+	// prime the bound values (grab the first point and set the bounds)
+	std::pair<double, double> firstPoint = getPointValues(*dataBegin);
+	double AL = firstPoint.first, AU = AL,
+		OL = firstPoint.second, OU = OL;
+
+	// Traverse through the list of points to find the minima and maxima
+	// I increment dataBegin before assigning it to "it" because we already got the first point
+	for (auto it = dataBegin + 1; it != dataEnd; it++) {
+		std::pair<double, double> p = getPointValues(*it);
+
+		// update the bound values
+		if (AL > p.first) {
+			AL = p.first;
+		} else if (AU < p.first) {
+			AU = p.first;
+		}
+
+		if (OL > p.second) {
+			OL = p.second;
+		} else if (OU < p.second) {
+			OU = p.second;
+		}
+	}
+
+	return {AL, AU, OL, OU};
 }
 
 Expression discretePlot(const std::vector<Expression>& args) {
@@ -522,20 +581,25 @@ Expression discretePlot(const std::vector<Expression>& args) {
 
 		// The data should be a list
 		if (data.isHeadListRoot()) {
-			
+
 			// Start processing the data list and scale.
 			// TODO: The scaled data should contain a list of point and line objects scaled to fit the
-			// plot dispay constraints
-			Expression scaledData = data;
-			
+			// plot dispay constraints. Also return AL, AU, OL, OU
+
+			// First, we need to find the upper and lower bounds for each axis. Then we can determine
+			// the scale factor as well as the positioning for each object in the plot
+			// TODO: If the same-axis bounds are the same value, then ...
+			std::vector<double> bounds = getBounds(data);
+
 			// return the scaled data and options
 			// TODO: also return AL, AU, OL, OU after the data and before the options
 			if (dataAndOptions) {
-				return join({scaledData, handlePlotOptions(args[1])});
+				return handlePlotOptions(args[1]);
+				// return join({scaledData, handlePlotOptions(args[1])});
 			}
 
 			// if no options exist, just return the data
-			return scaledData;
+			return Expression();
 		}
 
 		// Both arguements should be a list
