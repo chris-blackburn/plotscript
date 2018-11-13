@@ -49,7 +49,11 @@ QRectF OutputWidget::handlePointGraphic(const Expression& exp, bool addToScene) 
 					// defaults to adding it, but is also used by line graphics - in that case we don't
 					// want to add it to the scene
 					if (addToScene) {
-						return scene->addEllipse(x, y, size, size, QPen(), QBrush(Qt::black))->rect();
+
+						// Make sure to set the pen width to zero to not interfere with the size
+						QPen pen;
+						pen.setWidth(0);
+						return scene->addEllipse(x, y, size, size, pen, QBrush(Qt::black))->rect();
 					}
 
 					// If addToScene is false, just return an rect item with the correct proportions

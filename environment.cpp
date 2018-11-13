@@ -496,16 +496,25 @@ Expression range(const std::vector<Expression>& args) {
 #define PlotD 2
 #define PlotP 0.5
 
-// convenience struct to hold the bounds values
+// convenience struct to hold the bounds values and stem abscissa starting value
 typedef struct _Bounds {
 	double AL, AU, OL, OU;
+
+	// Calculate the scale factors for the bounds of this object
+	double calcAbsScale() const {
+		return PlotN / (AU - AL);
+	}
+
+	double calcOrdScale() const {
+		return PlotN / (OU - OL);
+	}
 
 	// Helper function that returns the values scaled for the Qt notebook
 	_Bounds scaleForGraphics() const {
 
 		// TODO: If the two bounds are the same value, span from the axis to that value
-		double absScale = PlotN / (AU - AL);
-		double ordScale = PlotN / (OU - OL);
+		double absScale = calcAbsScale();
+		double ordScale = calcOrdScale();
 
 		return {AL * absScale, AU * absScale,
 			OL * ordScale, OU * ordScale};
@@ -515,10 +524,19 @@ typedef struct _Bounds {
 // convenience struct for lines and points
 typedef struct _Point {
 	double x, y;
+
+	_Point scaleForGraphics(double absScaleFactor, double ordScaleFactor) const {
+		return {x * absScaleFactor, y * ordScaleFactor};
+	}
 } Point;
 
 typedef struct _Line {
 	double x1, x2, y1, y2;
+
+	_Line scaleForGraphics(double absScaleFactor, double ordScaleFactor) const {
+		return {x1 * absScaleFactor, x2 * absScaleFactor,
+			y1 * ordScaleFactor, y2 * ordScaleFactor};
+	}
 } Line;
 
 // Helper function to create a plotscript point object
@@ -651,6 +669,22 @@ void addPlotEdges(std::vector<Expression>& plotData, const Bounds& scaled) {
 	plotData.push_back(makeLineExpression({scaled.AU, scaled.AU, scaled.OU, scaled.OL}));
 }
 
+void addScaledDiscreteData(const Expression& data, std::vector<Expression>& plotData,
+	const Bounds& bounds, double stemRoot) {
+	double absScale = bounds.calcAbsScale();
+	double ordScale = bounds.calcOrdScale();
+
+	auto dataBegin = data.tailConstBegin();
+	auto dataEnd = data.tailConstEnd();
+	for (auto it = dataBegin; it != dataEnd; it++) {
+		Point p = getPointValues(*it).scaleForGraphics(absScale, ordScale);
+
+		// Create the scaled point expression and add it to the plot data
+		plotData.push_back(makePointExpression(p, PlotP / 2));
+		plotData.push_back(makeLineExpression({p.x, p.x, stemRoot, p.y}));
+	}
+}
+
 Expression discretePlot(const std::vector<Expression>& args) {
 
 	// Discrete plots can take one or two arguments (options are, optional)
@@ -666,11 +700,13 @@ Expression discretePlot(const std::vector<Expression>& args) {
 			Bounds scaledBounds = bounds.scaleForGraphics();
 			std::vector<Expression> plotData;
 
-			// We need a value to stem lines from
-			/*double stemOrigin = */addAxes(plotData, scaledBounds);
+			// We need a value to start stem lines from
+			double stemRoot = addAxes(plotData, scaledBounds);
 			addPlotEdges(plotData, scaledBounds);
 
-			// TODO: for each point in the list of data points, scale and create the line and point objects
+			// for each point in the list of data points, scale and create the line and point objects
+			addScaledDiscreteData(data, plotData, bounds, stemRoot);
+
 			// TODO: Create the text objects for the AL, AU, OL, and OU
 			// TODO: Create the title, abscissa label, ordinate label text objects
 
