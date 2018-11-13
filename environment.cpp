@@ -511,10 +511,12 @@ typedef struct _Line {
 } Line;
 
 // Helper function to create a plotscript point object
-Expression makePointExpression(Point p) {
-	Expression point({Expression(p.x), Expression(p.y)});
+Expression makePointExpression(Point p, double size = 0) {
+
+	// NOTE: Ordinate values are negated because of Qt's coordinate system
+	Expression point({Expression(p.x), Expression(-p.y)});
 	point.setProperty("object-name", Expression(Atom("point")));
-	point.setProperty("size", Expression(0));
+	point.setProperty("size", Expression(size));
 	return point;
 }
 
