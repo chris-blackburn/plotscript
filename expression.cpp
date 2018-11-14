@@ -614,6 +614,22 @@ typedef struct _Line {
 	}
 } Line;
 
+double dX(const Line& l) {
+	return l.x2 - l.x1;
+}
+
+double dY(const Line& l) {
+	return l.y2 - l.y1;
+}
+
+double slope(const Line& l) {
+	return dY(l) / dX(l);
+}
+
+double angleToXAxis(const Line& l) {
+	return std::atan2(dY(l), dX(l)) * (180 / PI);
+}
+
 // Helper function to create a plotscript point object
 Expression makePointExpression(Point p, double size = 0) {
 
@@ -938,17 +954,20 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 	}
 }
 
+#include <iostream>
 double angleAdjacent(const Line& l1, const Line& l2) {
 
-	// If we find the angle between each line and the abscissa axis, then we can take 180 minus
-	// the sum of those angles to find the angle we want.
-	Point p1 = {l1.x1, l1.y1};
-	Point p2 = {l1.x2, l1.y2};
-	Point p3 = {l2.x2, l2.y2};
-	double angle1 = atan2((p2.y - p1.y), (p2.x - p1.x)) * (180 / PI);
-	double angle2 = atan2((p3.y - p2.y), (p3.x - p2.x)) * (180 / PI);
+	// Depending on the slope of the line, we need to get different angles to find the angle
+	// between the two lines, opposing slopes just add, positive slopes subtract
+	double m1 = slope(l1);
+	double m2 = slope(l2);
+	if ((m1 > 0 && m2 < 0) || (m1 < 0 && m2 > 0)) {
+		return 180 - (angleToXAxis(l1) + angleToXAxis(l2));
+	} else if (m1 > 0 && m2 > 0) {
+		return 180 - angleToXAxis(l1) - angleToXAxis(l2);
+	}
 
-	return 180 - (angle1 + angle2);
+	return 0;
 }
 
 void smoothContinuousPlot(const Expression& lambda, const Environment& env,
@@ -958,7 +977,7 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	// We do nothing if we already hit 10 iterations
 	if (iteration < PLOT_SPLIT_MAX) {
 		bool alreadySmooth = true;
-		for (std::size_t i; i < lines.size(); i++) {
+		for (std::size_t i = 0; i < lines.size(); i++) {
 
 			// Check the angle between the current line and the next
 			Line l1 = lines[i];
@@ -975,10 +994,10 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 
 				// NOTE: It's important to increment the index appropriately to keep the lines in order.
 				// I have to subtract one from the final addition since the for loop increments
-				lines[i++] = {l1.x1, firstMidx, l2.y1, firstMidy};
-				lines.insert(lines.begin() + i++, {firstMidx, l1.x2, firstMidy, l1.y2});
-				lines.insert(lines.begin() + i++, {l2.x1, secondMidx, l2.y1, secondMidy});
-				lines[i--] = {secondMidx, l2.x2, secondMidy, l2.y2};
+				lines[i] = {l1.x1, firstMidx, l2.y1, firstMidy};
+				lines[i + 1] = {secondMidx, l2.x2, secondMidy, l2.y2};
+				lines.insert(lines.begin() + i + 1, {firstMidx, l1.x2, firstMidy, l1.y2});
+				lines.insert(lines.begin() + i + 2, {l2.x1, secondMidx, l2.y1, secondMidy});
 			}
 		}
 
@@ -1012,6 +1031,7 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 
 	// Smooth the plot
 	smoothContinuousPlot(lambda, env, lines);
+	std::cout << "Number of lines: " << lines.size() << std::endl;
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();
