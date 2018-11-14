@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iomanip>
 
 #include "environment.hpp"
 #include "semantic_error.hpp"
@@ -544,7 +545,7 @@ Expression makePointExpression(Point p, double size = 0) {
 
 	// NOTE: Ordinate values are negated because of Qt's coordinate system
 	Expression point({Expression(p.x), Expression(-p.y)});
-	point.setProperty("object-name", Expression(Atom("point")));
+	point.setProperty("object-name", Expression(Atom("\"point\"")));
 	point.setProperty("size", Expression(size));
 	return point;
 }
@@ -552,13 +553,25 @@ Expression makePointExpression(Point p, double size = 0) {
 // Helper function to create a plotscript line object
 Expression makeLineExpression(Line l) {
 	Expression line({makePointExpression({l.x1, l.y1}), makePointExpression({l.x2, l.y2})});
-	line.setProperty("object-name", Expression(Atom("line")));
+	line.setProperty("object-name", Expression(Atom("\"line\"")));
 	line.setProperty("thickness", Expression(0));
 	return line;
 }
 
+// Helper function to create a plotscript text object
+Expression makeTextExpression(const std::string& text, Point point, double scale = 1,
+	double rotation = 0) {
+	Expression textExp(Atom('"' + text + '"'));
+	textExp.setProperty("object-name", Expression(Atom("\"text\"")));
+	textExp.setProperty("position", makePointExpression(point));
+	textExp.setProperty("text-scale", Expression(scale));
+	textExp.setProperty("text-rotation", Expression(rotation));
+	return textExp;
+}
+
 // Helper function to handle any possible options for plots (title, axis labels, etc.)
-Expression handlePlotOptions(std::vector<Expression>& plotData, const Expression& options,
+// it returns the text scale if it was set (1 if it was not set)
+double handlePlotOptions(std::vector<Expression>& plotData, const Expression& options,
 	const Bounds& scaled) {
 
 	// TODO: remove, only here to make compiler happy
@@ -571,7 +584,7 @@ Expression handlePlotOptions(std::vector<Expression>& plotData, const Expression
 		// TODO: Check for known options and verify they are of the correct type. If there are valid
 		// options in the list, add them to the plot data with the proper positioning based off of
 		// the scaled bounds
-		return options;
+		return 1;
 	}
 
 	throw SemanticError("Error: options for plot is not a list");
@@ -638,7 +651,7 @@ Bounds getBoundsFromList(const Expression& data) {
 
 // Helper function that adds the abscissa and ordinate axes to a vector of expressions. Also
 // returns the starting point for stem plot lines
-double addAxes(std::vector<Expression>& plotData, const Bounds& scaled) {
+double addPlotAxes(std::vector<Expression>& plotData, const Bounds& scaled) {
 
 	// Adding the ordinate axis
 	if (0 > scaled.AL && 0 < scaled.AU) {
@@ -667,6 +680,30 @@ void addPlotEdges(std::vector<Expression>& plotData, const Bounds& scaled) {
 	plotData.push_back(makeLineExpression({scaled.AL, scaled.AU, scaled.OL, scaled.OL}));
 	plotData.push_back(makeLineExpression({scaled.AL, scaled.AL, scaled.OU, scaled.OL}));
 	plotData.push_back(makeLineExpression({scaled.AU, scaled.AU, scaled.OU, scaled.OL}));
+}
+
+void addPlotTickLabels(std::vector<Expression>& plotData, const Bounds& bounds,
+	double textScale) {
+	Bounds scaled = bounds.scaleForGraphics();
+
+	std::stringstream ss;
+	ss << std::setprecision(2);
+
+	// Tick labels (AL, AU, OL, OU)
+	ss << bounds.AL;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL, scaled.OL - PlotC}, textScale));
+
+	ss.str(std::string());
+	ss << bounds.AU;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AU, scaled.OL - PlotC}, textScale));
+
+	ss.str(std::string());
+	ss << bounds.OL;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PlotD, scaled.OL}, textScale));
+
+	ss.str(std::string());
+	ss << bounds.OU;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PlotD, scaled.OU}, textScale));
 }
 
 void addScaledDiscreteData(const Expression& data, std::vector<Expression>& plotData,
@@ -701,19 +738,22 @@ Expression discretePlot(const std::vector<Expression>& args) {
 			std::vector<Expression> plotData;
 
 			// We need a value to start stem lines from
-			double stemRoot = addAxes(plotData, scaledBounds);
-			addPlotEdges(plotData, scaledBounds);
+			double stemRoot = addPlotAxes(plotData, scaledBounds);
 
 			// for each point in the list of data points, scale and create the line and point objects
 			addScaledDiscreteData(data, plotData, bounds, stemRoot);
+			addPlotEdges(plotData, scaledBounds);
 
-			// TODO: Create the text objects for the AL, AU, OL, and OU
-			// TODO: Create the title, abscissa label, ordinate label text objects
-
-			// Retreive the options if there were any
+			// Retreive the options if there were any and apply them (i.e. create the text labels)
+			double textScale = 1;
 			if (dataAndOptions) {
-				handlePlotOptions(plotData, args[1], scaledBounds);
+
+				// Create the title, abscissa label, ordinate label text objects if they were set and get
+				// the text scale
+				textScale = handlePlotOptions(plotData, args[1], scaledBounds);
 			}
+
+			addPlotTickLabels(plotData, bounds, textScale);
 
 			// if no options exist, just return the plot data
 			return Expression(plotData);
