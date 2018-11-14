@@ -1617,8 +1617,6 @@ TEST_CASE("Test complex-unique procedures", "[interpreter]") {
 
 TEST_CASE("Simple discrete plot tests", "[interpreter]") {
 
-	// Test redefinition, wrong number of arguments
-	// Each should throw sematic error
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
@@ -1631,6 +1629,25 @@ TEST_CASE("Simple discrete plot tests", "[interpreter]") {
 			"(discrete-plot (list (list 1 2 3) (list 2 3)))",
 			"(discrete-plot (list (list 1) (list 2 3)))",
 			"(discrete-plot (list (list 1 2) (list 2 3)) (list) (list))"
+		};
+
+		for (auto s : programs) {
+			INFO(s);
+			run(s, true);
+		}
+	}
+}
+
+TEST_CASE("Simple continuous plot tests", "[interpreter]") {
+
+	{
+		INFO("Should throw semantic error for:");
+		std::vector<std::string> programs = {
+			"(define continuous-plot 1)",
+			"(continuous-plot 1)",
+			"(continuous-plot (lambda (x) (list x 1)) 1)",
+			"(continuous-plot (lambda (x) (list x 1)) (list 1 I))",
+			"(continuous-plot (lambda (x) (list x 1)) (list 1 1) (list) (list))"
 		};
 
 		for (auto s : programs) {

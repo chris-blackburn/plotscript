@@ -494,12 +494,14 @@ const complex I = complex(0, 1);
 
 // **************** Plotting procedures ****************
 // Spacing constants
-#define PlotN 20
-#define PlotA 3
-#define PlotB 3
-#define PlotC 2
-#define PlotD 2
-#define PlotP 0.5
+#define PLOT_N 20
+#define PLOT_A 3
+#define PLOT_B 3
+#define PLOT_C 2
+#define PLOT_D 2
+#define PLOT_P 0.5
+#define PLOT_M 50
+#define PLOT_SPLIT_MAX 10
 
 // convenience struct to hold the bounds values and stem abscissa starting value
 typedef struct _Bounds {
@@ -507,11 +509,11 @@ typedef struct _Bounds {
 
 	// Calculate the scale factors for the bounds of this object
 	double calcAbsScale() const {
-		return PlotN / (AU - AL);
+		return PLOT_N / (AU - AL);
 	}
 
 	double calcOrdScale() const {
-		return PlotN / (OU - OL);
+		return PLOT_N / (OU - OL);
 	}
 
 	// Helper function that returns the values scaled for the Qt notebook
@@ -601,17 +603,17 @@ void applyPlotOptions(std::vector<Expression>& plotData, const PlotOptions& opti
 	const Bounds& scaled) {
 	if (options.title != std::string()) {
 		plotData.push_back(makeTextExpression(options.title,
-			{scaled.AL + (PlotN / 2), scaled.OU + PlotA}, options.textScale));
+			{scaled.AL + (PLOT_N / 2), scaled.OU + PLOT_A}, options.textScale));
 	}
 
 	if (options.abscissaLabel != std::string()) {
 		plotData.push_back(makeTextExpression(options.abscissaLabel,
-			{scaled.AL + (PlotN / 2), scaled.OL - PlotA}, options.textScale));
+			{scaled.AL + (PLOT_N / 2), scaled.OL - PLOT_A}, options.textScale));
 	}
 
 	if (options.ordinateLabel != std::string()) {
 		plotData.push_back(makeTextExpression(options.ordinateLabel,
-			{scaled.AL - PlotB, scaled.OL + (PlotN / 2)}, options.textScale, -PI / 2));
+			{scaled.AL - PLOT_B, scaled.OL + (PLOT_N / 2)}, options.textScale, -PI / 2));
 	}
 }
 
@@ -766,19 +768,19 @@ void addPlotTickLabels(std::vector<Expression>& plotData, const Bounds& bounds,
 
 	// Tick labels (AL, AU, OL, OU)
 	ss << bounds.AL;
-	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL, scaled.OL - PlotC}, textScale));
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL, scaled.OL - PLOT_C}, textScale));
 
 	ss.str(std::string());
 	ss << bounds.AU;
-	plotData.push_back(makeTextExpression(ss.str(), {scaled.AU, scaled.OL - PlotC}, textScale));
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AU, scaled.OL - PLOT_C}, textScale));
 
 	ss.str(std::string());
 	ss << bounds.OL;
-	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PlotD, scaled.OL}, textScale));
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PLOT_D, scaled.OL}, textScale));
 
 	ss.str(std::string());
 	ss << bounds.OU;
-	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PlotD, scaled.OU}, textScale));
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PLOT_D, scaled.OU}, textScale));
 }
 
 void addScaledDiscreteData(const Expression& data, std::vector<Expression>& plotData,
@@ -792,7 +794,7 @@ void addScaledDiscreteData(const Expression& data, std::vector<Expression>& plot
 		Point p = getPointValues(*it).scaleForGraphics(absScale, ordScale);
 
 		// Create the scaled point expression and add it to the plot data
-		plotData.push_back(makePointExpression(p, PlotP / 2));
+		plotData.push_back(makePointExpression(p, PLOT_P / 2));
 		plotData.push_back(makeLineExpression({p.x, p.x, stemRoot, p.y}));
 	}
 }
@@ -841,6 +843,116 @@ Expression discretePlot(const std::vector<Expression>& args) {
 	// This will only get triggered when there is the wrong number of arguments
 	throw SemanticError("Error: wrong number of arguments for discrete-plot which "
 		"takes one or two arguments");
+}
+
+// Helper function to get the point at the evaluated lambda and update the bounds
+void stepContinuous(const Expression& lambda, double toEval, Point& p, Bounds& bounds,
+	bool init = false) {
+	Expression lambdaResultExp = evalLambda(Expression(toEval));
+
+	// if the result is a valid number, then we can make it the next point
+	if (lambdaResultExp.isHeadNumber()) {
+		p = {toEval, lambdaResult.head().asNumber()};
+
+		// Record the maxima for the ordinate axis for scaling (if already initialized)
+		if (!init) {
+			if (bounds.OL > p.y) {
+				bounds.OL = p.y;
+			} else if (bounds.OU < p.y) {
+				bounds.OU = p.y;
+			}
+		} else {
+			bounds.OL = p.y;
+			bounds.OU = p.y;
+		}
+	} else {
+		throw SemanticError("Error: invalid function for continuous plot");
+	}
+}
+
+void addScaledContinuousData(const Expression& lambda, Bounds& bounds,
+	std::vector<Expression>& plotData) {
+
+	// Evaluate the lambda function with a certain sample size between the bounds given
+	// TODO: At this point, I should have a list of all the evaluated y values and input x values
+	double incValue = (bounds.AU - bounds.AL) / PLOT_M;
+
+	// Step each domain value and evaluate the lambda function. Along the way, correct non-straight
+	// lines and record maxima.
+
+	// const int MIN_ANGLE = 175;
+	std::vector<Line> lines;
+
+	// Prime the loop
+	Point prev;
+	stepContinuous(lambda, bounds.AL, prev, bounds, true);
+	for (double i = bounds.AL; i < bounds.AU; i++) {
+		Point next;
+
+		// create lines from i to i + 1
+		stepContinuous(lambda, i + 1, next, bounds);
+
+		// add the line to the list
+		lines.push_back({prev.x, next.x, prev.y, next.y});
+		prev = next;
+	}
+
+	// Iterate through each line, scale it, and add it to the plot
+	double absScaleFactor = bounds.calcAbsScale();
+	double ordScaleFactor = bounds.calcOrdScale();
+	for (auto& line : lines) {
+		plotData.push_back(line->scaledForGraphics(absScaleFactor, ordScaleFactor));
+	}
+}
+
+Expression continuousPlot(const std::vector<Expression>& args) {
+
+	// Continuous plots can take two or three arguments (options are, optional)
+	bool justData = nargs_equal(args, 2);
+	bool dataAndOptions = nargs_equal(args, 3);
+
+	if (justData || dataAndOptions) {
+		const Expression& lambda = args[0];
+
+		// Validate the arguments. Start processing the plot data
+		if (lambda.isHeadLambdaRoot()) {
+			std::vector<Expression> plotData;
+
+			// We can grab the bounds as a point since we expect a list of two values (try catch is
+			// for error clarification)
+			Bounds bounds;
+			try {
+				Point abscissaBounds = getPointValues(args[1]);
+				bounds.AL = abscissaBounds.x;
+				bounds.AU = abscissaBounds.y;
+			} catch () {
+				throw SemanticError("Error: second argument to continuous-plot should be a list of two "
+					"bounding values");
+			}
+
+			// Create the plot (addScaledContinuousData will update the bounds)
+			addScaledContinuousData(lambda, bounds, plotData);
+
+			scaledBounds = bounds.scaleForGraphics();
+			addPlotAxes(plotData, scaledBounds);
+			addPlotEdges(plotData, scaledBounds);
+
+			// Retreive the options if there were any and apply them (i.e. create the text labels)
+			double textScale = 1;
+			if (dataAndOptions) {
+				textScale = handlePlotOptions(plotData, args[1], scaledBounds);
+			}
+
+			addPlotTickLabels(plotData, bounds, textScale);
+			return Expression(plotData);
+		}
+
+		throw SemanticError("Error: first argument to continuous-plot should be a lambda function");
+	}
+
+	// This will only get triggered when there is the wrong number of arguments
+	throw SemanticError("Error: wrong number of arguments for continuous-plot which "
+		"takes two or three arguments");
 }
 
 Environment::Environment() {
@@ -1003,4 +1115,7 @@ void Environment::reset() {
 
 	// Procedure: discrete-plot
 	envmap.emplace("discrete-plot", EnvResult(ProcedureType, discretePlot));
+
+	// Procedure: continuous-plot
+	envmap.emplace("continuous-plot", EnvResult(ProcedureType, continuousPlot));
 }
