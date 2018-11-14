@@ -941,10 +941,10 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 	// Prime the loop
 	Point prev, next;
 	stepContinuous(lambda, env, bounds.AL, prev, bounds, true);
-	for (double i = bounds.AL; i < bounds.AU; i += incValue) {
+	for (double i = 1; i < PLOT_M; i++) {
 
 		// create lines from i to i + 1
-		stepContinuous(lambda, env, i + incValue, next, bounds);
+		stepContinuous(lambda, env, bounds.AL + (incValue * i), next, bounds);
 
 		// add the line to the list
 		lines.push_back({prev.x, next.x, prev.y, next.y});
