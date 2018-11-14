@@ -88,6 +88,9 @@ public:
 	/// Evaluate expression using a post-order traversal (recursive)
 	Expression eval(Environment& env);
 
+	/// Evaluate a lambda function with a certain input expression
+	Expression evalLambda(const Expression& input, const Environment& env) const;
+
 	/// equality comparison for two expressions (recursive)
 	bool operator==(const Expression& exp) const noexcept;
 

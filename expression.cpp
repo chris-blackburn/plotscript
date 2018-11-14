@@ -1,6 +1,8 @@
 #include "expression.hpp"
 
 #include <sstream>
+#include <iomanip>
+#include <cmath>
 
 #include "environment.hpp"
 #include "semantic_error.hpp"
@@ -156,6 +158,10 @@ Expression apply_lambda(const Expression& lambda, const std::vector<Expression>&
 	}
 }
 
+// Forward declare the plot functions for apply
+Expression discretePlot(const std::vector<Expression>& args);
+Expression continuousPlot(const std::vector<Expression>& args, const Environment& env);
+
 Expression apply(const Atom & op, const std::vector<Expression>& args, const Environment& env) {
 
 	// head must be a symbol
@@ -170,6 +176,12 @@ Expression apply(const Atom & op, const std::vector<Expression>& args, const Env
 		Expression lambda = env.get_exp(op);
 		if (lambda.isHeadLambdaRoot()) {
 			return apply_lambda(lambda, args, env);
+
+			// Check if it is one of the plot commands
+		} else if (op.asSymbol() == "discrete-plot") {
+			return discretePlot(args);
+		} else if (op.asSymbol() == "continuous-plot") {
+			return continuousPlot(args, env);
 		} else {
 			throw SemanticError("Error during evaluation: symbol does not name a procedure");
 		}
@@ -221,7 +233,9 @@ bool Expression::isSpecialForm(const Atom& head) const {
 		head == ListRoot ||
 		head == LambdaRoot ||
 		s == "set-property" ||
-		s == "get-property";
+		s == "get-property" ||
+		s == "discrete-plot" ||
+		s == "continuous-plot";
 }
 
 Expression Expression::handle_define(Environment& env) {
@@ -484,6 +498,13 @@ Expression Expression::eval(Environment& env) {
 	}
 }
 
+Expression Expression::evalLambda(const Expression& input, const Environment& env) const {
+
+	// TODO: remove, make the compiler happy
+	env.is_exp(input.head());
+	return input;
+}
+
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
 	if (exp.head().isNone()) {
 		out << "NONE";
@@ -532,4 +553,455 @@ bool Expression::operator==(const Expression& exp) const noexcept {
 
 bool operator!=(const Expression& left, const Expression& right) noexcept {
 	return !(left == right);
+}
+
+// **************** Plotting procedures ****************
+const double PI = std::atan2(0, -1);
+
+// Spacing constants
+#define PLOT_N 20
+#define PLOT_A 3
+#define PLOT_B 3
+#define PLOT_C 2
+#define PLOT_D 2
+#define PLOT_P 0.5
+#define PLOT_M 50
+#define PLOT_SPLIT_MAX 10
+
+// convenience struct to hold the bounds values and stem abscissa starting value
+typedef struct _Bounds {
+	double AL, AU, OL, OU;
+
+	// Calculate the scale factors for the bounds of this object
+	double calcAbsScale() const {
+		return PLOT_N / (AU - AL);
+	}
+
+	double calcOrdScale() const {
+		return PLOT_N / (OU - OL);
+	}
+
+	// Helper function that returns the values scaled for the Qt notebook
+	_Bounds scaleForGraphics() const {
+
+		// TODO: If the two bounds are the same value, span from the axis to that value
+		double absScale = calcAbsScale();
+		double ordScale = calcOrdScale();
+
+		return {AL * absScale, AU * absScale,
+			OL * ordScale, OU * ordScale};
+	}
+} Bounds;
+
+// convenience struct for lines and points
+typedef struct _Point {
+	double x, y;
+
+	_Point scaleForGraphics(double absScaleFactor, double ordScaleFactor) const {
+		return {x * absScaleFactor, y * ordScaleFactor};
+	}
+} Point;
+
+typedef struct _Line {
+	double x1, x2, y1, y2;
+
+	_Line scaleForGraphics(double absScaleFactor, double ordScaleFactor) const {
+		return {x1 * absScaleFactor, x2 * absScaleFactor,
+			y1 * ordScaleFactor, y2 * ordScaleFactor};
+	}
+} Line;
+
+// Helper function to create a plotscript point object
+Expression makePointExpression(Point p, double size = 0) {
+
+	// NOTE: Ordinate values are negated because of Qt's coordinate system
+	Expression point({Expression(p.x), Expression(-p.y)});
+	point.setProperty("object-name", Expression(Atom("\"point\"")));
+	point.setProperty("size", Expression(size));
+	return point;
+}
+
+// Helper function to create a plotscript line object
+Expression makeLineExpression(Line l) {
+	Expression line({makePointExpression({l.x1, l.y1}), makePointExpression({l.x2, l.y2})});
+	line.setProperty("object-name", Expression(Atom("\"line\"")));
+	line.setProperty("thickness", Expression(0));
+	return line;
+}
+
+// Helper function to create a plotscript text object
+Expression makeTextExpression(const std::string& text, Point point, double scale = 1,
+	double rotation = 0) {
+	Expression textExp(Atom('"' + text + '"'));
+	textExp.setProperty("object-name", Expression(Atom("\"text\"")));
+	textExp.setProperty("position", makePointExpression(point));
+	textExp.setProperty("text-scale", Expression(scale));
+	textExp.setProperty("text-rotation", Expression(rotation));
+	return textExp;
+}
+
+// Helper function to get a key-value pair from the plot options
+std::pair<const Expression&, const Expression&> getOptionKeyValue(const Expression& option) {
+	if (option.isHeadListRoot()) {
+		auto it = option.tailConstBegin();
+
+		// If option + 2 is the end, then there were only two things in the option list, ignore
+		// option lists that have incorrect or invalid keys/values.
+		if (it + 2 == option.tailConstEnd()) {
+
+			// return the key, value pair
+			return {*it, *(it + 1)};
+		}
+	}
+
+	return {Expression(), Expression()};
+}
+
+// convenience struct to house the possible plot options
+typedef struct _PlotOptions {
+	std::string title, abscissaLabel, ordinateLabel;
+	double textScale = 1;
+} PlotOptions;
+
+// Helper function to apply plot options
+void applyPlotOptions(std::vector<Expression>& plotData, const PlotOptions& options,
+	const Bounds& scaled) {
+	if (options.title != std::string()) {
+		plotData.push_back(makeTextExpression(options.title,
+			{scaled.AL + (PLOT_N / 2), scaled.OU + PLOT_A}, options.textScale));
+	}
+
+	if (options.abscissaLabel != std::string()) {
+		plotData.push_back(makeTextExpression(options.abscissaLabel,
+			{scaled.AL + (PLOT_N / 2), scaled.OL - PLOT_A}, options.textScale));
+	}
+
+	if (options.ordinateLabel != std::string()) {
+		plotData.push_back(makeTextExpression(options.ordinateLabel,
+			{scaled.AL - PLOT_B, scaled.OL + (PLOT_N / 2)}, options.textScale, -PI / 2));
+	}
+}
+
+// Helper function to handle any possible options for plots (title, axis labels, etc.)
+// it returns the text scale if it was set (1 if it was not set)
+double handlePlotOptions(std::vector<Expression>& plotData, const Expression& options,
+	const Bounds& scaled) {
+
+	// the options expression should be a list
+	if (options.isHeadListRoot()) {
+		PlotOptions plotOptions;
+
+		auto optionsBegin = options.tailConstBegin();
+		auto optionsEnd = options.tailConstEnd();
+
+		// Check for known options and verify they are of the correct type.
+		for (auto it = optionsBegin; it != optionsEnd; it++) {
+			std::pair<const Expression&, const Expression&> option = getOptionKeyValue(*it);
+
+			// If there is a title,
+			if (option.first.head().asSymbol(true) == "title") {
+				if (option.second.isHeadStringLiteral()) {
+					plotOptions.title = option.second.head().asSymbol(true);
+				}
+
+				// If there is an abscissa label,
+			} else if (option.first.head().asSymbol(true) == "abscissa-label") {
+				if (option.second.isHeadStringLiteral()) {
+					plotOptions.abscissaLabel = option.second.head().asSymbol(true);
+				}
+
+				// If there is an ordinate label,
+			} else if (option.first.head().asSymbol(true) == "ordinate-label") {
+				if (option.second.isHeadStringLiteral()) {
+					plotOptions.ordinateLabel = option.second.head().asSymbol(true);
+				}
+
+				// If there is a text-scale option,
+			} else if (option.first.head().asSymbol(true) == "text-scale") {
+				if (option.second.isHeadNumber()) {
+					plotOptions.textScale = option.second.head().asNumber();
+				}
+			}
+		}
+
+		// After all options have been evaluated, apply them and return the text scale
+		applyPlotOptions(plotData, plotOptions, scaled);
+		return plotOptions.textScale;
+	}
+
+	throw SemanticError("Error: options for plot is not a list");
+}
+
+// returns Point object (convenience when working with point lists)
+Point getPointValues(const Expression& point) {
+	auto cbegin = point.tailConstBegin();
+	auto cend = point.tailConstEnd();
+
+	// If cbegin + 2 is the end, then that means only two elements were in the point list
+	if (cbegin + 2 == cend) {
+		const Expression x = *cbegin;
+		const Expression y = *(cbegin + 1);
+
+		if (x.isHeadNumber() && y.isHeadNumber()) {
+			return {x.head().asNumber(), y.head().asNumber()};
+		}
+
+		throw SemanticError("Error: NaN or complex value for point in plot");
+	}
+
+	throw SemanticError("Error: not a valid point for plot");
+}
+
+// returns a bounds object (AL, AU, OL, and OU) based off a list of points
+Bounds getBoundsFromList(const Expression& data) {
+
+	// data should be a list expression when this function is called
+	auto dataBegin = data.tailConstBegin();
+	auto dataEnd = data.tailConstEnd();
+
+	// If there are no points or just one point, then throw an exception
+	if (dataBegin == dataEnd || dataBegin + 1 == dataEnd) {
+		throw SemanticError("Error: not enough data points for plot");
+	}
+
+	// prime the bound values (grab the first point and set the bounds)
+	Point firstPoint = getPointValues(*dataBegin);
+	double AL = firstPoint.x, AU = AL,
+		OL = firstPoint.y, OU = OL;
+
+	// Traverse through the list of points to find the minima and maxima
+	// I increment dataBegin before assigning it to "it" because we already got the first point
+	for (auto it = dataBegin + 1; it != dataEnd; it++) {
+		Point p = getPointValues(*it);
+
+		// update the bound values
+		if (AL > p.x) {
+			AL = p.x;
+		} else if (AU < p.x) {
+			AU = p.x;
+		}
+
+		if (OL > p.y) {
+			OL = p.y;
+		} else if (OU < p.y) {
+			OU = p.y;
+		}
+	}
+
+	return {AL, AU, OL, OU};
+}
+
+// Helper function that adds the abscissa and ordinate axes to a vector of expressions. Also
+// returns the starting point for stem plot lines
+double addPlotAxes(std::vector<Expression>& plotData, const Bounds& scaled) {
+
+	// Adding the ordinate axis
+	if (0 > scaled.AL && 0 < scaled.AU) {
+		plotData.push_back(makeLineExpression({0, 0, scaled.OL, scaled.OU}));
+	}
+
+	// In the cases where the abscissa axis does not need to be created, we still need a reference
+	// point to stem the discrete plot lines from.
+	if (0 > scaled.OL && 0 > scaled.OU) {
+		return scaled.OU;
+	} else if (0 < scaled.OL && 0 < scaled.OU) {
+		return scaled.OL;
+	} else {
+
+		// If the axis is in the plot, then we need to create another axis line
+		plotData.push_back(makeLineExpression({scaled.AL, scaled.AU, 0, 0}));
+	}
+
+	return 0;
+}
+
+void addPlotEdges(std::vector<Expression>& plotData, const Bounds& scaled) {
+
+	// Data bounding box edges (top, bottom, left, right)
+	plotData.push_back(makeLineExpression({scaled.AL, scaled.AU, scaled.OU, scaled.OU}));
+	plotData.push_back(makeLineExpression({scaled.AL, scaled.AU, scaled.OL, scaled.OL}));
+	plotData.push_back(makeLineExpression({scaled.AL, scaled.AL, scaled.OU, scaled.OL}));
+	plotData.push_back(makeLineExpression({scaled.AU, scaled.AU, scaled.OU, scaled.OL}));
+}
+
+void addPlotTickLabels(std::vector<Expression>& plotData, const Bounds& bounds,
+	double textScale) {
+	Bounds scaled = bounds.scaleForGraphics();
+
+	std::stringstream ss;
+	ss << std::setprecision(2);
+
+	// Tick labels (AL, AU, OL, OU)
+	ss << bounds.AL;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL, scaled.OL - PLOT_C}, textScale));
+
+	ss.str(std::string());
+	ss << bounds.AU;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AU, scaled.OL - PLOT_C}, textScale));
+
+	ss.str(std::string());
+	ss << bounds.OL;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PLOT_D, scaled.OL}, textScale));
+
+	ss.str(std::string());
+	ss << bounds.OU;
+	plotData.push_back(makeTextExpression(ss.str(), {scaled.AL - PLOT_D, scaled.OU}, textScale));
+}
+
+void addScaledDiscreteData(const Expression& data, std::vector<Expression>& plotData,
+	const Bounds& bounds, double stemRoot) {
+	double absScale = bounds.calcAbsScale();
+	double ordScale = bounds.calcOrdScale();
+
+	auto dataBegin = data.tailConstBegin();
+	auto dataEnd = data.tailConstEnd();
+	for (auto it = dataBegin; it != dataEnd; it++) {
+		Point p = getPointValues(*it).scaleForGraphics(absScale, ordScale);
+
+		// Create the scaled point expression and add it to the plot data
+		plotData.push_back(makePointExpression(p, PLOT_P / 2));
+		plotData.push_back(makeLineExpression({p.x, p.x, stemRoot, p.y}));
+	}
+}
+
+Expression discretePlot(const std::vector<Expression>& args) {
+
+	// Discrete plots can take one or two arguments (options are, optional)
+	bool justData = args.size() == 1;
+	bool dataAndOptions = args.size() == 2;
+
+	if (justData || dataAndOptions) {
+		const Expression& data = args[0];
+
+		// The data should be a list. Start processing the plot data
+		if (data.isHeadListRoot()) {
+			Bounds bounds = getBoundsFromList(data);
+			Bounds scaledBounds = bounds.scaleForGraphics();
+			std::vector<Expression> plotData;
+
+			// We need a value to start stem lines from
+			double stemRoot = addPlotAxes(plotData, scaledBounds);
+
+			// for each point in the list of data points, scale and create the line and point objects
+			addScaledDiscreteData(data, plotData, bounds, stemRoot);
+			addPlotEdges(plotData, scaledBounds);
+
+			// Retreive the options if there were any and apply them (i.e. create the text labels)
+			double textScale = 1;
+			if (dataAndOptions) {
+
+				// Create the title, abscissa label, ordinate label text objects if they were set and get
+				// the text scale
+				textScale = handlePlotOptions(plotData, args[1], scaledBounds);
+			}
+
+			addPlotTickLabels(plotData, bounds, textScale);
+
+			// if no options exist, just return the plot data
+			return Expression(plotData);
+		}
+
+		// Both arguements should be a list
+		throw SemanticError("Error: arguements to discrete-plot should be lists");
+	}
+
+	// This will only get triggered when there is the wrong number of arguments
+	throw SemanticError("Error: wrong number of arguments for discrete-plot which "
+		"takes one or two arguments");
+}
+
+// Helper function to get the point at the evaluated lambda and update the bounds
+void stepContinuous(const Expression& lambda, const Environment& env, double toEval, Point& p,
+	Bounds& bounds, bool init = false) {
+	Expression lambdaResultExp = lambda.evalLambda(Expression(toEval), env);
+
+	// if the result is a valid number, then we can make it the next point
+	if (lambdaResultExp.isHeadNumber()) {
+		p = {toEval, lambdaResultExp.head().asNumber()};
+
+		// Record the maxima for the ordinate axis for scaling (if already initialized)
+		if (!init) {
+			if (bounds.OL > p.y) {
+				bounds.OL = p.y;
+			} else if (bounds.OU < p.y) {
+				bounds.OU = p.y;
+			}
+		} else {
+			bounds.OL = p.y;
+			bounds.OU = p.y;
+		}
+	} else {
+		throw SemanticError("Error: invalid function for continuous plot");
+	}
+}
+
+void addScaledContinuousData(const Expression& lambda, const Environment& env, Bounds& bounds,
+	std::vector<Expression>& plotData) {
+	double incValue = (bounds.AU - bounds.AL) / PLOT_M;
+	std::vector<Line> lines;
+
+	// Prime the loop
+	Point prev;
+	stepContinuous(lambda, env, bounds.AL, prev, bounds, true);
+	for (double i = bounds.AL; i < bounds.AU; i += incValue) {
+		Point next;
+
+		// create lines from i to i + 1
+		stepContinuous(lambda, env, i + 1, next, bounds);
+
+		// add the line to the list
+		lines.push_back({prev.x, next.x, prev.y, next.y});
+		prev = next;
+	}
+
+	// Iterate through each line, scale it, and add it to the plot
+	double absScaleFactor = bounds.calcAbsScale();
+	double ordScaleFactor = bounds.calcOrdScale();
+	for (auto& line : lines) {
+		plotData.push_back(makeLineExpression(line.scaleForGraphics(absScaleFactor, ordScaleFactor)));
+	}
+}
+
+Expression continuousPlot(const std::vector<Expression>& args, const Environment& env) {
+
+	// Continuous plots can take two or three arguments (options are, optional)
+	bool justData = args.size() == 2;
+	bool dataAndOptions = args.size() == 3;
+
+	if (justData || dataAndOptions) {
+		const Expression& lambda = args[0];
+
+		// Validate the arguments. Start processing the plot data
+		if (lambda.isHeadLambdaRoot()) {
+			std::vector<Expression> plotData;
+
+			// We can grab the bounds as a point since we expect a list of two values
+			Bounds bounds;
+			Point abscissaBounds = getPointValues(args[1]);
+			bounds.AL = abscissaBounds.x;
+			bounds.AU = abscissaBounds.y;
+
+			// Create the plot (addScaledContinuousData will update the bounds)
+			addScaledContinuousData(lambda, env, bounds, plotData);
+
+			Bounds scaledBounds = bounds.scaleForGraphics();
+			addPlotAxes(plotData, scaledBounds);
+			addPlotEdges(plotData, scaledBounds);
+
+			// Retreive the options if there were any and apply them (i.e. create the text labels)
+			double textScale = 1;
+			if (dataAndOptions) {
+				textScale = handlePlotOptions(plotData, args[1], scaledBounds);
+			}
+
+			addPlotTickLabels(plotData, bounds, textScale);
+			return Expression(plotData);
+		}
+
+		throw SemanticError("Error: first argument to continuous-plot should be a lambda function");
+	}
+
+	// This will only get triggered when there is the wrong number of arguments
+	throw SemanticError("Error: wrong number of arguments for continuous-plot which "
+		"takes two or three arguments");
 }
