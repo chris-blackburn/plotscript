@@ -89,8 +89,7 @@ public:
 	Expression eval(Environment& env);
 
 	/// Evaluate a lambda function with a certain input expression
-	Expression evalLambda(const Expression& lambda, const std::vector<Expression>& input,
-		const Environment& env) const;
+	Expression evalLambda(const std::vector<Expression>& input, const Environment& env) const;
 
 	/// equality comparison for two expressions (recursive)
 	bool operator==(const Expression& exp) const noexcept;

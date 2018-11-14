@@ -498,9 +498,13 @@ Expression Expression::eval(Environment& env) {
 	}
 }
 
-Expression Expression::evalLambda(const Expression& lambda, const std::vector<Expression>& input,
-	const Environment& env) const {
-	return apply_lambda(lambda, input, env);
+Expression Expression::evalLambda(const std::vector<Expression>& input,
+		const Environment& env) const {
+	if (isHeadLambdaRoot()) {
+		return apply_lambda(*this, input, env);
+	}
+
+	return Expression();
 }
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
@@ -911,7 +915,7 @@ Expression discretePlot(const std::vector<Expression>& args) {
 // Helper function to get the point at the evaluated lambda and update the bounds
 void stepContinuous(const Expression& lambda, const Environment& env, double toEval, Point& p,
 	Bounds& bounds, bool init = false) {
-	Expression lambdaResultExp = Expression().evalLambda(lambda, {Expression(toEval)}, env);
+	Expression lambdaResultExp = lambda.evalLambda({Expression(toEval)}, env);
 
 	// if the result is a valid number, then we can make it the next point
 	if (lambdaResultExp.isHeadNumber()) {
