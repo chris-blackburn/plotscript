@@ -130,8 +130,9 @@ void OutputWidget::handleTextGraphic(const Expression& exp) {
 			qreal x = posRect.left() - (text->boundingRect().width() / 2);
 			qreal y = posRect.top() - (text->boundingRect().height() / 2);
 			text->setPos(x, y);
-			text->setScale(scale);
+			text->setTransformOriginPoint(text->boundingRect().center());
 			text->setRotation(rot * (180 / PI));
+			text->setScale(scale);
 			return;
 		}
 

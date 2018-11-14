@@ -488,6 +488,10 @@ Expression range(const std::vector<Expression>& args) {
 	throw SemanticError("Error: wrong number of arguments for range which takes three arguments");
 }
 
+const double PI = std::atan2(0, -1);
+const double EXP = std::exp(1);
+const complex I = complex(0, 1);
+
 // **************** Plotting procedures ****************
 // Spacing constants
 #define PlotN 20
@@ -569,22 +573,93 @@ Expression makeTextExpression(const std::string& text, Point point, double scale
 	return textExp;
 }
 
+// Helper function to get a key-value pair from the plot options
+std::pair<const Expression&, const Expression&> getOptionKeyValue(const Expression& option) {
+	if (option.isHeadListRoot()) {
+		auto it = option.tailConstBegin();
+
+		// If option + 2 is the end, then there were only two things in the option list, ignore
+		// option lists that have incorrect or invalid keys/values.
+		if (it + 2 == option.tailConstEnd()) {
+
+			// return the key, value pair
+			return {*it, *(it + 1)};
+		}
+	}
+
+	return {Expression(), Expression()};
+}
+
+// convenience struct to house the possible plot options
+typedef struct _PlotOptions {
+	std::string title, abscissaLabel, ordinateLabel;
+	double textScale = 1;
+} PlotOptions;
+
+// Helper function to apply plot options
+void applyPlotOptions(std::vector<Expression>& plotData, const PlotOptions& options,
+	const Bounds& scaled) {
+	if (options.title != std::string()) {
+		plotData.push_back(makeTextExpression(options.title,
+			{scaled.AL + (PlotN / 2), scaled.OU + PlotA}, options.textScale));
+	}
+
+	if (options.abscissaLabel != std::string()) {
+		plotData.push_back(makeTextExpression(options.abscissaLabel,
+			{scaled.AL + (PlotN / 2), scaled.OL - PlotA}, options.textScale));
+	}
+
+	if (options.ordinateLabel != std::string()) {
+		plotData.push_back(makeTextExpression(options.ordinateLabel,
+			{scaled.AL - PlotB, scaled.OL + (PlotN / 2)}, options.textScale, -PI / 2));
+	}
+}
+
 // Helper function to handle any possible options for plots (title, axis labels, etc.)
 // it returns the text scale if it was set (1 if it was not set)
 double handlePlotOptions(std::vector<Expression>& plotData, const Expression& options,
 	const Bounds& scaled) {
 
-	// TODO: remove, only here to make compiler happy
-	plotData.size();
-	scaled.scaleForGraphics();
-
 	// the options expression should be a list
 	if (options.isHeadListRoot()) {
+		PlotOptions plotOptions;
 
-		// TODO: Check for known options and verify they are of the correct type. If there are valid
-		// options in the list, add them to the plot data with the proper positioning based off of
-		// the scaled bounds
-		return 1;
+		auto optionsBegin = options.tailConstBegin();
+		auto optionsEnd = options.tailConstEnd();
+
+		// Check for known options and verify they are of the correct type.
+		for (auto it = optionsBegin; it != optionsEnd; it++) {
+			std::pair<const Expression&, const Expression&> option = getOptionKeyValue(*it);
+
+			// If there is a title,
+			if (option.first.head().asSymbol(true) == "title") {
+				if (option.second.isHeadStringLiteral()) {
+					plotOptions.title = option.second.head().asSymbol(true);
+				}
+
+				// If there is an abscissa label,
+			} else if (option.first.head().asSymbol(true) == "abscissa-label") {
+				if (option.second.isHeadStringLiteral()) {
+					plotOptions.abscissaLabel = option.second.head().asSymbol(true);
+				}
+
+				// If there is an ordinate label,
+			} else if (option.first.head().asSymbol(true) == "ordinate-label") {
+				if (option.second.isHeadStringLiteral()) {
+					plotOptions.ordinateLabel = option.second.head().asSymbol(true);
+				}
+
+				// If there is a text-scale option,
+			} else if (option.first.head().asSymbol(true) == "text-scale") {
+				if (option.second.isHeadNumber()) {
+					plotOptions.textScale = option.second.head().asNumber();
+				}
+			}
+		}
+
+		// After all options have been evaluated, apply them and return the text scale
+		applyPlotOptions(plotData, plotOptions, scaled);
+		return plotOptions.textScale;
 	}
 
 	throw SemanticError("Error: options for plot is not a list");
@@ -767,10 +842,6 @@ Expression discretePlot(const std::vector<Expression>& args) {
 	throw SemanticError("Error: wrong number of arguments for discrete-plot which "
 		"takes one or two arguments");
 }
-
-const double PI = std::atan2(0, -1);
-const double EXP = std::exp(1);
-const complex I = complex(0, 1);
 
 Environment::Environment() {
 	reset();
