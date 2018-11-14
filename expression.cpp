@@ -568,6 +568,7 @@ const double PI = std::atan2(0, -1);
 #define PLOT_D 2
 #define PLOT_P 0.5
 #define PLOT_M 50
+#define PLOT_LINE_ANG_MIN 175
 #define PLOT_SPLIT_MAX 10
 
 // convenience struct to hold the bounds values and stem abscissa starting value
@@ -937,6 +938,56 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 	}
 }
 
+double angleAdjacent(const Line& l1, const Line& l2) {
+
+	// If we find the angle between each line and the abscissa axis, then we can take 180 minus
+	// the sum of those angles to find the angle we want.
+	Point p1 = {l1.x1, l1.y1};
+	Point p2 = {l1.x2, l1.y2};
+	Point p3 = {l2.x2, l2.y2};
+	double angle1 = atan2((p2.y - p1.y), (p2.x - p1.x)) * (180 / PI);
+	double angle2 = atan2((p3.y - p2.y), (p3.x - p2.x)) * (180 / PI);
+
+	return 180 - (angle1 + angle2);
+}
+
+void smoothContinuousPlot(const Expression& lambda, const Environment& env,
+	std::vector<Line>& lines, std::size_t iteration = 0) {
+
+	// We need to work through the whole plot and split lines that have an angle smaller than 175
+	// We do nothing if we already hit 10 iterations
+	if (iteration < PLOT_SPLIT_MAX) {
+		bool alreadySmooth = true;
+		for (std::size_t i; i < lines.size(); i++) {
+
+			// Check the angle between the current line and the next
+			Line l1 = lines[i];
+			Line l2 = lines[i + 1];
+			if (angleAdjacent(l1, l2) < PLOT_LINE_ANG_MIN) {
+				alreadySmooth = false;
+
+				// If the angle is less than the minimum, remove the two current lines, add in the split
+				// lines, then advance to the next unevaluated line
+				double firstMidx = (l1.x1 + l1.x2) / 2;
+				double firstMidy = lambda.evalLambda({Expression(firstMidx)}, env).head().asNumber();
+				double secondMidx = (l2.x1 + l2.x2) / 2;
+				double secondMidy = lambda.evalLambda({Expression(secondMidx)}, env).head().asNumber();
+
+				// NOTE: It's important to increment the index appropriately to keep the lines in order.
+				// I have to subtract one from the final addition since the for loop increments
+				lines[i++] = {l1.x1, firstMidx, l2.y1, firstMidy};
+				lines.insert(lines.begin() + i++, {firstMidx, l1.x2, firstMidy, l1.y2});
+				lines.insert(lines.begin() + i++, {l2.x1, secondMidx, l2.y1, secondMidy});
+				lines[i--] = {secondMidx, l2.x2, secondMidy, l2.y2};
+			}
+		}
+
+		if (!alreadySmooth) {
+			smoothContinuousPlot(lambda, env, lines, iteration + 1);
+		}
+	}
+}
+
 void addScaledContinuousData(const Expression& lambda, const Environment& env, Bounds& bounds,
 	std::vector<Expression>& plotData) {
 	double incValue = (bounds.AU - bounds.AL) / PLOT_M;
@@ -958,6 +1009,9 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 	// calculate the final value
 	stepContinuous(lambda, env, bounds.AU, next, bounds);
 	lines.push_back({prev.x, next.x, prev.y, next.y});
+
+	// Smooth the plot
+	smoothContinuousPlot(lambda, env, lines);
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();

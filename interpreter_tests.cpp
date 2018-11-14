@@ -1645,6 +1645,7 @@ TEST_CASE("Simple continuous plot tests", "[interpreter]") {
 		std::vector<std::string> programs = {
 			"(define continuous-plot 1)",
 			"(continuous-plot 1)",
+			"(continuous-plot (list 2 3) (list 1 1))",
 			"(continuous-plot (lambda (x) (list x 1)) 1)",
 			"(continuous-plot (lambda (x) (list x 1)) (list 1 I))",
 			"(continuous-plot (lambda (x) (list x 1)) (list 1 1) (list) (list))"
