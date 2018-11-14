@@ -498,11 +498,9 @@ Expression Expression::eval(Environment& env) {
 	}
 }
 
-Expression Expression::evalLambda(const Expression& input, const Environment& env) const {
-
-	// TODO: remove, make the compiler happy
-	env.is_exp(input.head());
-	return input;
+Expression Expression::evalLambda(const Expression& lambda, const std::vector<Expression>& input,
+	const Environment& env) const {
+	return apply_lambda(lambda, input, env);
 }
 
 std::ostream& operator<<(std::ostream& out, const Expression& exp) {
@@ -913,7 +911,7 @@ Expression discretePlot(const std::vector<Expression>& args) {
 // Helper function to get the point at the evaluated lambda and update the bounds
 void stepContinuous(const Expression& lambda, const Environment& env, double toEval, Point& p,
 	Bounds& bounds, bool init = false) {
-	Expression lambdaResultExp = lambda.evalLambda(Expression(toEval), env);
+	Expression lambdaResultExp = Expression().evalLambda(lambda, {Expression(toEval)}, env);
 
 	// if the result is a valid number, then we can make it the next point
 	if (lambdaResultExp.isHeadNumber()) {
@@ -941,18 +939,21 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 	std::vector<Line> lines;
 
 	// Prime the loop
-	Point prev;
+	Point prev, next;
 	stepContinuous(lambda, env, bounds.AL, prev, bounds, true);
 	for (double i = bounds.AL; i < bounds.AU; i += incValue) {
-		Point next;
 
 		// create lines from i to i + 1
-		stepContinuous(lambda, env, i + 1, next, bounds);
+		stepContinuous(lambda, env, i + incValue, next, bounds);
 
 		// add the line to the list
 		lines.push_back({prev.x, next.x, prev.y, next.y});
 		prev = next;
 	}
+
+	// calculate the final value
+	stepContinuous(lambda, env, bounds.AU, next, bounds);
+	lines.push_back({prev.x, next.x, prev.y, next.y});
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();
@@ -991,7 +992,7 @@ Expression continuousPlot(const std::vector<Expression>& args, const Environment
 			// Retreive the options if there were any and apply them (i.e. create the text labels)
 			double textScale = 1;
 			if (dataAndOptions) {
-				textScale = handlePlotOptions(plotData, args[1], scaledBounds);
+				textScale = handlePlotOptions(plotData, args[2], scaledBounds);
 			}
 
 			addPlotTickLabels(plotData, bounds, textScale);
