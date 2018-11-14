@@ -51,9 +51,8 @@ QRectF OutputWidget::handlePointGraphic(const Expression& exp, bool addToScene) 
 					if (addToScene) {
 
 						// Make sure to set the pen width to zero to not interfere with the size
-						QPen pen;
-						pen.setWidth(0);
-						return scene->addEllipse(x, y, size, size, pen, QBrush(Qt::black))->rect();
+						return scene->addEllipse(x, y, size, size, QPen(QBrush(Qt::black), size),
+							QBrush(Qt::black))->rect();
 					}
 
 					// If addToScene is false, just return an rect item with the correct proportions
