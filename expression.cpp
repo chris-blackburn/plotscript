@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include <limits>
 
 #include "environment.hpp"
 #include "semantic_error.hpp"
@@ -954,20 +955,28 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 	}
 }
 
-#include <iostream>
 double angleAdjacent(const Line& l1, const Line& l2) {
 
 	// Depending on the slope of the line, we need to get different angles to find the angle
-	// between the two lines, opposing slopes just add, positive slopes subtract
+	// between the two lines, opposing slopes just add and take inverse, same sign adds
 	double m1 = slope(l1);
 	double m2 = slope(l2);
-	if ((m1 > 0 && m2 < 0) || (m1 < 0 && m2 > 0)) {
+	double diff = fabs(m1 - m2);
+
+	// First check if the slopes are the same
+	if (std::isnan(diff) || (diff <= std::numeric_limits<double>::epsilon())) {
+		return 180;
+	} else if ((m1 > 0 && m2 < 0) || (m1 < 0 && m2 > 0)) {
 		return 180 - (angleToXAxis(l1) + angleToXAxis(l2));
-	} else if (m1 > 0 && m2 > 0) {
-		return 180 - angleToXAxis(l1) - angleToXAxis(l2);
+	} else if ((m1 > 0 && m2 > 0) || (m1 < 0 && m2 < 0)) {
+		return angleToXAxis(l1) + angleToXAxis(l2);
+	} else if (m1 == 0) {
+		return 180 - angleToXAxis(l2);
+	} else if (m2 == 0) {
+		return 180 - angleToXAxis(l1);
 	}
 
-	return 0;
+	return 180;
 }
 
 void smoothContinuousPlot(const Expression& lambda, const Environment& env,
@@ -977,7 +986,8 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	// We do nothing if we already hit 10 iterations
 	if (iteration < PLOT_SPLIT_MAX) {
 		bool alreadySmooth = true;
-		for (std::size_t i = 0; i < lines.size(); i++) {
+		std::size_t numLines = lines.size();
+		for (std::size_t i = 0; i < numLines; i++) {
 
 			// Check the angle between the current line and the next
 			Line l1 = lines[i];
@@ -994,10 +1004,11 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 
 				// NOTE: It's important to increment the index appropriately to keep the lines in order.
 				// I have to subtract one from the final addition since the for loop increments
-				lines[i] = {l1.x1, firstMidx, l2.y1, firstMidy};
+				lines[i] = {l1.x1, firstMidx, l1.y1, firstMidy};
 				lines[i + 1] = {secondMidx, l2.x2, secondMidy, l2.y2};
 				lines.insert(lines.begin() + i + 1, {firstMidx, l1.x2, firstMidy, l1.y2});
 				lines.insert(lines.begin() + i + 2, {l2.x1, secondMidx, l2.y1, secondMidy});
+				i += 2;
 			}
 		}
 
@@ -1031,7 +1042,6 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 
 	// Smooth the plot
 	smoothContinuousPlot(lambda, env, lines);
-	std::cout << "Number of lines: " << lines.size() << std::endl;
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();
