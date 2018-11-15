@@ -955,7 +955,6 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 	}
 }
 
-#include <iostream>
 double angleAdjacent(const Line& l1, const Line& l2) {
 
 	// Depending on the slope of the line, we need to get different angles to find the angle
@@ -967,11 +966,9 @@ double angleAdjacent(const Line& l1, const Line& l2) {
 	double angle;
 	if ((std::isgreater(m1, 0) && std::isgreater(0, m2)) ||
 		(std::isgreater(0, m1) && std::isgreater(m2, 0))) {
-		std::cout << "No, here" << std::endl;
 		angle = 180 - (angleToXAxis(l1) + angleToXAxis(l2));
 	} else if ((std::isgreater(m1, 0) && std::isgreater(m2, 0)) ||
 		(std::isgreater(0, m1) && std::isgreater(0, m2))) {
-		std::cout << "Here" << std::endl;
 		if (std::isgreater(m1, m2)) {
 			angle = angleToXAxis(l1) - angleToXAxis(l2) - 180;
 		} else if (std::isgreater(m2, m1)) {
@@ -989,7 +986,6 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	// We do nothing if we already hit 10 iterations
 	if (iteration < PLOT_SPLIT_MAX) {
 		bool alreadySmooth = true;
-		std::cout << "Number of lines: " << lines.size() << std::endl;
 		for (std::size_t i = 0; i < lines.size() - 1; i++) {
 
 			// Check the angle between the current line and the next
@@ -1053,7 +1049,6 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 
 	// Smooth the plot
 	smoothContinuousPlot(lambda, env, lines);
-	std::cout << "Total number of lines: " << lines.size() << std::endl;
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();

@@ -30,6 +30,7 @@ private slots:
 
 	// Test for plots
 	void testDiscretePlotLayout();
+	void testContinuousPlotSimple();
 
 	// TODO: implement additional tests here
 private:
@@ -59,7 +60,8 @@ QGraphicsScene* NotebookTest::getScene(QWidget* output) {
 
 void NotebookTest::verifyNumberOfOutputGraphics(QWidget* output, qreal n) {
 	auto children = getScene(output)->items();
-	QVERIFY2(children.size() == n, "Wrong number of graphics items in the output");
+	qreal numItems = children.size();
+	QCOMPARE(numItems, n);
 }
 
 void NotebookTest::testSimpleExpression(const QString& input, const QString& output) {
@@ -370,8 +372,7 @@ void NotebookTest::testTextLists() {
 
 // **************** Plotting Tests ****************
 /*
-findLines - find lines in a scene contained within a bounding box
-						with a small margin
+findLines - find lines in a scene contained within a bounding box with a small margin
  */
 int findLines(QGraphicsScene * scene, QRectF bbox, qreal margin){
 
@@ -526,6 +527,21 @@ void NotebookTest::testDiscretePlotLayout() {
 
 	// check the point at (1,1)
 	QCOMPARE(findPoints(scene, QPointF(10, -10), 0.6), 1);
+}
+
+void NotebookTest::testContinuousPlotSimple() {
+	auto inputWidget = app.findChild<QWidget*>("input");
+	auto outputWidget = app.findChild<QWidget*>("output");
+
+	QTest::keyClicks(inputWidget, "(continuous-plot (lambda (x) (sin x)) (list (- pi) pi) "
+		"(list (list \"title\" \"The Title\") "
+		"(list \"abscissa-label\" \"X Label\") "
+		"(list \"ordinate-label\" \"Y Label\")))");
+	submitInput(inputWidget);
+
+	// first check total number of items
+	// 4 edge + 2 axis + 66 lines + 7 text = 79
+	verifyNumberOfOutputGraphics(outputWidget, 79);
 }
 
 QTEST_MAIN(NotebookTest)
