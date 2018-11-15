@@ -957,16 +957,29 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 
 double angleAdjacent(const Line& l1, const Line& l2) {
 
-	// Take the dot product to find the inner angle
-	double dx21 = l1.x2 - l1.x1;
-	double dx31 = l2.x2 - l1.x1;
-	double dy21 = l1.y2 - l1.y1;
-	double dy31 = l2.y2 - l1.y1;
-	return std::acos((dx21 * dx31 + dy21 * dy31) /
-		(std::sqrt(dx21 * dx21 + dy21 * dy21) * std::sqrt(dx31 * dx31 + dy31 * dy31)));
+	// Depending on the slope of the line, we need to get different angles to find the angle
+	// between the two lines, opposing slopes just add and take inverse, same sign adds
+	double m1 = slope(l1);
+	double m2 = slope(l2);
+	double diff = fabs(m1 - m2);
+	//
+	// // First check if the slopes are the same
+	if (std::isnan(diff) || (diff <= std::numeric_limits<double>::epsilon())) {
+		return 180;
+	} else if ((m1 > 0 && m2 < 0) || (m1 < 0 && m2 > 0)) {
+		return 180 - (angleToXAxis(l1) + angleToXAxis(l2));
+	} else if ((m1 > 0 && m2 > 0) || (m1 < 0 && m2 < 0)) {
+		return angleToXAxis(l1) + (180 - angleToXAxis(l2));
+	} else if (m1 == 0) {
+		return 180 - angleToXAxis(l2);
+	} else if (m2 == 0) {
+		return 180 - angleToXAxis(l1);
+	}
+
+	return 180;
 }
 
-#include <iostream>
+// #include <iostream>
 void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	std::vector<Line>& lines, std::size_t iteration = 0) {
 
@@ -974,7 +987,6 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	// We do nothing if we already hit 10 iterations
 	if (iteration < PLOT_SPLIT_MAX) {
 		bool alreadySmooth = true;
-		// std::cout << "Number of lines: " << lines.size() << std::endl;
 		for (std::size_t i = 0; i < lines.size() - 1; i++) {
 
 			// Check the angle between the current line and the next
@@ -1005,7 +1017,6 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 				lines.insert(lines.begin() + i, new2);
 				lines.insert(lines.begin() + i, new1);
 				i += 2;
-				break;
 			}
 		}
 
@@ -1023,7 +1034,7 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 	// Prime the loop
 	Point prev, next;
 	stepContinuous(lambda, env, bounds.AL, prev, bounds, true);
-	for (double i = 1; i < PLOT_M - 1; i++) {
+	for (double i = 1; i < PLOT_M; i++) {
 
 		// create lines from i to i + 1
 		stepContinuous(lambda, env, bounds.AL + (incValue * i), next, bounds);
