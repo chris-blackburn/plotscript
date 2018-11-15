@@ -628,7 +628,7 @@ double slope(const Line& l) {
 }
 
 double angleToXAxis(const Line& l) {
-	return std::atan2(dY(l), dX(l)) * (180 / PI);
+	return std::atan(slope(l)) * (180 / PI);
 }
 
 // Helper function to create a plotscript point object
@@ -962,8 +962,8 @@ double angleAdjacent(const Line& l1, const Line& l2) {
 	double m1 = slope(l1);
 	double m2 = slope(l2);
 	double diff = fabs(m1 - m2);
-
-	// First check if the slopes are the same
+	//
+	// // First check if the slopes are the same
 	if (std::isnan(diff) || (diff <= std::numeric_limits<double>::epsilon())) {
 		return 180;
 	} else if ((m1 > 0 && m2 < 0) || (m1 < 0 && m2 > 0)) {
@@ -977,8 +977,17 @@ double angleAdjacent(const Line& l1, const Line& l2) {
 	}
 
 	return 180;
+
+	// double dx21 = l1.x2-l1.x1;
+	// double dx31 = l2.x2-l1.x1;
+	// double dy21 = l1.y2-l1.y1;
+	// double dy31 = l2.y2-l1.y1;
+	// double m12 = sqrt(dx21*dx21 + dy21*dy21);
+	// double m13 = sqrt(dx31*dx31 + dy31*dy31);
+	// return std::acos((dx21*dx31 + dy21*dy31) / (m12 * m13));
 }
 
+#include <iostream>
 void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	std::vector<Line>& lines, std::size_t iteration = 0) {
 
@@ -986,8 +995,8 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	// We do nothing if we already hit 10 iterations
 	if (iteration < PLOT_SPLIT_MAX) {
 		bool alreadySmooth = true;
-		std::size_t numLines = lines.size();
-		for (std::size_t i = 0; i < numLines; i++) {
+		std::cout << "Number of lines: " << lines.size() << std::endl;
+		for (std::size_t i = 0; i < lines.size() - 1; i++) {
 
 			// Check the angle between the current line and the next
 			Line l1 = lines[i];
@@ -1003,12 +1012,21 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 				double secondMidy = lambda.evalLambda({Expression(secondMidx)}, env).head().asNumber();
 
 				// NOTE: It's important to increment the index appropriately to keep the lines in order.
-				// I have to subtract one from the final addition since the for loop increments
-				lines[i] = {l1.x1, firstMidx, l1.y1, firstMidy};
-				lines[i + 1] = {secondMidx, l2.x2, secondMidy, l2.y2};
-				lines.insert(lines.begin() + i + 1, {firstMidx, l1.x2, firstMidy, l1.y2});
-				lines.insert(lines.begin() + i + 2, {l2.x1, secondMidx, l2.y1, secondMidy});
-				i += 2;
+				Line new1 = {l1.x1, firstMidx, l1.y1, firstMidy};
+				Line new2 = {firstMidx, l1.x2, firstMidy, l1.y2};
+				Line new3 = {l2.x1, secondMidx, l2.y1, secondMidy};
+				Line new4 = {secondMidx, l2.x2, secondMidy, l2.y2};
+
+				// erase the old lines
+				lines.erase(lines.begin() + i, lines.begin() + i + 2);
+
+				// insert the new ones in reverse order (insert pushes everything forward)
+				lines.insert(lines.begin() + i, new4);
+				lines.insert(lines.begin() + i, new3);
+				lines.insert(lines.begin() + i, new2);
+				lines.insert(lines.begin() + i, new1);
+
+				break;
 			}
 		}
 
