@@ -963,7 +963,7 @@ double angleAdjacent(const Line& l1, const Line& l2) {
 	double m2 = slope(l2);
 
 	// First check if the slopes are the same
-	double angle;
+	double angle = 180;
 	if ((std::isgreater(m1, 0) && std::isgreater(0, m2)) ||
 		(std::isgreater(0, m1) && std::isgreater(m2, 0))) {
 		angle = 180 - (angleToXAxis(l1) + angleToXAxis(l2));
@@ -991,7 +991,7 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 			// Check the angle between the current line and the next
 			Line l1 = lines[i];
 			Line l2 = lines[i + 1];
-			if (angleAdjacent(l1, l2) < PLOT_LINE_ANG_MIN) {
+			if (std::isgreater(PLOT_LINE_ANG_MIN, angleAdjacent(l1, l2))) {
 				alreadySmooth = false;
 
 				// If the angle is less than the minimum, remove the two current lines, add in the split
