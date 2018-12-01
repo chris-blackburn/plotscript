@@ -13,6 +13,11 @@ set(interpreter_src
   interpreter.hpp interpreter.cpp
   )
 
+# files related to multithreading
+set(multithread_src
+  messageQueue.hpp messageQueue.tpp
+  )
+
 # EDIT
 # add any files you create related to interpreter unit testing here
 set(unittest_src
@@ -25,6 +30,7 @@ set(unittest_src
   semantic_error.hpp
   token_tests.cpp
   unit_tests.cpp
+  messageQueue_tests.cpp
   )
 
 # EDIT
@@ -90,13 +96,16 @@ endif()
 # build interpreter library
 add_library(interpreter ${interpreter_src})
 
+# build the multithreading library
+add_library(multithreading ${multithread_src})
+
 # create the plotscript executable
 add_executable(plotscript ${tui_main} ${tui_src})
 target_link_libraries(plotscript interpreter)
 
 # create the unit_tests executable
 add_executable(unit_tests ${unittest_src})
-target_link_libraries(unit_tests interpreter)
+target_link_libraries(unit_tests interpreter multithreading)
 
 enable_testing()
 add_test(unit_tests unit_tests)
@@ -107,8 +116,8 @@ if(DEFINED ENV{ECE3574_REFERENCE_ENV})
   set(GCC_COVERAGE_COMPILE_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
   set_target_properties(interpreter PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
   set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS ${GCC_COVERAGE_COMPILE_FLAGS} )
-  target_link_libraries(unit_tests interpreter gcov)
-  target_link_libraries(plotscript interpreter gcov)
+  target_link_libraries(unit_tests interpreter pthread gcov)
+  target_link_libraries(plotscript interpreter pthread gcov)
   add_custom_target(coverage
     COMMAND ${CMAKE_COMMAND} -E env "ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
     ${CMAKE_CURRENT_SOURCE_DIR}/scripts/coverage.sh)
