@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "messageQueue.hpp"
+#include "message_queue.hpp"
 #include <thread>
 #include <chrono>
 

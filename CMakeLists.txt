@@ -15,7 +15,7 @@ set(interpreter_src
 
 # files related to multithreading
 set(multithread_src
-  messageQueue.hpp messageQueue.tpp
+  message_queue.hpp message_queue.tpp
   )
 
 # EDIT
@@ -30,7 +30,7 @@ set(unittest_src
   semantic_error.hpp
   token_tests.cpp
   unit_tests.cpp
-  messageQueue_tests.cpp
+  message_queue_tests.cpp
   )
 
 # EDIT
