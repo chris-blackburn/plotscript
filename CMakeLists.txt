@@ -11,12 +11,8 @@ set(interpreter_src
   expression.hpp expression.cpp
   parse.hpp parse.cpp
   interpreter.hpp interpreter.cpp
-  )
-
-# files related to multithreading
-set(multithread_src
   message_queue.hpp message_queue.tpp
-	threaded_interpreter.hpp threaded_interpreter.cpp
+  threaded_interpreter.hpp threaded_interpreter.cpp
   )
 
 # EDIT
@@ -30,9 +26,9 @@ set(unittest_src
   parse_tests.cpp
   semantic_error.hpp
   token_tests.cpp
-  unit_tests.cpp
   message_queue_tests.cpp
-	threaded_interpreter_tests.cpp
+  threaded_interpreter_tests.cpp
+  unit_tests.cpp
   )
 
 # EDIT
@@ -98,16 +94,13 @@ endif()
 # build interpreter library
 add_library(interpreter ${interpreter_src})
 
-# build the multithreading library
-add_library(multithreading ${multithread_src})
-
 # create the plotscript executable
 add_executable(plotscript ${tui_main} ${tui_src})
 target_link_libraries(plotscript interpreter)
 
 # create the unit_tests executable
 add_executable(unit_tests ${unittest_src})
-target_link_libraries(unit_tests interpreter multithreading)
+target_link_libraries(unit_tests interpreter)
 
 enable_testing()
 add_test(unit_tests unit_tests)

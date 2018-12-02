@@ -35,25 +35,27 @@ void ThreadedInterpreter::error(const std::string& e) {
 }
 
 void ThreadedInterpreter::run() {
+	Interpreter interp;
 	while (active) {
-		Interpreter interp;
 
-		// Grab input messages as they populate the queue
+		// Grab input messages as they populate the queue. If not message is returned, then continue
+		// iterating
 		InputMessage msg;
-		m_iq->wait_pop(msg);
+		if (m_iq->try_pop(msg)) {
 
-		// Attempt to parse the input stream
-		std::istringstream expression(msg);
-		if (!interp.parseStream(expression)) {
-			error("Invalid Expression. Could not parse.");
-		} else {
+			// Attempt to parse the input stream
+			std::istringstream expression(msg);
+			if (!interp.parseStream(expression)) {
+				error("Invalid Expression. Could not parse.");
+			} else {
 
-			// try to evaluate the expression, push the result to the output queue
-			try {
-				Expression exp = interp.evaluate();
-				m_oq->push(OutputMessage(ExpressionType, exp));
-			} catch(const SemanticError& ex) {
-				error(std::string(ex.what()));
+				// try to evaluate the expression, push the result to the output queue
+				try {
+					Expression exp = interp.evaluate();
+					m_oq->push(OutputMessage(ExpressionType, exp));
+				} catch(const SemanticError& ex) {
+					error(std::string(ex.what()));
+				}
 			}
 		}
 	}

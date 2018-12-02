@@ -28,8 +28,8 @@ typedef struct _OutputMessage {
 typedef MessageQueue<InputMessage> InputQueue;
 typedef MessageQueue<OutputMessage> OutputQueue;
 
-// This is a wrapper class for the interpreter. It is meant to be run in a separate thread and
-// contains its own event loop (via the overloaded () operator)
+// This is a wrapper class for the interpreter. It controls the interpreter inside of a separate
+// thread and provides an api to control the state of that thread
 class ThreadedInterpreter {
 public:
 	ThreadedInterpreter(InputQueue* iq, OutputQueue* oq);
