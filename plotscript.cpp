@@ -3,9 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "interpreter.hpp"
-#include "semantic_error.hpp"
-#include "startup_config.hpp"
+#include "threaded_interpreter.hpp"
 
 void prompt() {
 	std::cout << "\nplotscript> ";
@@ -82,11 +80,26 @@ int eval_from_command(std::string argexp) {
 	return eval_from_stream(expression);
 }
 
+void wait_for_startup(ThreadedInterpreter& interp, OutputQueue& oq) {
+
+	// Wait until the startup file gets loaded. If an error occured, there will be an error message
+	// in the output queue
+	while (!interp.isStartupLoaded()) {}
+	OutputMessage startupMsg;
+	oq.try_pop(startupMsg);
+
+	if (startupMsg.type == ErrorType) {
+		error(startupMsg.err);
+	}
+}
+
 // A REPL is a repeated read-eval-print loop
 void repl() {
-	Interpreter interp;
+	InputQueue iq;
+	OutputQueue oq;
+	ThreadedInterpreter interp(&iq, &oq);
 
-	load_startup_file(interp);
+	wait_for_startup(interp, oq);
 	while (!std::cin.eof()) {
 
 		prompt();
@@ -96,17 +109,21 @@ void repl() {
 			continue;
 		}
 
-		std::istringstream expression(line);
+		// TODO: Test if the input was %start, %stop, or %reset and handle
+		// TODO: handle if interp is not running
 
-		if (!interp.parseStream(expression)) {
-			error("Invalid Expression. Could not parse.");
-		} else {
-			try {
-				Expression exp = interp.evaluate();
-				std::cout << exp << std::endl;
-			} catch(const SemanticError& ex) {
-				std::cerr << ex.what() << std::endl;
-			}
+		// queue the user's expression
+		iq.push(line);
+
+		// wait for an output
+		OutputMessage(msg);
+		oq.wait_pop(msg);
+
+		// Output the message
+		if (msg.type == ErrorType) {
+			error(msg.err);
+		} else if (msg.type == ExpressionType) {
+			std::cout << msg.exp << std::endl;
 		}
 	}
 }

@@ -45,6 +45,10 @@ public:
 	void start();
 	void stop();
 	void reset();
+
+	// allows the user to see if the startup file has been successfully loaaded. This is needed to
+	// clear any possible errors from the output queue before starting plotscript evaluation
+	bool isStartupLoaded() const;
 private:
 	std::thread m_thread;
 
@@ -56,6 +60,7 @@ private:
 	void run();
 
 	// Load the startup plotscript file. Errors are sent to the output queue
+	bool startupLoaded = false;
 	void loadStartupFile(Interpreter& interp);
 
 	void error(const std::string& e);

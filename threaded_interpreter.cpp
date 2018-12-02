@@ -67,18 +67,24 @@ void ThreadedInterpreter::loadStartupFile(Interpreter& interp) {
 
 	if (!ifs) {
 		error("Could not open startup file for reading.");
-		return;
-	}
-
-	// Just load the expressions from the startup file into the interpreter. We don't need to do
-	// anything with them
-	if (!interp.parseStream(ifs)) {
-		error("Invalid Program in startup file. Could not parse.");
 	} else {
-		try {
-			interp.evaluate();
-		} catch (const SemanticError& ex) {
-			error(std::string(ex.what()) + " [startup]");
+
+		// Just load the expressions from the startup file into the interpreter. We don't need to do
+		// anything with them
+		if (!interp.parseStream(ifs)) {
+			error("Invalid Program in startup file. Could not parse.");
+		} else {
+			try {
+				interp.evaluate();
+			} catch (const SemanticError& ex) {
+				error(std::string(ex.what()) + " [startup]");
+			}
 		}
 	}
+
+	startupLoaded = true;
+}
+
+bool ThreadedInterpreter::isStartupLoaded() const {
+	return startupLoaded;
 }

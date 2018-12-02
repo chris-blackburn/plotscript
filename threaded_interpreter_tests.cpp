@@ -3,10 +3,17 @@
 #include "threaded_interpreter.hpp"
 #include <thread>
 
+void waitForStartup(ThreadedInterpreter& interp, OutputQueue& oq) {
+	while (!interp.isStartupLoaded()) {}
+	OutputMessage startupMsg;
+	oq.try_pop(startupMsg);
+}
+
 Expression run_threaded(const std::string& program, bool runSemantic = false) {
 	InputQueue iq;
 	OutputQueue oq;
 	ThreadedInterpreter interp(&iq, &oq);
+	waitForStartup(interp, oq);
 
 	// run the program by queueing it
 	iq.push(program);
@@ -67,6 +74,7 @@ TEST_CASE("Test reset capability", "[ThreadedInterpreter]") {
 		InputQueue iq;
 		OutputQueue oq;
 		ThreadedInterpreter interp(&iq, &oq);
+		waitForStartup(interp, oq);
 
 		// define some variable, and make sure it's retrievable
 		iq.push("(define a 22)");
@@ -95,12 +103,13 @@ TEST_CASE("Make sure the startup file loads", "[ThreadedInterpreter]") {
 		OutputQueue oq;
 
 		ThreadedInterpreter interp(&iq, &oq);
-		OutputMessage msg;
+		waitForStartup(interp, oq);
 
 		iq.push("(define p (make-point 17 5))");
 		iq.push("(get-property \"object-name\" p)");
 		iq.push("(get-property \"size\" p)");
 
+		OutputMessage msg;
 		oq.wait_pop(msg);
 		REQUIRE(msg.exp == Expression(std::vector<Expression>{Expression(17), Expression(5)}));
 		oq.wait_pop(msg);
@@ -114,12 +123,13 @@ TEST_CASE("Make sure the startup file loads", "[ThreadedInterpreter]") {
 		OutputQueue oq;
 
 		ThreadedInterpreter interp(&iq, &oq);
-		OutputMessage msg;
+		waitForStartup(interp, oq);
 
 		iq.push("(define l (make-line (list 17 5) (list 22 22)))");
 		iq.push("(get-property \"object-name\" l)");
 		iq.push("(get-property \"thickness\" l)");
 
+		OutputMessage msg;
 		oq.wait_pop(msg);
 		oq.wait_pop(msg);
 		REQUIRE(msg.exp == Expression(Atom("\"line\"")));
@@ -132,7 +142,7 @@ TEST_CASE("Make sure the startup file loads", "[ThreadedInterpreter]") {
 		OutputQueue oq;
 
 		ThreadedInterpreter interp(&iq, &oq);
-		OutputMessage msg;
+		waitForStartup(interp, oq);
 
 		iq.push("(define t (make-text \"Hi\"))");
 		iq.push("(get-property \"object-name\" t)");
@@ -140,6 +150,7 @@ TEST_CASE("Make sure the startup file loads", "[ThreadedInterpreter]") {
 		iq.push("(get-property \"text-scale\" t)");
 		iq.push("(get-property \"text-rotation\" t)");
 
+		OutputMessage msg;
 		oq.wait_pop(msg);
 		REQUIRE(msg.exp == Expression(Atom("\"Hi\"")));
 		oq.wait_pop(msg);
