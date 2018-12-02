@@ -40,6 +40,7 @@ TEST_CASE("Constructs and stops on destruction", "[ThreadedInterpreter]") {
 	OutputQueue oq;
 
 	ThreadedInterpreter interp(&iq, &oq);
+	interp.isActive();
 }
 
 TEST_CASE("Direct stream evaluation", "[ThreadedInterpreter]") {

@@ -45,6 +45,10 @@ void ThreadedInterpreter::reset() {
 	start();
 }
 
+bool ThreadedInterpreter::isActive() const {
+	return active;
+}
+
 void ThreadedInterpreter::error(const std::string& e) {
 	m_oq->push(OutputMessage(ErrorType, e));
 }

@@ -91,21 +91,36 @@ void repl() {
 			continue;
 		}
 
-		// TODO: Test if the input was %start, %stop, or %reset and handle
-		// TODO: handle if interp is not running
+		// Handle thread control
+		if (line == "%start") {
+			interp.start();
+			continue;
+		} else if (line == "%stop") {
+			interp.stop();
+			continue;
+		} else if (line == "%reset") {
+			interp.reset();
+			continue;
+		}
 
-		// queue the user's expression
-		iq.push(line);
+		// if the interpreter thread is not active, output an error
+		if (interp.isActive()) {
 
-		// wait for an output
-		OutputMessage(msg);
-		oq.wait_pop(msg);
+			// queue the user's expression
+			iq.push(line);
 
-		// Output the message
-		if (msg.type == ErrorType) {
-			error(msg.err);
-		} else if (msg.type == ExpressionType) {
-			std::cout << msg.exp << std::endl;
+			// wait for an output
+			OutputMessage(msg);
+			oq.wait_pop(msg);
+
+			// Output the message
+			if (msg.type == ErrorType) {
+				error(msg.err);
+			} else if (msg.type == ExpressionType) {
+				std::cout << msg.exp << std::endl;
+			}
+		} else {
+			error("interpreter kernel not running");
 		}
 	}
 }

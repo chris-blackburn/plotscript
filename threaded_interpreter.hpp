@@ -47,6 +47,8 @@ public:
 	void stop();
 	void reset();
 
+	bool isActive() const;
+
 	// allows the user to see if the startup file has been successfully loaaded. This is needed to
 	// clear any possible errors from the output queue before starting plotscript evaluation
 	bool isStartupLoaded() const;
