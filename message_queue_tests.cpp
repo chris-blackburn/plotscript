@@ -4,7 +4,7 @@
 #include <thread>
 #include <chrono>
 
-TEST_CASE ("Simple try and pop", "[MessageQueue]") {
+TEST_CASE("Simple try and pop", "[MessageQueue]") {
 	MessageQueue<int> queue;
 
 	// should be empty to begin with
@@ -41,7 +41,7 @@ TEST_CASE ("Simple try and pop", "[MessageQueue]") {
 	REQUIRE(queue.empty());
 }
 
-TEST_CASE ("Simple wait and pop", "[MessageQueue]") {
+TEST_CASE("Simple wait and pop", "[MessageQueue]") {
 	MessageQueue<int> queue;
 
 	// should be empty to begin with

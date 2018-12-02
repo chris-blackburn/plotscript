@@ -16,6 +16,7 @@ set(interpreter_src
 # files related to multithreading
 set(multithread_src
   message_queue.hpp message_queue.tpp
+	threaded_interpreter.hpp threaded_interpreter.cpp
   )
 
 # EDIT
@@ -31,6 +32,7 @@ set(unittest_src
   token_tests.cpp
   unit_tests.cpp
   message_queue_tests.cpp
+	threaded_interpreter_tests.cpp
   )
 
 # EDIT
