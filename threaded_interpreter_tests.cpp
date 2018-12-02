@@ -87,3 +87,68 @@ TEST_CASE("Test reset capability", "[ThreadedInterpreter]") {
 		REQUIRE(msg.type == ErrorType);
 	}
 }
+
+TEST_CASE("Make sure the startup file loads", "[ThreadedInterpreter]") {
+
+	{ // points
+		InputQueue iq;
+		OutputQueue oq;
+
+		ThreadedInterpreter interp(&iq, &oq);
+		OutputMessage msg;
+
+		iq.push("(define p (make-point 17 5))");
+		iq.push("(get-property \"object-name\" p)");
+		iq.push("(get-property \"size\" p)");
+
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(std::vector<Expression>{Expression(17), Expression(5)}));
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(Atom("\"point\"")));
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(0));
+	}
+
+	{ // lines
+		InputQueue iq;
+		OutputQueue oq;
+
+		ThreadedInterpreter interp(&iq, &oq);
+		OutputMessage msg;
+
+		iq.push("(define l (make-line (list 17 5) (list 22 22)))");
+		iq.push("(get-property \"object-name\" l)");
+		iq.push("(get-property \"thickness\" l)");
+
+		oq.wait_pop(msg);
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(Atom("\"line\"")));
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(1));
+	}
+
+	{ // text
+		InputQueue iq;
+		OutputQueue oq;
+
+		ThreadedInterpreter interp(&iq, &oq);
+		OutputMessage msg;
+
+		iq.push("(define t (make-text \"Hi\"))");
+		iq.push("(get-property \"object-name\" t)");
+		iq.push("(get-property \"position\" t)");
+		iq.push("(get-property \"text-scale\" t)");
+		iq.push("(get-property \"text-rotation\" t)");
+
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(Atom("\"Hi\"")));
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(Atom("\"text\"")));
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(std::vector<Expression>{Expression(0), Expression(0)}));
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(1));
+		oq.wait_pop(msg);
+		REQUIRE(msg.exp == Expression(0));
+	}
+}

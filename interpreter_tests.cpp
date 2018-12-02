@@ -1617,6 +1617,18 @@ TEST_CASE("Test complex-unique procedures", "[interpreter]") {
 
 TEST_CASE("Simple discrete plot tests", "[interpreter]") {
 
+	{ // Testing discrete plot, verify list length
+		std::string program = "((discrete-plot (list (list -1 -1) (list 1 1)) "
+			"(list (list \"title\" \"The Title\") "
+			"(list \"abscissa-label\" \"X Label\") "
+			"(list \"ordinate-label\" \"Y Label\")))";
+		INFO("Simle discrete plot test");
+		Expression result = run(program);
+		auto begin = result.tailConstBegin();
+		auto end = result.tailConstEnd();
+		REQUIRE(std::distance(begin, end) == 17);
+	}
+
 	{
 		INFO("Should throw semantic error for:");
 		std::vector<std::string> programs = {
@@ -1639,6 +1651,18 @@ TEST_CASE("Simple discrete plot tests", "[interpreter]") {
 }
 
 TEST_CASE("Simple continuous plot tests", "[interpreter]") {
+
+	{ // Testing continuous plot, verify list length
+		std::string program = "(continuous-plot (lambda (x) (sin x)) (list (- pi) pi) "
+			"(list (list \"title\" \"The Title\") "
+			"(list \"abscissa-label\" \"X Label\") "
+			"(list \"ordinate-label\" \"Y Label\")))";
+		INFO("Simple continious plot test");
+		Expression result = run(program);
+		auto begin = result.tailConstBegin();
+		auto end = result.tailConstEnd();
+		REQUIRE(std::distance(begin, end) == 79);
+	}
 
 	{
 		INFO("Should throw semantic error for:");

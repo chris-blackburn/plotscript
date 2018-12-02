@@ -2,6 +2,7 @@
 #define THREADED_INTERPRETER_HPP
 
 #include <thread>
+#include <fstream>
 
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
@@ -53,6 +54,9 @@ private:
 	// The interpreter thread's main event loop
 	bool active = true;
 	void run();
+
+	// Load the startup plotscript file. Errors are sent to the output queue
+	void loadStartupFile(Interpreter& interp);
 
 	void error(const std::string& e);
 };

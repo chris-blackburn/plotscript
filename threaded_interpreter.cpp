@@ -36,6 +36,7 @@ void ThreadedInterpreter::error(const std::string& e) {
 
 void ThreadedInterpreter::run() {
 	Interpreter interp;
+	loadStartupFile(interp);
 	while (active) {
 
 		// Grab input messages as they populate the queue. If not message is returned, then continue
@@ -57,6 +58,27 @@ void ThreadedInterpreter::run() {
 					error(std::string(ex.what()));
 				}
 			}
+		}
+	}
+}
+
+void ThreadedInterpreter::loadStartupFile(Interpreter& interp) {
+	std::ifstream ifs(STARTUP_FILE);
+
+	if (!ifs) {
+		error("Could not open startup file for reading.");
+		return;
+	}
+
+	// Just load the expressions from the startup file into the interpreter. We don't need to do
+	// anything with them
+	if (!interp.parseStream(ifs)) {
+		error("Invalid Program in startup file. Could not parse.");
+	} else {
+		try {
+			interp.evaluate();
+		} catch (const SemanticError& ex) {
+			error(std::string(ex.what()) + " [startup]");
 		}
 	}
 }
