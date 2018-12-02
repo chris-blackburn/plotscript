@@ -24,43 +24,38 @@ void info(const std::string& err_str) {
 	std::cout << "Info: " << err_str << std::endl;
 }
 
-void load_startup_file(Interpreter& interp) {
-	std::ifstream ifs(STARTUP_FILE);
+void wait_for_startup(ThreadedInterpreter& interp, OutputQueue& oq) {
 
-	if (!ifs) {
-		error("Could not open startup file for reading.");
-		return;
-	}
+	// Wait until the startup file gets loaded. If an error occured, there will be an error message
+	// in the output queue
+	while (!interp.isStartupLoaded()) {}
+	OutputMessage startupMsg;
+	oq.try_pop(startupMsg);
 
-	if (!interp.parseStream(ifs)) {
-		error("Invalid Program in startup file. Could not parse.");
-	} else {
-		try {
-			interp.evaluate();
-		} catch (const SemanticError& ex) {
-			std::cerr << ex.what() << " [startup]" << std::endl;
-		}
+	if (startupMsg.type == ErrorType) {
+		error(startupMsg.err);
 	}
 }
 
 int eval_from_stream(std::istream& stream) {
-	Interpreter interp;
 
-	load_startup_file(interp);
-	if (!interp.parseStream(stream)) {
-		error("Invalid Program. Could not parse.");
+	// evaluate the stream directly
+	OutputQueue oq;
+	ThreadedInterpreter interp(&oq, stream);
+
+	// wait for the output
+	OutputMessage msg;
+	oq.wait_pop(msg);
+
+	if (msg.type == ErrorType) {
+		error(msg.err);
 		return EXIT_FAILURE;
-	} else {
-		try {
-			Expression exp = interp.evaluate();
-			std::cout << exp << std::endl;
-		} catch (const SemanticError& ex) {
-			std::cerr << ex.what() << std::endl;
-			return EXIT_FAILURE;
-		}
+	} else if (msg.type == ExpressionType) {
+		std::cout << msg.exp << std::endl;
+		return EXIT_SUCCESS;
 	}
 
-	return EXIT_SUCCESS;
+	return EXIT_FAILURE;
 }
 
 int eval_from_file(std::string filename) {
@@ -78,19 +73,6 @@ int eval_from_command(std::string argexp) {
 	std::istringstream expression(argexp);
 
 	return eval_from_stream(expression);
-}
-
-void wait_for_startup(ThreadedInterpreter& interp, OutputQueue& oq) {
-
-	// Wait until the startup file gets loaded. If an error occured, there will be an error message
-	// in the output queue
-	while (!interp.isStartupLoaded()) {}
-	OutputMessage startupMsg;
-	oq.try_pop(startupMsg);
-
-	if (startupMsg.type == ErrorType) {
-		error(startupMsg.err);
-	}
 }
 
 // A REPL is a repeated read-eval-print loop

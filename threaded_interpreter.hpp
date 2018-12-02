@@ -34,6 +34,7 @@ typedef MessageQueue<OutputMessage> OutputQueue;
 class ThreadedInterpreter {
 public:
 	ThreadedInterpreter(InputQueue* iq, OutputQueue* oq);
+	ThreadedInterpreter(OutputQueue* oq, std::istream& stream);
 
 	~ThreadedInterpreter();
 
@@ -49,6 +50,8 @@ public:
 	// allows the user to see if the startup file has been successfully loaaded. This is needed to
 	// clear any possible errors from the output queue before starting plotscript evaluation
 	bool isStartupLoaded() const;
+
+	void evalStream(Interpreter& interp, std::istream& stream);
 private:
 	std::thread m_thread;
 

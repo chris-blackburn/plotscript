@@ -42,6 +42,21 @@ TEST_CASE("Constructs and stops on destruction", "[ThreadedInterpreter]") {
 	ThreadedInterpreter interp(&iq, &oq);
 }
 
+TEST_CASE("Direct stream evaluation", "[ThreadedInterpreter]") {
+	std::string program = "(+ 4 3)";
+	std::istringstream stream(program);
+
+	// evaluate the stream directly
+	OutputQueue oq;
+	ThreadedInterpreter interp(&oq, stream);
+
+	// wait for the output
+	OutputMessage msg;
+	oq.wait_pop(msg);
+
+	REQUIRE(msg.exp == Expression(7));
+}
+
 TEST_CASE("Test simple expressions", "[ThreadedInterpreter]") {
 
 	{

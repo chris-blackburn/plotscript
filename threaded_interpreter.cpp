@@ -4,6 +4,21 @@ ThreadedInterpreter::ThreadedInterpreter(InputQueue* iq, OutputQueue* oq): m_iq(
 	start();
 }
 
+// evaluate a stream directly
+ThreadedInterpreter::ThreadedInterpreter(OutputQueue* oq, std::istream& stream): m_oq(oq) {
+	if (!m_thread.joinable()) {
+		m_thread = std::thread([this, &stream](){
+			Interpreter interp;
+			loadStartupFile(interp);
+
+			// pop in case there was an error with the startup file
+			OutputMessage msg;
+			m_oq->try_pop(msg);
+			evalStream(interp, stream);
+		});
+	}
+}
+
 // Be sure to stop and join the thread when falling out of scope
 ThreadedInterpreter::~ThreadedInterpreter() {
 	stop();
@@ -34,6 +49,21 @@ void ThreadedInterpreter::error(const std::string& e) {
 	m_oq->push(OutputMessage(ErrorType, e));
 }
 
+void ThreadedInterpreter::evalStream(Interpreter& interp, std::istream& stream) {
+	if (!interp.parseStream(stream)) {
+		error("Invalid Expression. Could not parse.");
+	} else {
+
+		// try to evaluate the expression, push the result to the output queue
+		try {
+			Expression exp = interp.evaluate();
+			m_oq->push(OutputMessage(ExpressionType, exp));
+		} catch(const SemanticError& ex) {
+			error(std::string(ex.what()));
+		}
+	}
+}
+
 void ThreadedInterpreter::run() {
 	Interpreter interp;
 	loadStartupFile(interp);
@@ -45,19 +75,8 @@ void ThreadedInterpreter::run() {
 		if (m_iq->try_pop(msg)) {
 
 			// Attempt to parse the input stream
-			std::istringstream expression(msg);
-			if (!interp.parseStream(expression)) {
-				error("Invalid Expression. Could not parse.");
-			} else {
-
-				// try to evaluate the expression, push the result to the output queue
-				try {
-					Expression exp = interp.evaluate();
-					m_oq->push(OutputMessage(ExpressionType, exp));
-				} catch(const SemanticError& ex) {
-					error(std::string(ex.what()));
-				}
-			}
+			std::istringstream stream(msg);
+			evalStream(interp, stream);
 		}
 	}
 }
