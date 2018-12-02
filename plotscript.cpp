@@ -101,6 +101,8 @@ void repl() {
 		} else if (line == "%reset") {
 			interp.reset();
 			continue;
+		} else if (line == "%exit") {
+			exit(EXIT_SUCCESS);
 		}
 
 		// if the interpreter thread is not active, output an error
