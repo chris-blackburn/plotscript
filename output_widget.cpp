@@ -197,7 +197,7 @@ void OutputWidget::processExpression(const Expression& exp) {
 }
 
 void OutputWidget::error(const QString& str) {
-	addText(str);
+	addText("Error: " + str);
 }
 
 void OutputWidget::clear() {
