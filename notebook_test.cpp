@@ -3,6 +3,7 @@
 #include <QGraphicsItem>
 #include <QList>
 #include <QPair>
+#include <QEventLoop>
 
 #include "notebook_app.hpp"
 #include "interrupt_flag.hpp"
@@ -58,6 +59,11 @@ void NotebookTest::initTestCase() {
 void NotebookTest::submitInput(QWidget* w) {
 	QTest::keyPress(w, Qt::Key_Return, Qt::ShiftModifier);
 	QTest::keyRelease(w, Qt::Key_Return, Qt::ShiftModifier);
+
+	// wait for the signal to come through before continuing
+	QEventLoop loop;
+	connect(&app, SIGNAL(outputProcessed()), &loop, SLOT(quit()));
+	loop.exec();
 }
 
 QGraphicsScene* NotebookTest::getScene(QWidget* output) {
