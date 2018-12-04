@@ -1019,7 +1019,7 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 				lines.insert(lines.begin() + i, new3);
 				lines.insert(lines.begin() + i, new2);
 				lines.insert(lines.begin() + i, new1);
-				i += 2;
+				// i += 2;
 			}
 		}
 
