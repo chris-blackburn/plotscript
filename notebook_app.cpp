@@ -87,9 +87,9 @@ void NotebookApp::process(const QString& str) {
 	output->clear();
 	if (interp.isActive()) {
 		iq.push(str.toStdString());
-		checkOutput();
 	} else {
 		output->error("interpreter kernel not running");
+		input->setDisabled(false);
 	}
 }
 
