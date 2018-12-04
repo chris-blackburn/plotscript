@@ -628,7 +628,7 @@ double slope(const Line& l) {
 }
 
 double angleToXAxis(const Line& l) {
-	return std::abs(std::atan(slope(l)) * (180 / PI));
+	return std::abs(std::atan2(dY(l), dX(l)) * (180 / PI));
 }
 
 // Helper function to create a plotscript point object
