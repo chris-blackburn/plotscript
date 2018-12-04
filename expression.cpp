@@ -969,11 +969,13 @@ double angleAdjacent(const Line& l1, const Line& l2) {
 	double m2 = slope(l2);
 
 	// if one angle is positive and one is negative,
-	if ((std::isgreater(m1, 0) && std::isgreater(0, m2)) || (std::isgreater(0, m1) && std::isgreater(m2, 0))) {
+	if ((std::isgreater(m1, 0) && std::isgreater(0, m2)) ||
+		(std::isgreater(0, m1) && std::isgreater(m2, 0))) {
 		angle = 180 - angleToXAxis(l1) - angleToXAxis(l2);
 
 		// if both are positive or both are negative
-	} else if ((std::isgreater(m1, 0) && std::isgreater(m2, 0)) || (std::isgreater(0, m1) && std::isgreater(0, m2))) {
+	} else if ((std::isgreater(m1, 0) && std::isgreater(m2, 0)) ||
+		(std::isgreater(0, m1) && std::isgreater(0, m2))) {
 
 		// if m1 is greater than m2,
 		if (std::isgreater(std::abs(m1), std::abs(m2))) {
