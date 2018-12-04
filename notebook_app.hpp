@@ -36,7 +36,7 @@ private slots:
 	void startKernel();
 	void stopKernel();
 	void resetKernel();
-	// void interruptKernel();
+	void interruptKernel();
 };
 
 #endif

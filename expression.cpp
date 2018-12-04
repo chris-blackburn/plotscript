@@ -453,6 +453,13 @@ Expression Expression::handle_getProperty(Environment& env) {
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment& env) {
+	
+	// check for interrupt signal
+	if (interrupt_flag) {
+		interrupt_flag = false;
+		throw SemanticError("Error: interpreter kernel interrupted");
+	}
+
 	if (m_head.asSymbol() == "begin") {
 
 		// handle begin special-form

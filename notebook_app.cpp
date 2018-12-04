@@ -28,7 +28,7 @@ void NotebookApp::initButtons() {
 	connect(startBtn, SIGNAL(clicked()), this, SLOT(startKernel()));
 	connect(stopBtn, SIGNAL(clicked()), this, SLOT(stopKernel()));
 	connect(resetBtn, SIGNAL(clicked()), this, SLOT(resetKernel()));
-	// TODO: connect(interrupt, SIGNAL(clicked()), this, SLOT(interruptKernel()));
+	connect(interruptBtn, SIGNAL(clicked()), this, SLOT(interruptKernel()));
 }
 
 NotebookApp::NotebookApp(QWidget* parent): QWidget(parent), interp(&iq, &oq) {
@@ -95,6 +95,6 @@ void NotebookApp::resetKernel() {
 	interp.reset();
 }
 
-// void NotebookApp::interruptKernel() {
-// 	interp.interrupt();
-// }
+void NotebookApp::interruptKernel() {
+	interrupt_flag = false;
+}

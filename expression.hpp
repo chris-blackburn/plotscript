@@ -8,9 +8,13 @@ Defines the Expression type and assiciated functions.
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <atomic>
 
 #include "token.hpp"
 #include "atom.hpp"
+
+// for interrupting evaluation
+extern volatile std::atomic<bool> interrupt_flag;
 
 // forward declare Environment
 class Environment;
