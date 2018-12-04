@@ -628,7 +628,7 @@ double slope(const Line& l) {
 }
 
 double angleToXAxis(const Line& l) {
-	return std::atan(slope(l)) * (180 / PI);
+	return std::abs(std::atan(slope(l)) * (180 / PI));
 }
 
 // Helper function to create a plotscript point object
@@ -965,7 +965,7 @@ double angleAdjacent(const Line& l1, const Line& l2) {
 
 	// if one angle is positive and one is negative,
 	if ((std::isgreater(m1, 0) && std::isgreater(0, m2)) || (std::isgreater(0, m1) && std::isgreater(m2, 0))) {
-		angle = 180 - (angleToXAxis(l1) - angleToXAxis(l2));
+		angle = 180 - angleToXAxis(l1) - angleToXAxis(l2);
 
 		// if both are positive or both are negative
 	} else if ((std::isgreater(m1, 0) && std::isgreater(m2, 0)) || (std::isgreater(0, m1) && std::isgreater(0, m2))) {
