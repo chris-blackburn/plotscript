@@ -930,6 +930,15 @@ Expression discretePlot(const std::vector<Expression>& args) {
 		"takes one or two arguments");
 }
 
+// Helper function to update the ordinate bounds for continuous plots
+void updateOrdinateBounds(Bounds& bounds, double o) {
+	if (bounds.OL > o) {
+		bounds.OL = o;
+	} else if (bounds.OU < o) {
+		bounds.OU = o;
+	}
+}
+
 // Helper function to get the point at the evaluated lambda and update the bounds
 void stepContinuous(const Expression& lambda, const Environment& env, double toEval, Point& p,
 	Bounds& bounds, bool init = false) {
@@ -941,11 +950,7 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 
 		// Record the maxima for the ordinate axis for scaling (if already initialized)
 		if (!init) {
-			if (bounds.OL > p.y) {
-				bounds.OL = p.y;
-			} else if (bounds.OU < p.y) {
-				bounds.OU = p.y;
-			}
+			updateOrdinateBounds(bounds, p.y);
 		} else {
 			bounds.OL = p.y;
 			bounds.OU = p.y;
@@ -984,7 +989,7 @@ double angleAdjacent(const Line& l1, const Line& l2) {
 }
 
 void smoothContinuousPlot(const Expression& lambda, const Environment& env,
-	std::vector<Line>& lines, std::size_t iteration = 0) {
+	std::vector<Line>& lines, Bounds& bounds, std::size_t iteration = 0) {
 
 	// We need to work through the whole plot and split lines that have an angle smaller than 175
 	// We do nothing if we already hit 10 iterations
@@ -1011,6 +1016,9 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 				Line new3 = {l2.x1, secondMidx, l2.y1, secondMidy};
 				Line new4 = {secondMidx, l2.x2, secondMidy, l2.y2};
 
+				updateOrdinateBounds(bounds, firstMidy);
+				updateOrdinateBounds(bounds, secondMidy);
+
 				// erase the old lines
 				lines.erase(lines.begin() + i, lines.begin() + i + 2);
 
@@ -1019,12 +1027,12 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 				lines.insert(lines.begin() + i, new3);
 				lines.insert(lines.begin() + i, new2);
 				lines.insert(lines.begin() + i, new1);
-				// i += 2;
+				i += 2;
 			}
 		}
 
 		if (!alreadySmooth) {
-			smoothContinuousPlot(lambda, env, lines, iteration + 1);
+			smoothContinuousPlot(lambda, env, lines, bounds, iteration + 1);
 		}
 	}
 }
@@ -1052,7 +1060,7 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 	lines.push_back({prev.x, next.x, prev.y, next.y});
 
 	// Smooth the plot
-	smoothContinuousPlot(lambda, env, lines);
+	smoothContinuousPlot(lambda, env, lines, bounds);
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();
