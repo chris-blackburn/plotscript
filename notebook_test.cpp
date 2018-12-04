@@ -5,11 +5,14 @@
 #include <QPair>
 
 #include "notebook_app.hpp"
+#include "interrupt_flag.hpp"
 
 class NotebookTest : public QObject {
 	Q_OBJECT
 
 private slots:
+	void initTestCase();
+
 	void findInputWidget();
 	void findOutputWidget();
 	void findOutputView();
@@ -46,6 +49,10 @@ private:
 	void testSingleText(const QString& input, const QString& expected, const QPointF& pos,
 		qreal rotation = 0);
 };
+
+void NotebookTest::initTestCase() {
+	interrupt_flag.store(false);
+}
 
 // ************ START: Helper functions for repeated tests ************
 void NotebookTest::submitInput(QWidget* w) {

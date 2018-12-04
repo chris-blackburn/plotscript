@@ -2,7 +2,8 @@
 
 #include <QLayout>
 
-volatile std::atomic<bool> interrupt_flag;
+#include "interrupt_flag.hpp"
+
 void NotebookApp::initButtons() {
 	kernelControlButtons = new QHBoxLayout;
 
@@ -32,7 +33,7 @@ void NotebookApp::initButtons() {
 }
 
 NotebookApp::NotebookApp(QWidget* parent): QWidget(parent), interp(&iq, &oq) {
-	interrupt_flag = false;
+	interrupt_flag.store(false);
 
 	input = new InputWidget(this);
 	input->setObjectName("input");
@@ -64,7 +65,7 @@ void NotebookApp::process(const QString& str) {
 	if (interp.isActive()) {
 		iq.push(str.toStdString());
 
-		// TODO: once the input has been queued, wait for the output
+		// TODO: use a timer to check the input and clear the interrupt flag
 		OutputMessage msg;
 		oq.wait_pop(msg);
 
@@ -96,5 +97,5 @@ void NotebookApp::resetKernel() {
 }
 
 void NotebookApp::interruptKernel() {
-	interrupt_flag = false;
+	interrupt_flag.store(true);
 }

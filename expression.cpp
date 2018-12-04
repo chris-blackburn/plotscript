@@ -8,6 +8,9 @@
 #include "environment.hpp"
 #include "semantic_error.hpp"
 
+#include "interrupt_flag.hpp"
+std::atomic<bool> interrupt_flag;
+
 Expression::Expression() {}
 
 Expression::Expression(const std::vector<Expression>& a): m_head(ListRoot), m_tail(a) {}
@@ -453,10 +456,11 @@ Expression Expression::handle_getProperty(Environment& env) {
 // difficult with the ast data structure used (no parent pointer).
 // this limits the practical depth of our AST
 Expression Expression::eval(Environment& env) {
-	
+
 	// check for interrupt signal
-	if (interrupt_flag) {
-		interrupt_flag = false;
+	if (interrupt_flag.load()) {
+		interrupt_flag.store(false);
+		env.reset();
 		throw SemanticError("Error: interpreter kernel interrupted");
 	}
 

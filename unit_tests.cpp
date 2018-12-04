@@ -5,4 +5,4 @@
 
 // needed for the threaded interperter
 #include <atomic>
-volatile std::atomic<bool> interrupt_flag;
+extern std::atomic<bool> interrupt_flag;
