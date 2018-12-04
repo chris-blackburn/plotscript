@@ -3,12 +3,17 @@
 
 #include <thread>
 #include <fstream>
+#include <atomic>
+#include <csignal>
 
 #include "interpreter.hpp"
 #include "semantic_error.hpp"
 #include "message_queue.hpp"
 
 #include "startup_config.hpp"
+
+// for handling interrupts. Require that the interrupt flag be handled outside of this class
+extern volatile std::atomic<bool> interrupt_flag;
 
 typedef std::string InputMessage;
 
@@ -46,6 +51,7 @@ public:
 	void start();
 	void stop();
 	void reset();
+	void interrupt();
 
 	bool isActive() const;
 

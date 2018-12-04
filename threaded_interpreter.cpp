@@ -45,6 +45,10 @@ void ThreadedInterpreter::reset() {
 	start();
 }
 
+void ThreadedInterpreter::interrupt() {
+	error("interpreter kernel interrupted");
+}
+
 bool ThreadedInterpreter::isActive() const {
 	return active;
 }
@@ -72,6 +76,9 @@ void ThreadedInterpreter::run() {
 	Interpreter interp;
 	loadStartupFile(interp);
 	while (active) {
+		if (interrupt_flag) {
+			interrupt();
+		}
 
 		// Grab input messages as they populate the queue. If not message is returned, then continue
 		// iterating

@@ -5,6 +5,31 @@
 
 #include "threaded_interpreter.hpp"
 
+// ***************** begin interrupt handling *******************
+#include <unistd.h>
+volatile std::atomic<bool> interrupt_flag;
+void interrupt_handler(int signal_num) {
+	if(signal_num == SIGINT) {
+		if (interrupt_flag) {
+			exit(EXIT_FAILURE);
+		}
+
+		interrupt_flag = true;
+	}
+}
+
+inline void install_handler() {
+	struct sigaction sigIntHandler;
+
+	sigIntHandler.sa_handler = interrupt_handler;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+
+	sigaction(SIGINT, &sigIntHandler, NULL);
+}
+
+// ***************** end interrupt handling *******************
+
 void prompt() {
 	std::cout << "\nplotscript> ";
 }
@@ -83,6 +108,7 @@ void repl() {
 
 	wait_for_startup(interp, oq);
 	while (!std::cin.eof()) {
+		interrupt_flag = false;
 
 		prompt();
 		std::string line = readline();
@@ -128,6 +154,8 @@ void repl() {
 }
 
 int main(int argc, char* argv[]) {
+	install_handler();
+
 	if (argc == 2) {
 		return eval_from_file(argv[1]);
 	} else if (argc == 3) {

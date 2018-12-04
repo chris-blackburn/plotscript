@@ -2,6 +2,7 @@
 
 #include <QLayout>
 
+volatile std::atomic<bool> interrupt_flag;
 void NotebookApp::initButtons() {
 	kernelControlButtons = new QHBoxLayout;
 
@@ -31,6 +32,8 @@ void NotebookApp::initButtons() {
 }
 
 NotebookApp::NotebookApp(QWidget* parent): QWidget(parent), interp(&iq, &oq) {
+	interrupt_flag = false;
+
 	input = new InputWidget(this);
 	input->setObjectName("input");
 
