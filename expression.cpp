@@ -626,22 +626,6 @@ typedef struct _Line {
 	}
 } Line;
 
-double dX(const Line& l) {
-	return l.x2 - l.x1;
-}
-
-double dY(const Line& l) {
-	return l.y2 - l.y1;
-}
-
-double slope(const Line& l) {
-	return dY(l) / dX(l);
-}
-
-double angleToXAxis(const Line& l) {
-	return std::abs(std::atan(slope(l)) * (180 / PI));
-}
-
 // Helper function to create a plotscript point object
 Expression makePointExpression(Point p, double size = 0) {
 
@@ -971,7 +955,6 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 	}
 }
 
-#include <iostream>
 double angleAdjacent(const Line& l1, const Line& l2) {
 
 	// Vectorize the lines
@@ -995,7 +978,6 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	// We need to work through the whole plot and split lines that have an angle smaller than 175
 	// We do nothing if we already hit 10 iterations
 	if (iteration < PLOT_SPLIT_MAX) {
-		std::cout << "Iteration: " << iteration << std::endl;
 		bool alreadySmooth = true;
 		for (std::size_t i = 0; i < lines.size() - 1; i++) {
 
@@ -1047,7 +1029,7 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 	// Prime the loop
 	Point prev, next;
 	stepContinuous(lambda, env, bounds.AL, prev, bounds, true);
-	for (double i = 1; i < PLOT_M; i++) {
+	for (double i = 0; i < PLOT_M; i++) {
 
 		// create lines from i to i + 1
 		stepContinuous(lambda, env, bounds.AL + (incValue * i), next, bounds);
@@ -1063,7 +1045,6 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 
 	// Smooth the plot
 	smoothContinuousPlot(lambda, env, lines, bounds);
-	std::cout << "Number of lines: " << lines.size() << std::endl;
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();
