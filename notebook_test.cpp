@@ -36,7 +36,9 @@ private slots:
 	void testDiscretePlotLayout();
 	void testContinuousPlotSimple();
 
-	// TODO: implement additional tests here
+	// Interpreter kernel tests
+	void testStartStopInterp();
+	void testResetInterp();
 private:
 	NotebookApp app;
 
@@ -555,6 +557,38 @@ void NotebookTest::testContinuousPlotSimple() {
 	// first check total number of items
 	// 4 edge + 2 axis + 66 lines + 7 text = 79
 	verifyNumberOfOutputGraphics(outputWidget, 86);
+}
+
+// **************** End Plotting Tests ****************
+void NotebookTest::testStartStopInterp() {
+	auto startBtn = app.findChild<QWidget*>("start");
+	auto stopBtn = app.findChild<QWidget*>("stop");
+
+	// Interpreter thread should be running at startup
+	testSimpleExpression("(define willbelost 77)", "(77)");
+	testSimpleExpression("(willbelost)", "(77)");
+
+	// stop the interpreter
+	QTest::mouseClick(stopBtn, Qt::LeftButton, Qt::NoModifier);
+	testSimpleExpression("(willbelost)", "Error");
+
+	// start the interpreter back up
+	QTest::mouseClick(startBtn, Qt::LeftButton, Qt::NoModifier);
+	testSimpleExpression("(+ 7 1)", "(8)");
+	testSimpleExpression("(willbelost)", "Error");
+}
+
+void NotebookTest::testResetInterp() {
+	auto resetBtn = app.findChild<QWidget*>("reset");
+
+	// Interpreter thread should be running at startup
+	testSimpleExpression("(define willbelost 77)", "(77)");
+	testSimpleExpression("(willbelost)", "(77)");
+
+	// reset the interpreter
+	QTest::mouseClick(resetBtn, Qt::LeftButton, Qt::NoModifier);
+	testSimpleExpression("(+ 7 1)", "(8)");
+	testSimpleExpression("(willbelost)", "Error");
 }
 
 QTEST_MAIN(NotebookTest)
