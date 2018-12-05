@@ -971,34 +971,22 @@ void stepContinuous(const Expression& lambda, const Environment& env, double toE
 	}
 }
 
+#include <iostream>
 double angleAdjacent(const Line& l1, const Line& l2) {
-	double angle = 180;
 
-	// Depending on the slope of the line, we need to get different angles to find the angle
-	// between the two lines, opposing slopes just add and take inverse, same sign adds
-	double m1 = slope(l1);
-	double m2 = slope(l2);
+	// Vectorize the lines
+	std::pair<double, double> a(l1.x1 - l1.x2, l1.y1 - l1.y2);
+	std::pair<double, double> b(l2.x2 - l2.x1, l2.y2 - l2.y1);
 
-	// if one angle is positive and one is negative,
-	if ((std::isgreater(m1, 0) && std::isgreater(0, m2)) ||
-		(std::isgreater(0, m1) && std::isgreater(m2, 0))) {
-		angle = 180 - angleToXAxis(l1) - angleToXAxis(l2);
+	// find the dot product of the two vectors
+	double dotP = (a.first * b.first) + (a.second * b.second);
 
-		// if both are positive or both are negative
-	} else if ((std::isgreater(m1, 0) && std::isgreater(m2, 0)) ||
-		(std::isgreater(0, m1) && std::isgreater(0, m2))) {
+	// get the product of the magnitudes
+	double magA = std::sqrt((a.first * a.first) + (a.second * a.second));
+	double magB = std::sqrt((b.first * b.first) + (b.second * b.second));
 
-		// if m1 is greater than m2,
-		if (std::isgreater(std::abs(m1), std::abs(m2))) {
-			angle = 180 + angleToXAxis(l2) - angleToXAxis(l1);
-
-		// if m2 is greater than m1
-		} else if (std::isgreater(std::abs(m2), std::abs(m1))) {
-			angle = 180 + angleToXAxis(l1) - angleToXAxis(l2);
-		}
-	}
-
-	return std::abs(angle);
+	// return the angle
+	return std::acos(dotP / (magA * magB)) * (180 / PI);
 }
 
 void smoothContinuousPlot(const Expression& lambda, const Environment& env,
@@ -1007,6 +995,7 @@ void smoothContinuousPlot(const Expression& lambda, const Environment& env,
 	// We need to work through the whole plot and split lines that have an angle smaller than 175
 	// We do nothing if we already hit 10 iterations
 	if (iteration < PLOT_SPLIT_MAX) {
+		std::cout << "Iteration: " << iteration << std::endl;
 		bool alreadySmooth = true;
 		for (std::size_t i = 0; i < lines.size() - 1; i++) {
 
@@ -1074,6 +1063,7 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 
 	// Smooth the plot
 	smoothContinuousPlot(lambda, env, lines, bounds);
+	std::cout << "Number of lines: " << lines.size() << std::endl;
 
 	// Iterate through each line, scale it, and add it to the plot
 	double absScaleFactor = bounds.calcAbsScale();
