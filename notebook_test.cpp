@@ -554,7 +554,7 @@ void NotebookTest::testContinuousPlotSimple() {
 
 	// first check total number of items
 	// 4 edge + 2 axis + 66 lines + 7 text = 79
-	verifyNumberOfOutputGraphics(outputWidget, 88);
+	verifyNumberOfOutputGraphics(outputWidget, 86);
 }
 
 QTEST_MAIN(NotebookTest)

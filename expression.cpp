@@ -1029,7 +1029,7 @@ void addScaledContinuousData(const Expression& lambda, const Environment& env, B
 	// Prime the loop
 	Point prev, next;
 	stepContinuous(lambda, env, bounds.AL, prev, bounds, true);
-	for (double i = 0; i < PLOT_M; i++) {
+	for (double i = 1; i < PLOT_M - 1; i++) {
 
 		// create lines from i to i + 1
 		stepContinuous(lambda, env, bounds.AL + (incValue * i), next, bounds);

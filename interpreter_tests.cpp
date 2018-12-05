@@ -1661,7 +1661,7 @@ TEST_CASE("Simple continuous plot tests", "[interpreter]") {
 		Expression result = run(program);
 		auto begin = result.tailConstBegin();
 		auto end = result.tailConstEnd();
-		REQUIRE(std::distance(begin, end) == 88);
+		REQUIRE(std::distance(begin, end) == 86);
 	}
 
 	{
